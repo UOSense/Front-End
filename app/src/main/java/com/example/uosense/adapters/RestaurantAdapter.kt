@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.R
 import com.example.uosense.models.Restaurant
 
-class RestaurantAdapter(
+class RestaurantAdapter( // admin adapter
     private val onEditClick: (Restaurant) -> Unit, // 수정 버튼 클릭 처리
     private val onDeleteClick: (Restaurant) -> Unit // 삭제 버튼 클릭 처리
 ) : ListAdapter<Restaurant, RestaurantAdapter.RestaurantViewHolder>(DIFF_CALLBACK) {

@@ -48,7 +48,10 @@ class AddEditRestDialogFragment : DialogFragment() {
                 id = restaurant?.id ?: 0,
                 name = etName.text.toString(),
                 location = etLocation.text.toString(),
-                rating = etRating.text.toString().toFloatOrNull() ?: 0f
+                latitude = restaurant?.latitude ?: 0.0, // 기존 값 사용 또는 기본값 0.0
+                longitude = restaurant?.longitude ?: 0.0,
+                rating = etRating.text.toString().toFloatOrNull() ?: 0f,
+                description ="Default description" //수정필요
             )
 
             // 입력값 검증

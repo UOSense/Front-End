@@ -67,4 +67,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // 네이버 API
+    implementation("com.naver.maps:map-sdk:3.19.1")
 }
