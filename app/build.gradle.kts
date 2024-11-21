@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.uosense"
-        minSdk = 35
+        minSdk = 35 // 최소 SDK 버전은 일반적으로 21 이상으로 설정
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -40,7 +40,7 @@ android {
 }
 
 dependencies {
-
+    // AndroidX 및 Compose
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -53,6 +53,13 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+
+    // Retrofit & OkHttp
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0") // JSON 변환
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3") // 로깅
+
+    // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
