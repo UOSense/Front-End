@@ -1,0 +1,25 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:layout_marginBottom="4dp">
+
+    <!-- 요일 -->
+    <TextView
+        android:id="@+id/dayOfWeek"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Monday"
+        android:textSize="14sp"
+        android:layout_marginEnd="16dp"/>
+
+    <!-- 영업 시간 -->
+    <TextView
+        android:id="@+id/openingHours"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open: 09:00 - 22:00"
+        android:textSize="14sp"/>
+</LinearLayout>

@@ -37,6 +37,11 @@ android {
     buildFeatures {
         compose = true
     }
+    packagingOptions {
+        exclude ("META-INF/DEPENDENCIES")
+        exclude ("META-INF/NOTICE")
+        exclude( "META-INF/LICENSE")
+    }
 }
 
 dependencies {
@@ -70,4 +75,8 @@ dependencies {
 
     // 네이버 API
     implementation("com.naver.maps:map-sdk:3.19.1")
+
+    //AWS S3과 연결
+    implementation("com.amazonaws:aws-java-sdk-s3:1.12.576")
+
 }

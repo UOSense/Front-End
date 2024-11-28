@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -18,38 +17,30 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.UOSense"
         tools:targetApi="31">
+        <activity
+            android:name=".LoginAdminActivity"
+            android:exported="false" />
 
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="s78aa7asq0" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".RestaurantListActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.Light">
-                <intent-filter>
-                    <action android:name="android.intent.action.MAIN" />
-
-                    <category android:name="android.intent.category.LAUNCHER" />
-                </intent-filter>
-            </activity>
-        <activity
-            android:name=".LoginAdminActivity"
-            android:exported="false" /> <!-- AdminActivity를 Launcher로 설정 -->
-
-        <activity
-            android:name=".AdminActivity"
-            android:exported="false" />
-
-            <!--android:theme="@style/Theme.AppCompat.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            -->
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" /> <!-- AdminActivity를 Launcher로 설정 -->
+        <activity
+            android:name=".AdminActivity"
+            android:exported="false" />
     </application>
-
-
 
 </manifest>
