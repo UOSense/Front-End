@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         binding.searchBar.setOnEditorActionListener { _, _, _ ->
             val query = binding.searchBar.text.toString()
             // 검색 로직 추가해야 함
+            // 퀵 검색?
             true
         }
 
