@@ -6,49 +6,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.uosense.models.Restaurant
 import com.example.uosense.models.BusinessDay
+import com.example.uosense.models.RestaurantInfo
+import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.launch
 
 class RestaurantViewModel : ViewModel() {
-
-    private val _restaurants = MutableLiveData<List<Restaurant>>()
-    val restaurants: LiveData<List<Restaurant>> get() = _restaurants
-
-    private val _selectedRestaurant = MutableLiveData<Restaurant>()
-    val selectedRestaurant: LiveData<Restaurant> get() = _selectedRestaurant
-
     private val api = RetrofitInstance.api
 
-    // 모든 식당 정보 가져오기
-    fun fetchAllRestaurants() {
-        viewModelScope.launch {
-            try {
-                val response = api.getAllRestaurants()
-                _restaurants.postValue(response)
-            } catch (e: Exception) {
-                e.printStackTrace() // 에러 로그
-            }
-        }
-    }
+    val restaurantList = MutableLiveData<List<RestaurantListResponse>>()
+    val restaurantInfo = MutableLiveData<Restaurant>()
 
-    // 특정 식당 정보 가져오기
-    fun fetchRestaurantById(restaurantId: Int) {
-        viewModelScope.launch {
-            try {
-                val response = api.getRestaurant(restaurantId)
-                _selectedRestaurant.postValue(response)
-            } catch (e: Exception) {
-                e.printStackTrace() // 에러 로그
-            }
-        }
-    }
-
-    // Mock Data (테스트용)
-    fun fetchMockRestaurants() {
-        val exampleBusinessDays = listOf(
+    // 공통: Mock BusinessDays 생성
+    private fun createMockBusinessDays(restaurantId: Int): List<BusinessDay> {
+        return listOf(
             BusinessDay(
                 id = 1,
-                restaurant_id = 1,
+                restaurant_id = restaurantId,
                 day_of_week = "Monday",
                 have_break_time = true,
                 start_break_time = "15:00",
@@ -59,7 +33,7 @@ class RestaurantViewModel : ViewModel() {
             ),
             BusinessDay(
                 id = 2,
-                restaurant_id = 1,
+                restaurant_id = restaurantId,
                 day_of_week = "Tuesday",
                 have_break_time = false,
                 start_break_time = null,
@@ -69,9 +43,12 @@ class RestaurantViewModel : ViewModel() {
                 is_holiday = false
             )
         )
+    }
 
-        val exampleRestaurant = Restaurant(
-            id = 1,
+    // 공통: Mock Restaurant 생성
+    private fun createMockRestaurant(restaurantId: Int): Restaurant {
+        return Restaurant(
+            id = restaurantId,
             name = "Test Restaurant",
             door_type = "정문",
             longitude = 127.0340,
@@ -81,11 +58,50 @@ class RestaurantViewModel : ViewModel() {
             rating = 4.5,
             category = "한식",
             sub_description = "음식점",
-            description = "맛있는 한식 전문점",
+            description = "맛있는 한식 전문점 $restaurantId",
             review_count = 10,
             bookmark_count = 5,
-            businessDays = exampleBusinessDays
+            businessDays = createMockBusinessDays(restaurantId)
         )
-        _restaurants.value = listOf(exampleRestaurant)
+    }
+
+    // 모든 레스토랑 목록 가져오기
+    fun fetchAllRestaurants(doorType: String?, category: String?) {
+        viewModelScope.launch {
+            try {
+                val response = api.getAllRestaurants(doorType, category)
+                restaurantList.postValue(response)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // 특정 ID의 레스토랑 가져오기 (Mock or API)
+    fun fetchRestaurantById(restaurantId: Int) {
+        viewModelScope.launch {
+            try {
+                // Mock 데이터 활용 (API 호출이 아닌 경우)
+                val mockRestaurant = createMockRestaurant(restaurantId)
+                restaurantInfo.postValue(mockRestaurant)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // Mock 데이터를 레스토랑 목록으로 변환
+    fun fetchMockRestaurants() {
+        val mockRestaurant = createMockRestaurant(1)
+        val restaurantListResponse = RestaurantListResponse(
+            id = mockRestaurant.id,
+            name = mockRestaurant.name,
+            address = mockRestaurant.address,
+            category = mockRestaurant.category,
+            door_type = mockRestaurant.door_type,
+            phone_number = mockRestaurant.phone_number,
+            rating = mockRestaurant.rating
+        )
+        restaurantList.postValue(listOf(restaurantListResponse))
     }
 }

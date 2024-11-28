@@ -33,3 +33,33 @@ data class Restaurant(
     val bookmark_count: Int, // 즐겨찾기 수
     val businessDays: List<BusinessDay> // 1:N 관계로 연결된 BusinessDay 리스트
 )
+
+data class RestaurantListResponse(
+    val id: Int,
+    val name: String,
+    val address: String,
+    val category: String,
+    val door_type: String?, // 추가
+    val phone_number: String?, // 추가
+    val rating: Double
+)
+
+
+data class RestaurantInfo(
+    val id: Int,
+    val name: String,
+    val address: String,
+    val description: String?,
+    val category: String, // 반드시 String 타입이어야 함
+    val menu: List<MenuResponse>,
+    val businessDays: List<BusinessDay>
+)
+
+
+data class RestaurantRequest(
+    val id: Int,
+    val name: String,
+    val address: String,
+    val description: String
+)
+

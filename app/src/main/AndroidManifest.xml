@@ -18,8 +18,9 @@
         android:theme="@style/Theme.UOSense"
         tools:targetApi="31">
         <activity
-            android:name=".LoginAdminActivity"
-            android:exported="false" />
+            android:name=".RestaurantDetailActivity"
+            android:theme="@style/Theme.AppCompat.DayNight">
+        </activity>
 
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"

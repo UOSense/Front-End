@@ -2,24 +2,41 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:layout_marginBottom="4dp">
+    android:orientation="vertical"
+    android:padding="8dp">
 
     <!-- 요일 -->
     <TextView
         android:id="@+id/dayOfWeek"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Monday"
-        android:textSize="14sp"
-        android:layout_marginEnd="16dp"/>
+        android:text="요일"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp" />
 
-    <!-- 영업 시간 -->
+    <!-- 오픈 시간 -->
     <TextView
-        android:id="@+id/openingHours"
+        android:id="@+id/openingTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Open: 09:00 - 22:00"
-        android:textSize="14sp"/>
+        android:text="오픈 시간"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 끝나는 시간 -->
+    <TextView
+        android:id="@+id/closingTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="끝나는 시간"
+        android:layout_marginBottom="4dp" />
+
+    <!-- 브레이크 타임 -->
+    <TextView
+        android:id="@+id/breakTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="브레이크 타임" />
+
 </LinearLayout>
+

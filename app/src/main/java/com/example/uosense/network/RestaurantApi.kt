@@ -1,42 +1,39 @@
 package com.example.uosense.network
 
-import com.example.uosense.models.Restaurant
-import retrofit2.Call
+import com.example.uosense.models.*
+import okhttp3.MultipartBody
 import retrofit2.http.*
 
 interface RestaurantApi {
+    @GET("/show")
+    suspend fun getAllRestaurants(
+        @Query("doorType") doorType: String?,
+        @Query("category") category: String?
+    ): List<RestaurantListResponse>
 
-    // 모든 식당 정보 조회 (Coroutine 방식)
-    @GET("/api/restaurants")
-    suspend fun getAllRestaurants(): List<Restaurant>
+    @GET("/{restaurantId}/show")
+    suspend fun getRestaurantById(
+        @Path("restaurantId") restaurantId: Int
+    ): RestaurantInfo
 
-    // 모든 식당 정보 조회 (Call 방식 - AdminActivity 호환)
-    @GET("/api/restaurants")
-    fun getRestaurants(): Call<List<Restaurant>>
+    @POST("/restaurant/new")
+    suspend fun createRestaurant(
+        @Body restaurantRequest: RestaurantRequest
+    )
 
-    // 특정 식당 정보 조회
-    @GET("/api/restaurants/{restaurantId}")
-    suspend fun getRestaurant(@Path("restaurantId") id: Int): Restaurant
+    @PUT("/restaurant/{restaurantId}/update")
+    suspend fun editRestaurant(
+        @Path("restaurantId") restaurantId: Int,
+        @Body restaurantRequest: RestaurantRequest
+    )
 
-    // 문(door) 타입과 카테고리로 식당 필터링 조회
-    @GET("/api/restaurants/filter")
-    suspend fun getRestaurantsByDoorTypeAndCategory(
-        @Query("doorType") doorType: String,
-        @Query("category") category: String
-    ): List<Restaurant>
+    @DELETE("/restaurant/{restaurantId}/delete")
+    suspend fun deleteRestaurant(
+        @Path("restaurantId") restaurantId: Int
+    )
 
-    // 새로운 식당 추가
-    @POST("/api/restaurants")
-    fun addRestaurant(@Body restaurant: Restaurant): Call<Void>
-
-    // 기존 식당 수정
-    @PUT("/api/restaurants/{restaurantId}")
-    fun updateRestaurant(
-        @Path("restaurantId") restaurantId: Long,
-        @Body restaurant: Restaurant
-    ): Call<Void>
-
-    // 특정 식당 삭제
-    @DELETE("/api/restaurants/{restaurantId}")
-    fun deleteRestaurant(@Path("restaurantId") restaurantId: Long): Call<Void>
+    @GET("/{restaurantId}/menu")
+    suspend fun getMenuByRestaurantId(
+        @Path("restaurantId") restaurantId: Int
+    ): List<MenuResponse>
 }

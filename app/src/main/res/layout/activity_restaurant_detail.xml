@@ -1,11 +1,18 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@drawable/background_item"
-    android:layout_margin="8dp">
+    android:padding="16dp">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
     <!-- 식당 이름 -->
     <TextView
@@ -17,23 +24,14 @@
         android:textSize="18sp"
         android:layout_marginBottom="8dp"/>
 
-    <!-- 출입구 유형 -->
-    <TextView
-        android:id="@+id/restaurantDoorType"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Door Type"
-        android:textSize="14sp"
-        android:layout_marginBottom="4dp"/>
-
-    <!-- 카테고리 및 부가 설명 -->
+    <!-- 카테고리 -->
     <TextView
         android:id="@+id/restaurantCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Category - Sub-description"
+        android:text="Category"
         android:textSize="14sp"
-        android:layout_marginBottom="4dp"/>
+        android:layout_marginBottom="8dp"/>
 
     <!-- 주소 -->
     <TextView
@@ -42,16 +40,16 @@
         android:layout_height="wrap_content"
         android:text="Address"
         android:textSize="14sp"
-        android:layout_marginBottom="4dp"/>
+        android:layout_marginBottom="8dp"/>
 
-    <!-- 전화번호 -->
+    <!-- 상세 설명 -->
     <TextView
-        android:id="@+id/restaurantPhoneNumber"
+        android:id="@+id/restaurantDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Phone Number"
+        android:text="Description"
         android:textSize="14sp"
-        android:layout_marginBottom="4dp"/>
+        android:layout_marginBottom="8dp"/>
 
     <!-- 평점 -->
     <TextView
@@ -60,15 +58,21 @@
         android:layout_height="wrap_content"
         android:text="Rating"
         android:textSize="14sp"
-        android:layout_marginBottom="4dp"/>
+        android:layout_marginBottom="8dp"/>
 
-    <!-- 영업일 리스트 -->
-    <LinearLayout
-        android:id="@+id/businessDaysContainer"
+    <!-- 전화번호 -->
+    <TextView
+        android:id="@+id/restaurantPhoneNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Phone Number"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- BusinessDays RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/businessDaysRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="8dp">
-        <!-- BusinessDay 정보가 동적으로 추가될 예정 -->
-    </LinearLayout>
+        android:layout_marginTop="8dp" />
 </LinearLayout>
