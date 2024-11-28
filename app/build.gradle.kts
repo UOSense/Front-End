@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -41,6 +42,10 @@ android {
         exclude ("META-INF/DEPENDENCIES")
         exclude ("META-INF/NOTICE")
         exclude( "META-INF/LICENSE")
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 }
 

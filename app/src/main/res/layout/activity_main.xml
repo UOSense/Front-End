@@ -1,41 +1,36 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- activity_main.xml -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <!-- 검색 필드 -->
-    <LinearLayout
+    <EditText
+        android:id="@+id/searchBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
+        android:hint="Search"
+        android:inputType="text" />
 
-        <EditText
-            android:id="@+id/searchField"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Search restaurants" />
+    <Button
+        android:id="@+id/doorTypeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Door Type"
+        android:layout_below="@id/searchBar"
+        android:layout_marginTop="8dp" />
 
-        <Button
-            android:id="@+id/searchButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Search" />
-    </LinearLayout>
-
-    <!-- 네이버 지도 -->
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/map_fragment"
+    <FrameLayout
+        android:id="@+id/map"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="match_parent"
+        android:layout_below="@id/doorTypeButton"
+        android:layout_marginTop="8dp" />
 
-    <!-- 검색 결과 리스트 -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/searchResults"
+    <Button
+        android:id="@+id/myPageButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone" />
-</LinearLayout>
+        android:text="Go to My Page"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout>
+
