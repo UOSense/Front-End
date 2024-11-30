@@ -1,146 +1,152 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:background="@android:color/white"
-    android:layout_marginBottom="8dp"
-    android:layout_marginTop="4dp"
-    android:elevation="2dp">
-
-<!--    식당 세부 정보-->
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
     <LinearLayout
-        android:id="@+id/detail_restaurants"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="5dp"
-        >
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="@android:color/white"
+        android:elevation="2dp">
 
-
+    <!--    식당 세부 정보-->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
             >
 
-            <!--    식당 이름   -->
-            <TextView
-                android:id="@+id/name_restaurants"
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="실크로드"
-                android:textSize="18dp"
+                android:orientation="horizontal"
+                >
+
+                <!--    식당 이름   -->
+                <TextView
+                    android:id="@+id/restaurantName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="실크로드"
+                    android:textSize="18dp"
+                    android:textStyle="bold"
+                    />
+                <!--    식당 유형   -->
+                <TextView
+                    android:id="@+id/restaurantCategory"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="바(bar)"
+                    android:layout_marginLeft="10dp"
+                    />
+                <!--    식당 영업 여부    -->
+                <TextView
+                    android:id="@+id/restaurantDoorType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="영업 중"
+                    android:textSize="16dp"
+                    android:layout_marginLeft="90dp"
+                    android:textStyle="bold"
+                    />
+
+            </LinearLayout>
+
+                <!--    식당 위치   -->
+            <TextView
+                android:id="@+id/restaurantAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="서울 동대문구 전농로 219"
                 android:textStyle="bold"
-                />
-            <!--    식당 유형   -->
-            <TextView
-                android:id="@+id/type_restaurants"
+            />
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="바(bar)"
-                android:layout_marginLeft="10dp"
-                />
-            <!--    식당 영업 여부    -->
-            <TextView
-                android:id="@+id/isOpened"
+                android:orientation="horizontal"
+                >
+
+                    <!--    별 출력    -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="★"
+                    android:textColor="#FF0000"
+                    android:gravity="center"
+                    />
+                    <!--    평점      -->
+                <TextView
+                    android:id="@+id/restaurantRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4.64"
+                    android:layout_marginStart="5dp"
+                    android:textStyle="bold"
+                    />
+                    <!--    리뷰 출력   -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="리뷰"
+                    android:layout_marginStart="25dp"/>
+                    <!--    리뷰 수    -->
+                <TextView
+                    android:id="@+id/restaurantReview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="35"
+                    android:layout_marginStart="5dp"/>
+
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="영업 중"
-                android:textSize="16dp"
-                android:layout_marginLeft="90dp"
-                android:textStyle="bold"
-                />
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="데이트 추천"
+                    android:padding="5dp"
+                    android:textColor="@color/pink"
+                    android:background="@drawable/rounded_border_pink"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:textColor="@color/green"
+                    android:background="@drawable/rounded_border_green"
+                    android:text="착한 가격"/>
+
+
+
+            </LinearLayout>
+
+
+    <!--    식당 이미지-->
+
 
         </LinearLayout>
 
-            <!--    식당 위치   -->
-        <TextView
-            android:id="@+id/location_restaurants"
+        <ImageView
+            android:id="@+id/restaurantImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="서울 동대문구 전농로 219"
-            android:textStyle="bold"
-        />
+            android:layout_marginStart="15dp"
+            android:background="@drawable/ic_launcher_background"
+            android:src="@drawable/ic_launcher_foreground" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            >
-
-                <!--    별 출력    -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="★"
-                android:textColor="#FF0000"
-                android:gravity="center"
-                />
-                <!--    평점      -->
-            <TextView
-                android:id="@+id/review_score"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="4.64"
-                android:layout_marginStart="5dp"
-                android:textStyle="bold"
-                />
-                <!--    리뷰 출력   -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="리뷰"
-                android:layout_marginStart="25dp"/>
-                <!--    리뷰 수    -->
-            <TextView
-                android:id="@+id/review_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="35"
-                android:layout_marginStart="5dp"/>
-
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="데이트 추천"
-                android:padding="5dp"
-                android:textColor="@color/pink"
-                android:background="@drawable/rounded_border_pink"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:textColor="@color/green"
-                android:background="@drawable/rounded_border_green"
-                android:text="착한 가격"/>
-
-
-
-        </LinearLayout>
-
-
-<!--    식당 이미지-->
 
 
     </LinearLayout>
-
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:background="@drawable/ic_launcher_background"
-        android:src="@drawable/ic_launcher_foreground" />
-
 
 </LinearLayout>

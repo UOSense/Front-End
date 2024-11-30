@@ -35,14 +35,18 @@ data class Restaurant(
 )
 
 data class RestaurantListResponse(
+    val imageResourceId: Int,
     val id: Int,
     val name: String,
     val address: String,
     val category: String,
     val door_type: String?, // 추가
     val phone_number: String?, // 추가
-    val rating: Double
-)
+    val rating: Double,
+    val review_count: Int
+) {
+
+}
 
 
 data class RestaurantInfo(
