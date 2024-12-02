@@ -36,7 +36,7 @@
             android:layout_weight="1"
             android:iconifiedByDefault="false"
             app:queryHint="음식점을 검색해 보세요."
-            app:queryHintColor="000000"/>
+            app:queryHintColor="#FF0000"/>
 
         <!-- 검색 버튼 -->
         <ImageView
@@ -62,14 +62,15 @@
         app:layout_constraintTop_toBottomOf="@id/top_bar">
 
         <Button
-            android:id="@+id/btn1"
+            android:id="@+id/doorTypeButton1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/button_background"
-            android:text="정문" />
+            android:text="정문"
+            />
 
         <Button
-            android:id="@+id/btn2"
+            android:id="@+id/doorTypeButton2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -77,7 +78,7 @@
             android:text="쪽문" />
 
         <Button
-            android:id="@+id/btn3"
+            android:id="@+id/doorTypeButton3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -85,7 +86,7 @@
             android:text="후문" />
 
         <Button
-            android:id="@+id/btn4"
+            android:id="@+id/doorTypeButton4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
