@@ -1,20 +1,54 @@
 <!-- activity_main.xml -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <EditText
-        android:id="@+id/searchBar"
+
+    <LinearLayout
+        android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="음식점을 검색해 보세요."
-        android:inputType="text" />
+        android:background="@color/white"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        >
+
+        <!-- 지도 아이콘 -->
+        <ImageView
+            android:id="@+id/iv_map"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/map_icon_image" />
+
+        <!-- 검색 창 -->
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/sv_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:searchIcon="null"
+            app:queryHint="음식점을 검색해 보세요."
+            style="@style/CustomSearchView"
+            />
+
+        <!-- 검색 버튼 -->
+        <ImageView
+            android:id="@+id/iv_search"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/search_icon" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/buttonGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/searchBar"
+        android:layout_below="@id/search_bar"
         android:orientation="horizontal"
         android:padding="8dp"
         >
@@ -71,7 +105,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/buttonGroup"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="14dp" />
 
     <Button
         android:id="@+id/categoryBtn"
@@ -83,6 +117,19 @@
         android:layout_marginBottom="20dp"
         android:background="@drawable/button_background"
         />
+
+    <Button
+        android:id="@+id/userProfileBtn"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/account_circle"
+        />
+
+
 
 </RelativeLayout>
 

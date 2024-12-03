@@ -35,8 +35,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:iconifiedByDefault="false"
+            app:searchIcon="null"
             app:queryHint="음식점을 검색해 보세요."
-            app:queryHintColor="#FF0000"/>
+            />
 
         <!-- 검색 버튼 -->
         <ImageView
