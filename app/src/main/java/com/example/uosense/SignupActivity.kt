@@ -16,12 +16,12 @@ class SignupActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // 뒤로가기 버튼
-        binding.backButton.setOnClickListener {
+        binding.backBtn.setOnClickListener {
             finish()
         }
 
         // 회원가입 완료 버튼 클릭 이벤트
-        binding.registerButton.setOnClickListener {
+        binding.registerBtn.setOnClickListener {
             val email = binding.emailInput.text.toString()
             val password = binding.passwordInput.text.toString()
             val confirmPassword = binding.passwordConfirmInput.text.toString()
@@ -44,7 +44,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
 //        인증 번호 발송 및 인증 번호 재전송 버튼 처리
-        binding.sendVerificationCodeButton.setOnClickListener {
+        binding.sendVerificationCodeBtn.setOnClickListener {
             val email = binding.emailInput.text.toString()
             if (email.isNotEmpty() && email.contains("@uos.ac.kr")) {
                 // 이메일로 인증 번호 발송 로직 추가
@@ -54,7 +54,7 @@ class SignupActivity : AppCompatActivity() {
             }
         }
 
-        binding.resendVerificationCodeButton.setOnClickListener {
+        binding.resendVerificationCodeBtn.setOnClickListener {
             val email = binding.emailInput.text.toString()
             if (email.isNotEmpty() && email.contains("@uos.ac.kr")) {
                 // 이메일로 인증 번호 재전송 로직 추가

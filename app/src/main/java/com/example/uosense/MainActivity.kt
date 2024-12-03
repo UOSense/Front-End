@@ -39,27 +39,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 검색창 이벤트
-        binding.searchBar.setOnEditorActionListener { _, _, _ ->
-            val query = binding.searchBar.text.toString()
-            if(query.isNotBlank()) {
-                searchRestaurants(query)
-            }else{
-                Toast.makeText(this, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
-            }
-            true
-        }
+//        binding.searchBar.setOnEditorActionListener { _, _, _ ->
+//            val query = binding.searchBar.text.toString()
+//            if(query.isNotBlank()) {
+//                searchRestaurants(query)
+//            }else{
+//                Toast.makeText(this, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+//            }
+//            true
+//        }
 
         setupFilterButtons()
 
         // MyPage 이동 버튼 클릭 이벤트
-//        binding.myPageButton.setOnClickListener {
+//        binding.myPageBtn.setOnClickListener {
 //            startActivity(Intent(this, MyPageActivity::class.java))
 //        }
     }
 
     private fun initializeMap() {
         //초기 지도 중심 설정
-        val initialPosition = LatLng(37.5666102, 126.9783881)
+        val initialPosition = LatLng(37.5834643, 127.0536246)
         moveCameraToLocation(initialPosition.latitude, initialPosition.longitude)
     }
 

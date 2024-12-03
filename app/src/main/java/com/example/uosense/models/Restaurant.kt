@@ -18,6 +18,7 @@ data class BusinessDay(
 
 
 data class Restaurant(
+    val imageResourceId: Int,
     val id: Int, // 식당 고유 ID
     val name: String, // 식당 이름
     val door_type: String, // 출입구 유형 (enum 값: '정문', '쪽문', '후문')

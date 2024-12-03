@@ -61,7 +61,8 @@ class RestaurantViewModel : ViewModel() {
             description = "맛있는 한식 전문점 $restaurantId",
             review_count = 10,
             bookmark_count = 5,
-            businessDays = createMockBusinessDays(restaurantId)
+            businessDays = createMockBusinessDays(restaurantId),
+            imageResourceId = 328
         )
     }
 
@@ -94,13 +95,15 @@ class RestaurantViewModel : ViewModel() {
     fun fetchMockRestaurants() {
         val mockRestaurant = createMockRestaurant(1)
         val restaurantListResponse = RestaurantListResponse(
+            imageResourceId = mockRestaurant.imageResourceId,
             id = mockRestaurant.id,
             name = mockRestaurant.name,
             address = mockRestaurant.address,
             category = mockRestaurant.category,
             door_type = mockRestaurant.door_type,
             phone_number = mockRestaurant.phone_number,
-            rating = mockRestaurant.rating
+            rating = mockRestaurant.rating,
+            review_count = mockRestaurant.review_count
         )
         restaurantList.postValue(listOf(restaurantListResponse))
     }

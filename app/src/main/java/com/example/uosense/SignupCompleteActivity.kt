@@ -15,7 +15,7 @@ class SignupCompleteActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // 탐방 시작 버튼 클릭 이벤트
-        binding.goToMainButton.setOnClickListener {
+        binding.goToMainBtn.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
