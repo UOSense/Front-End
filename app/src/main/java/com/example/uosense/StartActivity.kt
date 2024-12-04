@@ -18,13 +18,18 @@ class StartActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // 로그인 버튼 클릭 이벤트
-        binding.loginButton.setOnClickListener {
+        binding.loginBtn.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+
+//            로그인 로직
             val email = binding.emailInput.text.toString()
             val password = binding.passwordInput.text.toString()
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
                 // 로그인 로직 추가
                 Toast.makeText(this, "로그인 시도: $email", Toast.LENGTH_SHORT).show()
+                startActivity(intent)
+                finish()
             } else {
                 Toast.makeText(this, "이메일과 비밀번호를 입력하세요.", Toast.LENGTH_SHORT).show()
             }
@@ -32,7 +37,8 @@ class StartActivity : AppCompatActivity() {
 
         // 회원가입 클릭 이벤트
         binding.signup.setOnClickListener {
-            startActivity(Intent(this, SignupActivity::class.java))
+            val intent = Intent(this, SignupActivity::class.java)
+            startActivity(intent)
         }
 
         // 비밀번호 찾기 클릭 이벤트

@@ -72,12 +72,11 @@
 
         <Button
             android:id="@+id/goToMainBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="탐방 시작"
-            android:background="@drawable/rounded_button"
-            android:textColor="#FFFFFF" />
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/ic_login"
+            />
     </LinearLayout>
 
     <!-- 빈 공간 -->
