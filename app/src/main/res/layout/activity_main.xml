@@ -21,7 +21,7 @@
             android:layout_height="30dp"
             android:layout_gravity="center"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/map_icon_image" />
+            android:src="@drawable/ic_map_image" />
 
         <!-- 검색 창 -->
         <androidx.appcompat.widget.SearchView
@@ -40,7 +40,7 @@
             android:layout_height="30dp"
             android:layout_gravity="center"
             android:layout_marginStart="8dp"
-            android:src="@drawable/search_icon" />
+            android:src="@drawable/ic_search" />
     </LinearLayout>
 
     <LinearLayout
@@ -125,7 +125,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginBottom="20dp"
         android:layout_marginEnd="20dp"
-        android:background="@drawable/account_circle"
+        android:background="@drawable/ic_account_circle"
         />
 
 
