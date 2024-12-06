@@ -20,7 +20,7 @@ class RestaurantDetailActivity : AppCompatActivity() {
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        toolbar.setNavigationOnClickListener { onBackPressed() }
+        toolbar.setNavigationOnClickListener { }
 
         val restaurantId = intent.getIntExtra("restaurantId", -1)
 

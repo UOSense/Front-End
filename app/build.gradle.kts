@@ -84,4 +84,8 @@ dependencies {
     //AWS S3과 연결
     implementation("com.amazonaws:aws-java-sdk-s3:1.12.576")
 
+
+    implementation ("com.google.android.material:material:1.9.0")
+    implementation ("androidx.viewpager2:viewpager2:1.1.0")
+
 }

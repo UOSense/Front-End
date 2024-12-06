@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/white">
+
+    <!-- 이미지 업로드 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp"
+        android:background="@drawable/rounded_input_background">
+
+
+        <Button
+            android:id="@+id/uploadImageBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/rounded_border_green"
+            android:text="이미지 업로드"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="전화번호를 확인할 수 있는 사진을 첨부해주세요."
+            android:textColor="@color/gray" />
+    </LinearLayout>
+
+    <!-- 전화번호 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="전화번호"
+            android:textStyle="bold"
+            android:textSize="20dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="전화번호 입력"
+                android:background="@drawable/rounded_input_background"
+                android:padding="8dp"
+                android:textColorHint="@color/gray"
+                android:textColor="@color/black" />
+
+            <Button
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/ic_delete"
+                android:contentDescription="삭제 버튼" />
+        </LinearLayout>
+
+        <Button
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="추가 버튼"
+            android:background="@drawable/ic_add_circle"
+            android:layout_marginTop="8dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="홈페이지"
+            android:textStyle="bold"
+            android:textSize="20dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="대표 홈페이지를 입력해 주세요."
+                android:background="@drawable/rounded_input_background"
+                android:padding="8dp"
+                android:textColorHint="@color/gray"
+                android:textColor="@color/black" />
+
+            <Button
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/ic_delete"
+                android:contentDescription="삭제 버튼" />
+        </LinearLayout>
+
+        <Button
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="추가 버튼"
+            android:background="@drawable/ic_add_circle"
+            android:layout_marginTop="8dp"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="입력하신 정보는 장소 정보로 등록되어 업체정보로 활용됩니다.\n개인정보보호를 위해 휴대전화번호 등의 개인정보는 정책상 반려될 수 있습니다."
+        android:textColor="@color/gray"
+        android:textSize="12sp" />
+
+</LinearLayout>
