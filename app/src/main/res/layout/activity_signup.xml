@@ -83,6 +83,17 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
+<!--        오류 메세지 출력 TextView-->
+        <TextView
+            android:id="@+id/emailErrorMessage"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
         <!-- 인증 번호 발송 및 재전송 -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -98,14 +109,39 @@
                 android:text="인증 번호 발송"
                 android:textSize="13sp" />
 
-            <Button
-                android:id="@+id/resendVerificationCodeBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="인증 번호 재전송"
-                android:textSize="13sp" />
+
         </LinearLayout>
 
+        <!-- 인증 번호 입력 -->
+        <LinearLayout
+            android:id="@+id/verificationLayout"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:layout_marginTop="8dp">
+
+            <EditText
+                android:id="@+id/verificationCodeInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="인증 번호 입력"
+                android:textColorHint="#999999"
+                android:textColor="#000000"
+                android:background="@drawable/rounded_input_background"
+                android:padding="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/submitVerificationCodeBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="제출"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <!-- 비밀번호 입력 -->
         <TextView
@@ -150,6 +186,18 @@
             android:paddingEnd="10dp"
             android:inputType="textPassword" />
 
+
+    <!--        오류 메세지 출력 TextView-->
+        <TextView
+            android:id="@+id/passwordErrorMessage"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
         <!-- 닉네임 입력 -->
         <TextView
             android:layout_width="match_parent"
@@ -190,6 +238,17 @@
                 android:text="중복 확인"
                 android:textSize="13sp" />
         </LinearLayout>
+
+        <!--        오류 메세지 출력 TextView-->
+        <TextView
+            android:id="@+id/nickNameErrorMessage"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"
