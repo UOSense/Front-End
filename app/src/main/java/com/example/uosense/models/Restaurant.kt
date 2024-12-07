@@ -1,8 +1,41 @@
 package com.example.uosense.models
 
-import android.os.Parcelable
 import android.os.Parcel
+import android.os.Parcelable
 
+
+data class MenuRequest(
+    val id: Int,
+    val restaurantId: Int,
+    val name: String,
+    val price: Int,
+    val description: String,
+    val image: String
+)
+
+data class MenuResponse(
+    val menuId: Int,
+    val restaurantId: Int,
+    val name: String,
+    val price: Int,
+    val description: String,
+    val imageUrl: String
+)
+
+
+
+data class RestaurantRequest(
+    val id: Int?,
+    val name: String,
+    val doorType: String?,
+    val latitude: Double,
+    val longitude: Double,
+    val address: String,
+    val phoneNumber: String?,
+    val category: String,
+    val subDescription: String?,
+    val description: String
+)
 
 data class BusinessDay(
     val id: Int, // 고유 ID
@@ -16,55 +49,135 @@ data class BusinessDay(
     val is_holiday: Boolean // 휴일 여부
 )
 
+data class BusinessDayList(
+    val restaurantId: Int,
+    val businessDayInfoList: List<BusinessDayInfo>
+)
 
-data class Restaurant(
-    val imageResourceId: Int,
-    val id: Int, // 식당 고유 ID
-    val name: String, // 식당 이름
-    val door_type: String, // 출입구 유형 (enum 값: '정문', '쪽문', '후문')
-    val longitude: Double, // 경도
-    val latitude: Double, // 위도
-    val address: String, // 주소
-    val phone_number: String?, // 전화번호 (nullable)
-    val rating: Double, // 평점
-    val category: String, // 카테고리 (enum 값: '한식', '중식', '일식', '양식', '기타')
-    val sub_description: String, // 부가 설명 (enum 값: '술집', '음식점', '카페')
-    val description: String?, // 상세 설명 (nullable)
-    val review_count: Int, // 리뷰 수
-    val bookmark_count: Int, // 즐겨찾기 수
-    val businessDays: List<BusinessDay> // 1:N 관계로 연결된 BusinessDay 리스트
+data class BusinessDayInfo(
+    val id: Int?,
+    val dayOfWeek: String,
+    val haveBreakTime: Boolean,
+    val startBreakTime: LocalTime?,
+    val stopBreakTime: LocalTime?,
+    val openingTime: LocalTime,
+    val closingTime: LocalTime,
+    val holiday: Boolean
+)
+
+data class LocalTime(
+    val hour: Int,
+    val minute: Int,
+    val second: Int?,
+    val nano: Int?
+)
+
+data class WebmailRequest(
+    val email: String,
+    val purpose: String
+)
+
+
+data class AuthCodeRequest(
+    val email: String,
+    val code: String
+)
+
+
+data class RestaurantImagesResponse(
+    val restaurantId: Int,
+    val imageList: List<ImageInfo>
+)
+
+data class ImageInfo(
+    val url: String,
+    val description: String?
+)
+
+
+data class NewMenuRequest(
+    val restaurantId: Int,
+    val name: String,
+    val price: Int,
+    val description: String,
+    val image: String
 )
 
 data class RestaurantListResponse(
-    val imageResourceId: Int,
     val id: Int,
     val name: String,
+    val longitude: Double,
+    val latitude: Double,
     val address: String,
-    val category: String,
-    val door_type: String?, // 추가
-    val phone_number: String?, // 추가
     val rating: Double,
-    val review_count: Int
-) {
+    val category: String,
+    val reviewCount: Int,
+    val bookmarkCount: Int,
+    val restaurantImage: String?,
+    val doorType: String?, // 새로 추가된 속성
+    val phoneNumber: String? // 새로 추가된 속성
+): Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readInt(),
+        parcel.readString() ?: "",
+        parcel.readDouble(),
+        parcel.readDouble(),
+        parcel.readString() ?: "",
+        parcel.readDouble(),
+        parcel.readString() ?: "",
+        parcel.readInt(),
+        parcel.readInt(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString()
+    )
 
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(id)
+        parcel.writeString(name)
+        parcel.writeDouble(longitude)
+        parcel.writeDouble(latitude)
+        parcel.writeString(address)
+        parcel.writeDouble(rating)
+        parcel.writeString(category)
+        parcel.writeInt(reviewCount)
+        parcel.writeInt(bookmarkCount)
+        parcel.writeString(restaurantImage)
+        parcel.writeString(doorType)
+        parcel.writeString(phoneNumber)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<RestaurantListResponse> {
+        override fun createFromParcel(parcel: Parcel): RestaurantListResponse {
+            return RestaurantListResponse(parcel)
+        }
+
+        override fun newArray(size: Int): Array<RestaurantListResponse?> {
+            return arrayOfNulls(size)
+        }
+    }
 }
-
 
 data class RestaurantInfo(
     val id: Int,
     val name: String,
+    val doorType: String?,
+    val latitude: Double,
+    val longitude: Double,
     val address: String,
+    val phoneNumber: String?,
+    val rating: Double?,
+    val category: String?,
+    val subDescription: String?,
     val description: String?,
-    val category: String, // 반드시 String 타입이어야 함
-    val menu: List<MenuResponse>,
-    val businessDays: List<BusinessDay>
+    val reviewCount: Int?,
+    val bookmarkCount: Int?,
+    val businessDays: List<BusinessDay>?
 )
 
 
-data class RestaurantRequest(
-    val id: Int,
-    val name: String,
-    val address: String,
-    val description: String
-)
+
+
 
