@@ -179,8 +179,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun addMarkersToMap(restaurantList: List<RestaurantListResponse>) {
         restaurantList.forEach { restaurant ->
-            /*
-            ** 서버 연동시
             if (restaurant.latitude == 0.0 && restaurant.longitude == 0.0) {
                 getLatLngFromAddress(restaurant.address) { lat, lng ->
                     if (lat != null && lng != null) {
@@ -198,7 +196,7 @@ class MainActivity : AppCompatActivity() {
                             description = "" // 기본값 설정
                         )
                         // API 호출
-                        updateRestaurantCoordinates(restaurant.id, updatedRequest)
+                        // updateRestaurantCoordinates(restaurant.id, updatedRequest)
 
                         // 마커 추가
                         val marker = Marker().apply {
@@ -234,7 +232,8 @@ class MainActivity : AppCompatActivity() {
 
         moveCameraToFitAllMarkers()
 
-         */
+         /*
+         ** MOCK 데이터 사용 시
             val marker = Marker().apply {
                 position = LatLng(restaurant.latitude, restaurant.longitude)
                 map = naverMap
@@ -256,7 +255,8 @@ class MainActivity : AppCompatActivity() {
 
             restaurantMarkers.add(marker)
         }
-
+        }
+          */
         moveCameraToFitAllMarkers()
     }
 
@@ -291,7 +291,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    /*
+    **하지마 시발
+     */
     private fun updateRestaurantCoordinates(restaurantId: Int, updatedRequest: RestaurantRequest) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
