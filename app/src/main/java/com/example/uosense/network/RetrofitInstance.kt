@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
-    private var BASE_URL = "http://10.0.2.2:8080"
+    private var BASE_URL = "http://3.36.51.32:8080"
     /*
     유동적으로 서버가 계속 바뀌므로
     서버 사용 시
