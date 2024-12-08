@@ -205,6 +205,7 @@ data class RestaurantListResponse(
     }
 }
 
+
 // 식당 정보 모델
 data class RestaurantInfo(
     val id: Int,
@@ -220,11 +221,12 @@ data class RestaurantInfo(
     val description: String?,
     val reviewCount: Int?,
     val bookmarkCount: Int?,
-    val businessDays: List<BusinessDay>? = null // 추가됨
+    val bookmarkId: Int?, // 즐겨찾기 ID 추가
+    val businessDays: List<BusinessDay>? = null
 ) : Parcelable {
 
-    // Parcel에서 데이터를 읽어들이는 생성자
-    constructor(parcel: Parcel) : this(
+    // Parcel 생성자
+    private constructor(parcel: Parcel) : this(
         id = parcel.readInt(),
         name = parcel.readString() ?: "",
         doorType = parcel.readString(),
@@ -238,10 +240,11 @@ data class RestaurantInfo(
         description = parcel.readString(),
         reviewCount = parcel.readValue(Int::class.java.classLoader) as? Int,
         bookmarkCount = parcel.readValue(Int::class.java.classLoader) as? Int,
+        bookmarkId = parcel.readValue(Int::class.java.classLoader) as? Int,
         businessDays = parcel.createTypedArrayList(BusinessDay.CREATOR)
     )
 
-    // 데이터를 Parcel에 쓰는 메서드
+    // Parcel 데이터 쓰기
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(id)
         parcel.writeString(name)
@@ -256,19 +259,15 @@ data class RestaurantInfo(
         parcel.writeString(description)
         parcel.writeValue(reviewCount)
         parcel.writeValue(bookmarkCount)
+        parcel.writeValue(bookmarkId)
         parcel.writeTypedList(businessDays)
     }
 
     override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<RestaurantInfo> {
-        override fun createFromParcel(parcel: Parcel): RestaurantInfo {
-            return RestaurantInfo(parcel)
-        }
-
-        override fun newArray(size: Int): Array<RestaurantInfo?> {
-            return arrayOfNulls(size)
-        }
+        override fun createFromParcel(parcel: Parcel): RestaurantInfo = RestaurantInfo(parcel)
+        override fun newArray(size: Int): Array<RestaurantInfo?> = arrayOfNulls(size)
     }
 }
 
