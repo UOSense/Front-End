@@ -211,4 +211,8 @@ interface RestaurantApi {
     // 로그아웃 처리
     @PUT("/api/v1/user/signout")
     suspend fun signOut(): Response<Unit>
+
+    // 회원가입
+    @POST("/api/v1/user/signup")
+    suspend fun signUp(): Response<Unit>
 }

@@ -25,6 +25,7 @@ class StartActivity : AppCompatActivity() {
 //            로그인 로직
             val email = binding.emailInput.text.toString()
             val password = binding.passwordInput.text.toString()
+            //
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
                 val dbHelper = SQLiteHelper(this)
