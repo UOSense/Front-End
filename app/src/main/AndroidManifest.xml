@@ -5,6 +5,18 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Android 13(API 33) 이상 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" android:required="false"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" android:required="false"/>
+
+    <!-- Android 12 이하 호환 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+
+    <!-- 공통 권한 -->
+    <uses-permission android:name="android.permission.CAMERA" android:required="false"/>
+
+    <!-- 카메라 하드웨어 사용 여부 설정 -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -25,7 +37,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <activity android:name=".SignupActivity"
@@ -52,9 +63,13 @@
             android:exported="false">
         </activity>
 
-        <activity android:name=".RestaurantInfoSuggestionActivity"
+        <activity android:name=".ReviewWriteActivity"
             android:exported="false">
 
+        </activity>
+
+        <activity android:name=".RestaurantInfoSuggestionActivity"
+            android:exported="false">
         </activity>
 
         <activity

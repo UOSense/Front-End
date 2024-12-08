@@ -171,6 +171,24 @@ interface RestaurantApi {
         @Body reviewRequest: ReviewRequest
     ): Response<Int>
 
+//    이미지 등록
+    @Multipart
+    @POST("/api/v1/review/create/images")
+    suspend fun uploadReviewImages(
+        @Query("reviewId") reviewId: Int, // 리뷰 ID
+        @Part images: List<MultipartBody.Part> // 업로드할 이미지 파일 배열
+    ): Response<Unit>
+
+    @GET("/api/v1/webmail/check-format")
+    suspend fun checkEmail(
+        @Query("mailAddress") email: String
+    ): Response<Boolean>
+
+    @POST("/api/v1/user/check-nickname")
+    suspend fun checkNickname(
+        @Query("nickname") nickname: String
+    ): Response<Boolean>
+
     // 리뷰 삭제
     @DELETE("/api/v1/review/delete")
     suspend fun deleteReview(
