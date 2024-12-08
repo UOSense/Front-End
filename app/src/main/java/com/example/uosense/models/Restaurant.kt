@@ -185,6 +185,8 @@ data class RestaurantInfo(
     val bookmarkCount: Int?
 ) : Parcelable {
 
+    val businessDays: MutableList<BusinessDay>? = null
+
     // Parcel에서 데이터를 읽어들이는 생성자
     constructor(parcel: Parcel) : this(
         id = parcel.readInt(),
