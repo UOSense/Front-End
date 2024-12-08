@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.uosense"
-        minSdk = 35 // 최소 SDK 버전은 일반적으로 21 이상으로 설정
+        minSdk = 26 // 최소 SDK 버전은 일반적으로 21 이상으로 설정
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
+
+
     // Retrofit & OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0") // JSON 변환
@@ -84,6 +86,10 @@ dependencies {
 
     //AWS S3과 연결
     implementation("com.amazonaws:aws-java-sdk-s3:1.12.576")
+    
+    //Glide 사용
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
 
 
     implementation ("com.google.android.material:material:1.9.0")

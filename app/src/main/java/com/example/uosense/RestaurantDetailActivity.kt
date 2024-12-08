@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.adapters.BusinessDayAdapter
+import com.example.uosense.models.BusinessDay
+import com.example.uosense.models.RestaurantInfo
 import com.example.uosense.viewmodel.RestaurantViewModel
 
 class RestaurantDetailActivity : AppCompatActivity() {
@@ -38,17 +40,27 @@ class RestaurantDetailActivity : AppCompatActivity() {
 
         // ViewModel에서 데이터 관찰
         viewModel.restaurantInfo.observe(this) { restaurantInfo ->
-            nameTextView.text = restaurantInfo.name
-            addressTextView.text = restaurantInfo.address
-            categoryTextView.text = restaurantInfo.category
-            descriptionTextView.text = restaurantInfo.description ?: "정보 없음"
-            ratingTextView.text = "평점: ${restaurantInfo.rating}"
-            phoneNumberTextView.text = "전화번호: ${restaurantInfo.phone_number ?: "정보 없음"}"
-            businessDayAdapter.submitList(restaurantInfo.businessDays)
+            if (restaurantInfo != null) {
+                nameTextView.text = restaurantInfo.name
+                addressTextView.text = restaurantInfo.address
+                categoryTextView.text = restaurantInfo.category ?: "카테고리 정보 없음"
+                descriptionTextView.text = restaurantInfo.description ?: "설명 없음"
+                ratingTextView.text = "평점: ${restaurantInfo.rating ?: "정보 없음"}"
+                phoneNumberTextView.text =
+                    "전화번호: ${restaurantInfo.phoneNumber ?: "전화번호 정보 없음"}"
+                businessDayAdapter.submitList(restaurantInfo.businessDays ?: emptyList())
+            }
         }
 
-        // Fetch restaurant details
-        viewModel.fetchRestaurantById(restaurantId)
+        // 서버 연동을 위한 코드 (주석 처리)
+        if (restaurantId != -1) {
+            viewModel.fetchRestaurantById(restaurantId)
+        } else {
+             finish() // 유효하지 않은 ID일 경우 액티비티 종료
+        }
+
     }
+
+
 }
 

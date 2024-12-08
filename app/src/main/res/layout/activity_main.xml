@@ -1,17 +1,18 @@
-<!-- activity_main.xml -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:descendantFocusability="afterDescendants">
 
-
+    <!-- 검색바 -->
     <LinearLayout
         android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="8dp"
+        android:layout_marginTop="16dp"
         >
 
         <!-- 지도 아이콘 -->
@@ -29,8 +30,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            app:searchIcon="@null"
             app:queryHint="음식점을 검색해 보세요."
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:enabled="true"
             />
 
         <!-- 검색 버튼 -->
@@ -43,14 +47,14 @@
             android:src="@drawable/ic_search" />
     </LinearLayout>
 
+    <!-- 버튼 그룹 -->
     <LinearLayout
         android:id="@+id/buttonGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/search_bar"
         android:orientation="horizontal"
-        android:padding="8dp"
-        >
+        android:padding="8dp">
 
         <Button
             android:id="@+id/doorTypeButton1"
@@ -72,7 +76,6 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"/>
 
-
         <Button
             android:id="@+id/doorTypeButton3"
             android:layout_width="0dp"
@@ -83,7 +86,6 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"/>
 
-
         <Button
             android:id="@+id/doorTypeButton4"
             android:layout_width="0dp"
@@ -93,12 +95,9 @@
             android:text="남문"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"/>
-
-
-
     </LinearLayout>
 
-
+    <!-- 지도 -->
     <FrameLayout
         android:id="@+id/map"
         android:layout_width="match_parent"
@@ -106,6 +105,7 @@
         android:layout_below="@id/buttonGroup"
         android:layout_marginTop="14dp" />
 
+    <!-- 목록 보기 버튼 -->
     <Button
         android:id="@+id/categoryBtn"
         android:layout_width="wrap_content"
@@ -117,6 +117,7 @@
         android:background="@drawable/button_background"
         />
 
+    <!-- 사용자 프로필 버튼 -->
     <Button
         android:id="@+id/userProfileBtn"
         android:layout_width="50dp"
@@ -127,8 +128,4 @@
         android:layout_marginEnd="20dp"
         android:background="@drawable/ic_account_circle"
         />
-
-
-
 </RelativeLayout>
-
