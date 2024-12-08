@@ -141,6 +141,17 @@
                 android:layout_height="wrap_content"
                 android:text="제출"
                 android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/timerTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="03:00"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="5dp"/>
+
         </LinearLayout>
 
         <!-- 비밀번호 입력 -->

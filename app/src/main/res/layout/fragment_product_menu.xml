@@ -7,34 +7,39 @@
     android:padding="16dp"
     android:background="@color/white">
 
-    <!-- 이미지 업로드 버튼 -->
-    <LinearLayout
+
+    <GridLayout
+        android:id="@+id/imageContainer"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:orientation="vertical"
+        android:layout_height="300dp"
+        android:rowCount="2"
+        android:columnCount="2"
+        android:orientation="horizontal"
         android:gravity="center"
         android:layout_marginBottom="16dp"
-        android:padding="16dp"
+        android:padding="8dp"
         android:background="@drawable/rounded_input_background">
 
-
-        <Button
-            android:id="@+id/uploadImageBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/rounded_border_green"
-            android:text="이미지 업로드"
-            android:textColor="@color/black" />
-
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/imageHint"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_rowSpan="2"
+            android:layout_columnSpan="2"
+            android:layout_gravity="center"
             android:gravity="center"
             android:text="메뉴 및 가격을 확인할 수 있는 사진을 첨부해주세요."
             android:textColor="@color/gray" />
-    </LinearLayout>
+    </GridLayout>
+
+    <Button
+        android:id="@+id/uploadImageBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_gravity="center"
+        android:background="@drawable/rounded_border_green"
+        android:text="이미지 업로드"
+        android:textColor="@color/black" />
 
     <!-- 가격 정보 입력 -->
     <TextView
@@ -47,42 +52,14 @@
         android:layout_marginBottom="8dp" />
 
     <LinearLayout
+        android:id="@+id/priceContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-
-        <EditText
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.7"
-            android:hint="메뉴, 상품명"
-            android:background="@drawable/rounded_input_background"
-            android:padding="8dp"
-            android:textColorHint="@color/gray"
-            android:textColor="@color/black" />
-
-        <EditText
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="금액"
-            android:inputType="number"
-            android:background="@drawable/rounded_input_background"
-            android:padding="8dp"
-            android:layout_marginStart="8dp"
-            android:textColorHint="@color/gray"
-            android:textColor="@color/black" />
-
-        <Button
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/ic_delete"
-            android:contentDescription="삭제 버튼" />
-    </LinearLayout>
+        android:orientation="vertical"
+        android:layout_marginBottom="8dp"/>
 
     <Button
+        android:id="@+id/addCircleBtn"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="center_horizontal"
