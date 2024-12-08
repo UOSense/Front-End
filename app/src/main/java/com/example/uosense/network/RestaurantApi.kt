@@ -5,6 +5,14 @@ import retrofit2.http.*
 
 interface RestaurantApi {
 
+    // 회원가입 API 추가
+    @POST("/api/v1/user/signup")
+    suspend fun signupUser(
+        @Body newUserRequest: NewUserRequest
+    ): Response<Boolean>
+
+//    웹메일 및 닉네임 검증
+
     // 특정 식당 메뉴 수정
     @PUT("/api/v1/restaurant/update/menu")
     suspend fun updateMenu(
@@ -148,14 +156,14 @@ interface RestaurantApi {
         @Query("bookMarkId") bookMarkId: Int
     ): Response<Unit>
 
-    // 즐겨찾기 조회 (사용자 기준)
-    @GET("/api/v1/bookmark/get/mine")
-    suspend fun getMyBookmarks(): List<BookMarkResponse>
-
-    @GET("/api/v1/bookmark/get/user")
-    suspend fun getUserBookmarks(
-        @Query("userId") userId: Int
-    ): List<BookMarkResponse>
+//    // 즐겨찾기 조회 (사용자 기준)
+//    @GET("/api/v1/bookmark/get/mine")
+//    suspend fun getMyBookmarks(): List<BookMarkResponse>
+//
+//    @GET("/api/v1/bookmark/get/user")
+//    suspend fun getUserBookmarks(
+//        @Query("userId") userId: Int
+//    ): List<BookMarkResponse>
 
     // 리뷰 등록
     @POST("/api/v1/review/create")

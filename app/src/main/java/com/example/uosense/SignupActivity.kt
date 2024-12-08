@@ -9,6 +9,14 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.example.uosense.databinding.ActivitySignupBinding
 import com.example.uosense.helpers.SQLiteHelper
+import android.util.Log
+import com.example.uosense.models.NewUserRequest
+import com.example.uosense.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 
 class SignupActivity : AppCompatActivity() {
 
@@ -164,20 +172,39 @@ class SignupActivity : AppCompatActivity() {
 
     // 회원가입 처리
     private fun registerUser(email: String, password: String, nickname: String) {
-        val dbHelper = SQLiteHelper(this)
+        val newUserRequest = NewUserRequest(email, password, nickname)
 
-        // 데이터 저장
-        if (dbHelper.insertUser(email, password, nickname)) {
-            // 로그 추가
-            android.util.Log.d("SQLiteDB", "User saved: email=$email, nickname=$nickname")
-            Toast.makeText(this, "회원가입 성공!", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, SignupCompleteActivity::class.java)
-            startActivity(intent)
-            finish()
-        } else {
-            Toast.makeText(this, "회원가입 실패! 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+        // 비동기 작업 실행
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // API 호출
+                val response = RetrofitInstance.restaurantApi.signupUser(newUserRequest)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val isSuccess = response.body() ?: false
+                        if (isSuccess) {
+                            Toast.makeText(this@SignupActivity, "회원가입 성공!", Toast.LENGTH_SHORT).show()
+                            val intent = Intent(this@SignupActivity, SignupCompleteActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        } else {
+                            Toast.makeText(this@SignupActivity, "회원가입 실패. 이미 존재하는 이메일 또는 닉네임입니다.", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        // 서버 오류 디버깅용 로그
+                        Log.e("SignupActivity", "서버 오류: ${response.code()}, 응답 메시지: ${response.errorBody()?.string()}")
+                        Toast.makeText(this@SignupActivity, "서버 오류: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@SignupActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
+
 
     private lateinit var countDownTimer: CountDownTimer
     private var isTimerRunning = false
