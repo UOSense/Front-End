@@ -69,7 +69,8 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0") // JSON 변환
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
-    implementation(libs.androidx.recyclerview) // 로깅
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.gridlayout) // 로깅
 
     // Test
     testImplementation(libs.junit)
@@ -89,5 +90,9 @@ dependencies {
     //Glide 사용
     implementation ("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
+
+
+    implementation ("com.google.android.material:material:1.9.0")
+    implementation ("androidx.viewpager2:viewpager2:1.1.0")
 
 }
