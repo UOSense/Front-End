@@ -11,7 +11,29 @@ interface RestaurantApi {
         @Body newUserRequest: NewUserRequest
     ): Response<Boolean>
 
-//    웹메일 및 닉네임 검증
+    // 웹메일 검증
+    @GET("/api/v1/webmail/check-format")
+    suspend fun checkEmail(
+       @Query("mailAddress") email: String
+    ): Response<Boolean>
+
+    // 닉네임 검증
+    @POST("/api/v1/user/check-nickname")
+    suspend fun checkNickname(
+        @Query("nickname") nickname: String
+    ): Response<Boolean>
+
+    // 웹메일 인증 코드 발송
+    @POST("/api/v1/webmail/verify")
+    suspend fun sendAuthCode(
+        @Body webmailRequest: WebmailRequest
+    ): Response<Boolean>
+
+    // 인증 코드 확인
+    @POST("/api/v1/webmail/authenticate-code")
+    suspend fun validateCode(
+        @Body authCodeRequest: AuthCodeRequest
+    ): Response<Boolean>
 
     // 특정 식당 메뉴 수정
     @PUT("/api/v1/restaurant/update/menu")
@@ -30,18 +52,6 @@ interface RestaurantApi {
     suspend fun editBusinessDay(
         @Body businessDayList: BusinessDayList
     ): Response<Unit>
-
-    // 웹메일 인증 코드 발송
-    @POST("/api/v1/webmail/verify")
-    suspend fun sendAuthCode(
-        @Body webmailRequest: WebmailRequest
-    ): Response<Boolean>
-
-    // 인증 코드 확인
-    @POST("/api/v1/webmail/authenticate-code")
-    suspend fun validateCode(
-        @Body authCodeRequest: AuthCodeRequest
-    ): Response<Boolean>
 
     // 특정 식당 사진 조회
     @GET("/api/v1/restaurant/get/images")
@@ -179,15 +189,7 @@ interface RestaurantApi {
         @Part images: List<MultipartBody.Part> // 업로드할 이미지 파일 배열
     ): Response<Unit>
 
-    @GET("/api/v1/webmail/check-format")
-    suspend fun checkEmail(
-        @Query("mailAddress") email: String
-    ): Response<Boolean>
 
-    @POST("/api/v1/user/check-nickname")
-    suspend fun checkNickname(
-        @Query("nickname") nickname: String
-    ): Response<Boolean>
 
     // 리뷰 삭제
     @DELETE("/api/v1/review/delete")

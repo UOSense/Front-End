@@ -8,9 +8,10 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.example.uosense.databinding.ActivitySignupBinding
-import com.example.uosense.helpers.SQLiteHelper
 import android.util.Log
+import com.example.uosense.models.AuthCodeRequest
 import com.example.uosense.models.NewUserRequest
+import com.example.uosense.models.WebmailRequest
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,12 @@ import kotlinx.coroutines.withContext
 class SignupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignupBinding
-    private var isEmailVerified = false // 이메일 중복 확인 인증 플래그
+
+    // 상태 플래그
+    private var isEmailVerified = false
+    private var isVerificationCodeValid = false
+    private var isNicknameVerified = false
+    private var isPasswordValid = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,92 +48,152 @@ class SignupActivity : AppCompatActivity() {
 
         // 웹메일 중복 확인
         binding.verifyEmailButton.setOnClickListener {
-            val email = binding.emailInput.text.toString()
-            if (email.isNotEmpty() && email.contains("@uos.ac.kr")) {
-                val dbHelper = SQLiteHelper(this)
+            val email = binding.emailInput.text.toString().trim()
 
-                if (dbHelper.isEmailExists(email)) {
-//                    이메일 중복 경우
-                    binding.emailErrorMessage.visibility=View.VISIBLE
-                    binding.emailErrorMessage.text="중복된 웹메일입니다."
-                    isEmailVerified = false
-                }else {
-                    binding.emailErrorMessage.visibility=View.GONE
-                    Toast.makeText(this, "사용 가능한 웹메일입니다.", Toast.LENGTH_SHORT).show()
-                    isEmailVerified = true
+            if (email.isNotEmpty() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val response = RetrofitInstance.restaurantApi.checkEmail(email)
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                val isEmailValid = response.body() ?: false
+                                if (isEmailValid) {
+                                    binding.emailErrorMessage.visibility = View.GONE
+                                    Toast.makeText(this@SignupActivity, "사용 가능한 이메일입니다.", Toast.LENGTH_SHORT).show()
+                                    isEmailVerified = true
+                                    updateRegisterButtonState()
+                                } else {
+                                    binding.emailErrorMessage.visibility = View.VISIBLE
+                                    binding.emailErrorMessage.text = "중복된 이메일입니다."
+                                    isEmailVerified = false
+                                }
+                            } else {
+                                handleEmailCheckError(response.code(), response.errorBody()?.string())
+                            }
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@SignupActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             } else {
-                // 유효하지 않은 이메일일 때 오류 메시지 표시
                 binding.emailErrorMessage.visibility = View.VISIBLE
-                binding.emailErrorMessage.text = "유효한 웹메일 주소를 입력하세요 (예: xxxx@uos.ac.kr)."
-                isEmailVerified = false
+                binding.emailErrorMessage.text = "유효한 이메일 주소를 입력하세요."
             }
         }
 
         // 인증 번호 발송 처리
         binding.sendVerificationCodeBtn.setOnClickListener {
-            if (!isEmailVerified) {
-                binding.emailErrorMessage.visibility = View.VISIBLE
-                binding.emailErrorMessage.text = "중복 확인을 먼저 진행해 주세요."
-                return@setOnClickListener
-            }
+            val email = binding.emailInput.text.toString().trim()
 
-            val email = binding.emailInput.text.toString()
-            if (email.isNotEmpty() && email.contains("@uos.ac.kr")) {
-                binding.verificationLayout.visibility = View.VISIBLE
-                Toast.makeText(this, "인증 번호를 발송했습니다.", Toast.LENGTH_SHORT).show()
+            if (email.isNotEmpty() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val request = WebmailRequest(email, "SIGNUP")
+                        val response = RetrofitInstance.restaurantApi.sendAuthCode(request)
 
-//                타이머 시작
-                startTimer()
-
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful && response.body() == true) {
+                                Toast.makeText(this@SignupActivity, "인증 코드가 발송되었습니다.", Toast.LENGTH_SHORT).show()
+                                binding.verificationLayout.visibility = View.VISIBLE
+                                startTimer()
+                            } else {
+                                handleSendCodeError(response.code(), response.errorBody()?.string())
+                            }
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@SignupActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             } else {
-                Toast.makeText(this, "유효한 이메일을 입력하세요.", Toast.LENGTH_SHORT).show()
+                binding.emailErrorMessage.visibility = View.VISIBLE
+                binding.emailErrorMessage.text = "유효한 이메일 주소를 입력하세요."
             }
         }
 
         // 인증 번호 제출 버튼 클릭 이벤트
         binding.submitVerificationCodeBtn.setOnClickListener {
-            val verificationCode = binding.verificationCodeInput.text.toString()
-            if (verificationCode.isNotEmpty()) {
-                if (::countDownTimer.isInitialized) {
-                    countDownTimer.cancel()
+            val email = binding.emailInput.text.toString().trim()
+            val code = binding.verificationCodeInput.text.toString().trim()
+
+            if (email.isNotEmpty() && code.isNotEmpty()) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val request = AuthCodeRequest(email, code)
+                        val response = RetrofitInstance.restaurantApi.validateCode(request)
+
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful && response.body() == true) {
+                                Toast.makeText(this@SignupActivity, "인증 번호가 확인되었습니다.", Toast.LENGTH_SHORT).show()
+                                binding.timerTextView.visibility = View.GONE
+                                if (::countDownTimer.isInitialized) countDownTimer.cancel()
+                                isVerificationCodeValid = true
+                                updateRegisterButtonState()
+                            } else {
+                                handleValidateCodeError(response.code(), response.errorBody()?.string())
+                            }
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@SignupActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
-                Toast.makeText(this, "인증 번호가 확인되었습니다.", Toast.LENGTH_SHORT).show()
-                binding.timerTextView.visibility=View.GONE
             } else {
-                Toast.makeText(this, "유효한 인증 번호를 입력하세요.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "인증 번호를 입력하세요.", Toast.LENGTH_SHORT).show()
             }
         }
 
         // 닉네임 중복 확인 버튼 클릭
         binding.checkNicknameBtn.setOnClickListener {
-            val nickname = binding.nicknameInput.text.toString()
+            val nickname = binding.nicknameInput.text.toString().trim()
             if (nickname.isNotEmpty()) {
-                val dbHelper = SQLiteHelper(this)
-
-                if (dbHelper.isNicknameExists(nickname)){
-//                    닉네임 중복 경우
-                    binding.nickNameErrorMessage.visibility = View.VISIBLE
-                    binding.nickNameErrorMessage.text = "닉네임이 중복되었습니다."
-                }else {
-                    binding.nickNameErrorMessage.visibility = View.GONE
-                    Toast.makeText(this, "사용 가능한 닉네임입니다.", Toast.LENGTH_SHORT).show()
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val response = RetrofitInstance.restaurantApi.checkNickname(nickname)
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                val isNicknameValid = response.body() ?: false
+                                if (isNicknameValid) {
+                                    binding.nickNameErrorMessage.visibility = View.GONE
+                                    Toast.makeText(this@SignupActivity, "사용 가능한 닉네임입니다.", Toast.LENGTH_SHORT).show()
+                                    isNicknameVerified = true
+                                    updateRegisterButtonState()
+                                } else {
+                                    binding.nickNameErrorMessage.visibility = View.VISIBLE
+                                    binding.nickNameErrorMessage.text = "닉네임이 중복되었습니다."
+                                }
+                            } else if (response.code() == 400) {
+                                binding.nickNameErrorMessage.visibility = View.VISIBLE
+                                binding.nickNameErrorMessage.text = "닉네임이 중복되었습니다."
+                            } else {
+                                Toast.makeText(this@SignupActivity, "서버 오류: ${response.code()}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@SignupActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             } else {
-                binding.nickNameErrorMessage.visibility=View.VISIBLE
-                binding.nickNameErrorMessage.text="닉네임을 입력하세요."
+                binding.nickNameErrorMessage.visibility = View.VISIBLE
+                binding.nickNameErrorMessage.text = "닉네임을 입력하세요."
             }
         }
 
         // 회원가입 완료 버튼 클릭 이벤트
         binding.registerBtn.setOnClickListener {
-            val email = binding.emailInput.text.toString()
-            val password = binding.passwordInput.text.toString()
-            val confirmPassword = binding.passwordConfirmInput.text.toString()
-            val nickname = binding.nicknameInput.text.toString()
+            val email = binding.emailInput.text.toString().trim()
+            val password = binding.passwordInput.text.toString().trim()
+            val confirmPassword = binding.passwordConfirmInput.text.toString().trim()
+            val nickname = binding.nicknameInput.text.toString().trim()
 
-            // 입력 검증
-            if (!validateInputs(email, password, confirmPassword, nickname)) {
+            // 비밀번호 유효성 검사
+            if (!validatePassword(password, confirmPassword)) {
                 return@setOnClickListener
             }
 
@@ -136,6 +202,41 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 
+    // 회원가입 버튼 활성화 업데이트
+    private fun updateRegisterButtonState() {
+        binding.registerBtn.isEnabled =
+            isEmailVerified && isVerificationCodeValid && isNicknameVerified
+    }
+
+    // 비밀번호 검증
+    private fun validatePassword(password: String, confirmPassword: String): Boolean {
+        val passwordPattern = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@\$!%*?&#])[A-Za-z\\d@\$!%*?&#]{8,20}$"
+
+        return if (password.isEmpty() || password.length < 8 || password.length > 20) {
+            binding.passwordErrorMessage.visibility = View.VISIBLE
+            binding.passwordErrorMessage.text = "비밀번호는 최소 8자 이상, 최대 20자 이하여야 합니다."
+            isPasswordValid = false
+            false
+        } else if (!password.matches(Regex(passwordPattern))) {
+            binding.passwordErrorMessage.visibility = View.VISIBLE
+            binding.passwordErrorMessage.text = "비밀번호는 대,소문자, 숫자, 특수 문자를 포함해야 합니다."
+            isPasswordValid = false
+            false
+        } else if (password != confirmPassword) {
+            binding.passwordErrorMessage.visibility = View.VISIBLE
+            binding.passwordErrorMessage.text = "비밀번호가 일치하지 않습니다."
+            isPasswordValid = false
+            false
+        } else {
+            binding.passwordErrorMessage.visibility = View.GONE
+            isPasswordValid = true
+            updateRegisterButtonState()
+            true
+        }
+    }
+
+
+
     override fun onDestroy() {
         super.onDestroy()
         if (::countDownTimer.isInitialized) {
@@ -143,32 +244,58 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 
-    // 사용자 입력 검증
-    private fun validateInputs(email: String, password: String, confirmPassword: String, nickname: String): Boolean {
-        val passwordPattern = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@\$!%*?&#])[A-Za-z\\d@\$!%*?&#]{8,20}$"
-
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+//    이메일 중복 버튼 에러 처리
+private fun handleEmailCheckError(code: Int, errorBody: String?) {
+    when (code) {
+        400 -> {
             binding.emailErrorMessage.visibility = View.VISIBLE
-            binding.emailErrorMessage.text = "유효한 이메일을 입력하세요."
-            return false
+            binding.emailErrorMessage.text = "중복된 이메일입니다. 다른 이메일을 사용하세요."
+            Log.e("SignupActivity", "400 Error: $errorBody")
         }
-        if (password.isEmpty() || password.length < 8 || password.length > 20) {
-            binding.passwordErrorMessage.visibility = View.VISIBLE
-            binding.passwordErrorMessage.text = "비밀번호는 최소 8자 이상, 최대 20자 이하여야 합니다."
-            return false
+        else -> {
+            Toast.makeText(this, "알 수 없는 오류가 발생했습니다. ($code)", Toast.LENGTH_SHORT).show()
+            Log.e("SignupActivity", "Error: $code, $errorBody")
         }
-        if (!password.matches(Regex(passwordPattern))){
-            binding.passwordErrorMessage.visibility = View.VISIBLE
-            binding.passwordErrorMessage.text = "비밀번호는 대,소문자, 숫자, 특수 문자를 포함해야 합니다."
-            return false
-        }
-        if (password != confirmPassword) {
-            binding.passwordErrorMessage.visibility = View.VISIBLE
-            binding.passwordErrorMessage.text = "비밀번호가 일치하지 않습니다."
-            return false
-        }
-        return true
     }
+}
+//    인증 번호 발송 에러 처라
+    private fun handleSendCodeError(code: Int, errorBody: String?) {
+        when (code) {
+            400 -> {
+                Toast.makeText(this, "잘못된 요청입니다. 이메일을 확인하세요.", Toast.LENGTH_SHORT).show()
+                Log.e("SignupActivity", "400 Error: $errorBody")
+            }
+            500 -> {
+                Toast.makeText(this, "서버 오류가 발생했습니다. 나중에 다시 시도하세요.", Toast.LENGTH_SHORT).show()
+                Log.e("SignupActivity", "500 Error: $errorBody")
+            }
+            else -> {
+                Toast.makeText(this, "알 수 없는 오류가 발생했습니다. ($code)", Toast.LENGTH_SHORT).show()
+                Log.e("SignupActivity", "Error: $code, $errorBody")
+            }
+        }
+    }
+
+//    인증 번호 제출 에러 처리
+    private fun handleValidateCodeError(code: Int, errorBody: String?) {
+        when (code) {
+            400 -> {
+                Toast.makeText(this, "인증 번호가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
+                Log.e("SignupActivity", "400 Error: $errorBody")
+            }
+            500 -> {
+                Toast.makeText(this, "서버 오류가 발생했습니다. 나중에 다시 시도하세요.", Toast.LENGTH_SHORT).show()
+                Log.e("SignupActivity", "500 Error: $errorBody")
+            }
+            else -> {
+                Toast.makeText(this, "알 수 없는 오류가 발생했습니다. ($code)", Toast.LENGTH_SHORT).show()
+                Log.e("SignupActivity", "Error: $code, $errorBody")
+            }
+        }
+    }
+
+
+
 
     // 회원가입 처리
     private fun registerUser(email: String, password: String, nickname: String) {
@@ -207,15 +334,12 @@ class SignupActivity : AppCompatActivity() {
 
 
     private lateinit var countDownTimer: CountDownTimer
-    private var isTimerRunning = false
 
     private fun startTimer() {
-        // 기존 타이머 취소
         if (::countDownTimer.isInitialized) {
             countDownTimer.cancel()
         }
 
-        // 새 타이머 시작
         countDownTimer = object : CountDownTimer(180000, 1000) { // 3분 (180,000ms)
             override fun onTick(millisUntilFinished: Long) {
                 val minutes = millisUntilFinished / 1000 / 60
@@ -224,17 +348,13 @@ class SignupActivity : AppCompatActivity() {
             }
 
             override fun onFinish() {
-                isTimerRunning = false
                 binding.timerTextView.text = "00:00"
                 Toast.makeText(this@SignupActivity, "인증 시간이 초과되었습니다.", Toast.LENGTH_SHORT).show()
             }
         }
         countDownTimer.start()
-        isTimerRunning = true
-        binding.timerTextView.visibility = View.VISIBLE // 타이머 표시
+        binding.timerTextView.visibility = View.VISIBLE
     }
-
-
 
 }
 
