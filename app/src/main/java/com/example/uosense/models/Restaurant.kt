@@ -49,7 +49,44 @@ data class BusinessDay(
     val openingTime: String,
     val closingTime: String,
     val isHoliday: Boolean
-)
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        id = parcel.readValue(Int::class.java.classLoader) as? Int,
+        restaurantId = parcel.readInt(),
+        dayOfWeek = parcel.readString() ?: "",
+        haveBreakTime = parcel.readByte() != 0.toByte(),
+        startBreakTime = parcel.readString(),
+        stopBreakTime = parcel.readString(),
+        openingTime = parcel.readString() ?: "",
+        closingTime = parcel.readString() ?: "",
+        isHoliday = parcel.readByte() != 0.toByte()
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeValue(id)
+        parcel.writeInt(restaurantId)
+        parcel.writeString(dayOfWeek)
+        parcel.writeByte(if (haveBreakTime) 1 else 0)
+        parcel.writeString(startBreakTime)
+        parcel.writeString(stopBreakTime)
+        parcel.writeString(openingTime)
+        parcel.writeString(closingTime)
+        parcel.writeByte(if (isHoliday) 1 else 0)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<BusinessDay> {
+        override fun createFromParcel(parcel: Parcel): BusinessDay {
+            return BusinessDay(parcel)
+        }
+
+        override fun newArray(size: Int): Array<BusinessDay?> {
+            return arrayOfNulls(size)
+        }
+    }
+}
+
 
 // 영업일 리스트 모델
 data class BusinessDayList(
@@ -182,7 +219,8 @@ data class RestaurantInfo(
     val subDescription: String?,
     val description: String?,
     val reviewCount: Int?,
-    val bookmarkCount: Int?
+    val bookmarkCount: Int?,
+    val businessDays: List<BusinessDay>? = null // 추가됨
 ) : Parcelable {
 
     // Parcel에서 데이터를 읽어들이는 생성자
@@ -199,7 +237,8 @@ data class RestaurantInfo(
         subDescription = parcel.readString(),
         description = parcel.readString(),
         reviewCount = parcel.readValue(Int::class.java.classLoader) as? Int,
-        bookmarkCount = parcel.readValue(Int::class.java.classLoader) as? Int
+        bookmarkCount = parcel.readValue(Int::class.java.classLoader) as? Int,
+        businessDays = parcel.createTypedArrayList(BusinessDay.CREATOR)
     )
 
     // 데이터를 Parcel에 쓰는 메서드
@@ -217,11 +256,11 @@ data class RestaurantInfo(
         parcel.writeString(description)
         parcel.writeValue(reviewCount)
         parcel.writeValue(bookmarkCount)
+        parcel.writeTypedList(businessDays)
     }
 
     override fun describeContents(): Int = 0
 
-    // Parcelable 생성자
     companion object CREATOR : Parcelable.Creator<RestaurantInfo> {
         override fun createFromParcel(parcel: Parcel): RestaurantInfo {
             return RestaurantInfo(parcel)
