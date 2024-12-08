@@ -53,62 +53,14 @@ class RestaurantDetailActivity : AppCompatActivity() {
         }
 
         // 서버 연동을 위한 코드 (주석 처리)
-        // if (restaurantId != -1) {
-        //     viewModel.fetchRestaurantById(restaurantId)
-        // } else {
-        //     finish() // 유효하지 않은 ID일 경우 액티비티 종료
-        // }
+        if (restaurantId != -1) {
+            viewModel.fetchRestaurantById(restaurantId)
+        } else {
+             finish() // 유효하지 않은 ID일 경우 액티비티 종료
+        }
 
-        // Mock 데이터 사용
-        loadMockRestaurantDetails(restaurantId)
     }
 
-    private fun loadMockRestaurantDetails(restaurantId: Int) {
-        // Mock 데이터
-        val mockBusinessDays = listOf(
-            BusinessDay(
-                id = 1,
-                restaurant_id = restaurantId,
-                day_of_week = "Monday",
-                have_break_time = true,
-                start_break_time = "15:00",
-                stop_break_time = "17:00",
-                opening_time = "09:00",
-                closing_time = "21:00",
-                is_holiday = false
-            ),
-            BusinessDay(
-                id = 2,
-                restaurant_id = restaurantId,
-                day_of_week = "Tuesday",
-                have_break_time = false,
-                start_break_time = null,
-                stop_break_time = null,
-                opening_time = "10:00",
-                closing_time = "22:00",
-                is_holiday = false
-            )
-        )
 
-        val mockRestaurant = RestaurantInfo(
-            id = restaurantId,
-            name = "Mock Restaurant $restaurantId",
-            doorType = "정문",
-            latitude = 37.5834643,
-            longitude = 127.0536246,
-            address = "서울시 중랑구 Mock 주소 $restaurantId",
-            phoneNumber = "010-1234-567$restaurantId",
-            rating = 4.5,
-            category = "Mock 카테고리",
-            subDescription = null,
-            description = "Mock Restaurant Description",
-            reviewCount = 10,
-            bookmarkCount = 5,
-            businessDays = mockBusinessDays
-        )
-
-        // ViewModel을 통해 데이터 업데이트
-        viewModel.updateMockData(mockRestaurant)
-    }
 }
 

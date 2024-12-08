@@ -69,10 +69,6 @@ class RestaurantViewModel : ViewModel() {
         }
     }
 
-    // Mock 데이터를 업데이트하는 함수
-    fun updateMockData(mockData: RestaurantInfo) {
-        restaurantInfo.value = mockData
-    }
 
 
 

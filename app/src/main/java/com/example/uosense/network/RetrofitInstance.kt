@@ -14,9 +14,6 @@ object RetrofitInstance {
     /res/xml/network_security_config 수정 필요
      */
 
-    fun setBaseUrl(url: String) {
-        BASE_URL = url
-    }
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(HttpLoggingInterceptor().apply {

@@ -39,9 +39,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        RetrofitInstance.setBaseUrl("http://10.0.2.2:8080")
-
-
         // 뷰 바인딩 초기화
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -57,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         mapFragment.getMapAsync { naverMap ->
             this.naverMap = naverMap
             initializeMap()
-            loadMockRestaurants() // 데이터 로드 및 마커 생성
+            loadRestaurants() // 데이터 로드 및 마커 생성
         }
 
 
@@ -179,6 +176,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun addMarkersToMap(restaurantList: List<RestaurantListResponse>) {
         restaurantList.forEach { restaurant ->
+            // 마커 추가
+            val marker = Marker()
+            marker.position = LatLng(restaurant.latitude, restaurant.longitude)
+            marker.captionText = restaurant.name
+
             if (restaurant.latitude == 0.0 && restaurant.longitude == 0.0) {
                 getLatLngFromAddress(restaurant.address) { lat, lng ->
                     if (lat != null && lng != null) {
@@ -198,13 +200,18 @@ class MainActivity : AppCompatActivity() {
                         // API 호출
                         // updateRestaurantCoordinates(restaurant.id, updatedRequest)
 
-                        // 마커 추가
-                        val marker = Marker().apply {
+                        /*
+                         마커 추가 (업데이트 후 등록 시)
+                         */
+
+                        /*val marker = Marker().apply {
                             position = LatLng(lat, lng)
                             map = naverMap
                             captionText = restaurant.name
                             tag = restaurant.id
                         }
+                        */
+
 
                         // 마커 클릭 이벤트 설정
                         marker.setOnClickListener {
@@ -228,35 +235,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 restaurantMarkers.add(marker)
             }
-        }
-
-        moveCameraToFitAllMarkers()
-
-         /*
-         ** MOCK 데이터 사용 시
-            val marker = Marker().apply {
-                position = LatLng(restaurant.latitude, restaurant.longitude)
-                map = naverMap
-                captionText = restaurant.name
-                tag = restaurant.id // 태그로 식별자 설정
+            runOnUiThread {
+                marker.setMap(naverMap) // 메인 스레드에서 호출
             }
-
-            // 마커 클릭 이벤트 설정
-            marker.setOnClickListener {
-                // RestaurantDetailActivity로 이동
-                val intent = Intent(this@MainActivity, RestaurantDetailActivity::class.java).apply {
-                    putExtra("restaurantId", restaurant.id)
-                    // 서버 연동 시에 추가 데이터도 intent에 포함 가능
-                    // putExtra("restaurantData", Gson().toJson(restaurant))
-                }
-                startActivity(intent)
-                true // 이벤트 처리 완료를 알림
-            }
-
-            restaurantMarkers.add(marker)
         }
-        }
-          */
+
         moveCameraToFitAllMarkers()
     }
 
@@ -325,58 +308,8 @@ class MainActivity : AppCompatActivity() {
             naverMap.moveCamera(cameraUpdate)
         }
     }
-
-    private fun loadMockRestaurants() {
-        // Mock 데이터 준비
-        val mockRestaurants = listOf(
-            RestaurantListResponse(
-                id = 1,
-                name = "Mock Restaurant 1",
-                longitude = 127.0536246,
-                latitude = 37.5834643,
-                address = "서울시 중랑구 Mock 주소 1",
-                rating = 4.5,
-                category = "한식",
-                reviewCount = 10,
-                bookmarkCount = 5,
-                restaurantImage = null,
-                doorType = "정문",
-                phoneNumber = "010-1234-5678"
-            ),
-            RestaurantListResponse(
-                id = 2,
-                name = "Mock Restaurant 2",
-                longitude = 127.0564010,
-                latitude = 37.5869791,
-                address = "서울시 중랑구 Mock 주소 2",
-                rating = 3.8,
-                category = "중식",
-                reviewCount = 20,
-                bookmarkCount = 10,
-                restaurantImage = null,
-                doorType = "쪽문",
-                phoneNumber = "010-8765-4321"
-            ),
-            RestaurantListResponse(
-                id = 3,
-                name = "Mock Restaurant 3",
-                longitude = 127.0606581,
-                latitude = 37.5869320,
-                address = "서울시 중랑구 Mock 주소 3",
-                rating = 4.0,
-                category = "양식",
-                reviewCount = 15,
-                bookmarkCount = 8,
-                restaurantImage = null,
-                doorType = "후문",
-                phoneNumber = "010-1122-3344"
-            )
-        )
-
-        // 마커 추가 및 카메라 이동 호출
-        addMarkersToMap(mockRestaurants)
     }
 
 
 
-}
+
