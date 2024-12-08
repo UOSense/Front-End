@@ -6,12 +6,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.uosense.databinding.ActivityMainBinding
+import com.example.uosense.models.RestaurantInfo
 
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.models.RestaurantRequest
 import com.example.uosense.network.RetrofitInstance
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.geometry.LatLngBounds
+import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.CameraUpdate
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
@@ -53,14 +55,17 @@ class MainActivity : AppCompatActivity() {
 
         mapFragment.getMapAsync { naverMap ->
             this.naverMap = naverMap
+            Log.d("NAVER_MAP_INIT", "NaverMap 초기화 성공")
             initializeMap()
-            loadRestaurants() // 데이터 로드 및 마커 생성
+            loadRestaurants()
         }
 
 
 
 
-        binding.svSearch.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+
+        binding.svSearch.setOnQueryTextListener(object :
+            androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 val trimmedQuery = query?.trim()
                 if (!trimmedQuery.isNullOrBlank()) {
@@ -83,7 +88,6 @@ class MainActivity : AppCompatActivity() {
         setupFilterButtons()
 
 
-
         // MyPage 이동 버튼 클릭 이벤트
 //        binding.myPageBtn.setOnClickListener {
 //            startActivity(Intent(this, MyPageActivity::class.java))
@@ -91,42 +95,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeMap() {
-        //초기 지도 중심 설정
-        val initialPosition = LatLng(37.5834643, 127.0536246)
-        moveCameraToLocation(initialPosition.latitude, initialPosition.longitude)
+        val initialPosition = LatLng(37.5834643, 127.0536246) // 서울시립대 정문 위치
+        val cameraPosition = CameraPosition(initialPosition, 16.0) // 줌 레벨 15.0 설정
+        naverMap.cameraPosition = cameraPosition
     }
 
+
     private fun getLatLngFromAddress(address: String, callback: (Double?, Double?) -> Unit) {
-        //도로명 주소 -> 위도, 경도 변환
         val client = OkHttpClient()
         val url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${address}"
         println(url)
+
         val request = Request.Builder()
             .url(url)
             .addHeader("X-NCP-APIGW-API-KEY-ID", "s78aa7asq0")
             .addHeader("X-NCP-APIGW-API-KEY", "WGmu5zQXqTGWOy7Bj9PWwrD8HeQezlBvZ675Q24K")
             .build()
 
-        Thread {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = client.newCall(request).execute()
                 val responseBody = response.body?.string()
-                val json = JSONObject(responseBody!!)
+                val json = JSONObject(responseBody ?: "")
                 val addresses = json.getJSONArray("addresses")
+
                 if (addresses.length() > 0) {
                     val location = addresses.getJSONObject(0)
                     val latitude = location.getDouble("y")
                     val longitude = location.getDouble("x")
-                    callback(latitude, longitude)
+
+                    withContext(Dispatchers.Main) {
+                        callback(latitude, longitude)
+                    }
                 } else {
-                    callback(null, null)
+                    withContext(Dispatchers.Main) {
+                        callback(null, null)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                callback(null, null)
+                withContext(Dispatchers.Main) {
+                    callback(null, null)
+                }
             }
-        }.start()
+        }
     }
+
 
     //버튼을 누르면 위치 이동
     private fun setupFilterButtons() {
@@ -154,6 +168,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "남문 위치로 이동합니다.", Toast.LENGTH_SHORT).show()
         }
     }
+
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -162,7 +177,8 @@ class MainActivity : AppCompatActivity() {
                     if (restaurants.isNotEmpty()) {
                         addMarkersToMap(restaurants)
                     } else {
-                        Toast.makeText(this@MainActivity, "식당 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "식당 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             } catch (e: Exception) {
@@ -174,6 +190,74 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun addMarkersToMap(restaurantList: List<RestaurantListResponse>) {
+        restaurantList.forEach { restaurant ->
+            if (restaurant.latitude != 0.0 && restaurant.longitude != 0.0) {
+                // 마커 추가
+                val marker = Marker().apply {
+                    position = LatLng(restaurant.latitude, restaurant.longitude)
+                    map = naverMap
+                    captionText = restaurant.name
+                    tag = restaurant.id
+                }
+
+                // 마커 클릭 이벤트 설정
+                marker.setOnClickListener {
+                    fetchRestaurantDetails(restaurant.id)
+                    true
+                }
+                restaurantMarkers.add(marker)
+            } else {
+                // Geocoding API 호출
+                getLatLngFromAddress(restaurant.address) { lat, lng ->
+                    if (lat != null && lng != null) {
+                        val marker = Marker().apply {
+                            position = LatLng(lat, lng)
+                            map = naverMap
+                            captionText = restaurant.name
+                            tag = restaurant.id
+                        }
+
+                        // 마커 클릭 이벤트 설정
+                        marker.setOnClickListener {
+                            fetchRestaurantDetails(restaurant.id)
+                            true
+                        }
+                        restaurantMarkers.add(marker)
+                    }
+                }
+            }
+        }
+        moveCameraToFitAllMarkers()
+    }
+    private fun fetchRestaurantDetails(restaurantId: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitInstance.restaurantApi.getRestaurantById(restaurantId)
+                withContext(Dispatchers.Main) {
+                    navigateToRestaurantDetail(response)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "식당 정보를 불러오지 못했습니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun navigateToRestaurantDetail(restaurantInfo: RestaurantInfo) {
+        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
+            putExtra("restaurantInfo", restaurantInfo)
+        }
+        startActivity(intent)
+    }
+
+    /*
     private fun addMarkersToMap(restaurantList: List<RestaurantListResponse>) {
         restaurantList.forEach { restaurant ->
             // 마커 추가
@@ -242,11 +326,10 @@ class MainActivity : AppCompatActivity() {
 
         moveCameraToFitAllMarkers()
     }
+    */
 
 
-
-
-    private fun moveCameraToLocation(latitude: Double, longitude: Double){
+    private fun moveCameraToLocation(latitude: Double, longitude: Double) {
         val cameraUpdate = CameraUpdate.scrollTo(LatLng(latitude, longitude))
         naverMap.moveCamera(cameraUpdate)
     }
@@ -257,9 +340,10 @@ class MainActivity : AppCompatActivity() {
                 val response = RetrofitInstance.restaurantApi.searchRestaurants(keyword, "DEFAULT")
                 withContext(Dispatchers.Main) {
                     if (response.isNotEmpty()) {
-                        val intent = Intent(this@MainActivity, RestaurantListActivity::class.java).apply {
-                            putParcelableArrayListExtra("restaurantList", ArrayList(response))
-                        }
+                        val intent =
+                            Intent(this@MainActivity, RestaurantListActivity::class.java).apply {
+                                putParcelableArrayListExtra("restaurantList", ArrayList(response))
+                            }
                         startActivity(intent)
                     } else {
                         Toast.makeText(this@MainActivity, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show()
@@ -280,10 +364,13 @@ class MainActivity : AppCompatActivity() {
     private fun updateRestaurantCoordinates(restaurantId: Int, updatedRequest: RestaurantRequest) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.editRestaurant(restaurantId, updatedRequest)
+                // updatedRequest를 전달하도록 수정
+                val response = RetrofitInstance.restaurantApi.editRestaurant(updatedRequest)
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        Toast.makeText(this@MainActivity, "좌표가 업데이트되었습니다.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "좌표가 업데이트되었습니다.", Toast.LENGTH_SHORT)
+                            .show()
                     } else {
                         Log.e("API_ERROR", "업데이트 실패: ${response.errorBody()?.string()}")
                     }
@@ -300,15 +387,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun moveCameraToFitAllMarkers() {
         if (restaurantMarkers.isNotEmpty()) {
-            val bounds = LatLngBounds.Builder()
-            restaurantMarkers.forEach { marker ->
-                bounds.include(marker.position)
-            }
-            val cameraUpdate = CameraUpdate.fitBounds(bounds.build())
+            val bounds = LatLngBounds.Builder().apply {
+                restaurantMarkers.forEach { marker ->
+                    include(marker.position)
+                }
+            }.build()
+
+            val cameraUpdate = CameraUpdate.fitBounds(bounds, 100) // 패딩 추가
             naverMap.moveCamera(cameraUpdate)
         }
     }
-    }
+}
+
+
 
 
 

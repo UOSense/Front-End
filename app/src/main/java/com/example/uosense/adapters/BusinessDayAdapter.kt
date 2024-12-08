@@ -28,15 +28,16 @@ class BusinessDayAdapter :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val businessDay = getItem(position)
-        holder.dayOfWeek.text = businessDay.day_of_week
-        holder.openingTime.text = "오픈 시간: ${businessDay.opening_time}"
-        holder.closingTime.text = "끝나는 시간: ${businessDay.closing_time}"
-        holder.breakTime.text = if (businessDay.have_break_time) {
-            "브레이크 타임: ${businessDay.start_break_time} - ${businessDay.stop_break_time}"
+        holder.dayOfWeek.text = businessDay.dayOfWeek
+        holder.openingTime.text = "오픈 시간: ${businessDay.openingTime}"
+        holder.closingTime.text = "끝나는 시간: ${businessDay.closingTime}"
+        holder.breakTime.text = if (businessDay.haveBreakTime) {
+            "브레이크 타임: ${businessDay.startBreakTime} - ${businessDay.stopBreakTime}"
         } else {
             "No Break Time"
         }
     }
+
 
     class DiffCallback : DiffUtil.ItemCallback<BusinessDay>() {
         override fun areItemsTheSame(oldItem: BusinessDay, newItem: BusinessDay): Boolean {

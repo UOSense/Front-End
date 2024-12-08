@@ -2,17 +2,19 @@ package com.example.uosense.models
 
 import android.os.Parcel
 import android.os.Parcelable
+import java.time.LocalDateTime
 
-
+// 메뉴 요청 모델
 data class MenuRequest(
-    val id: Int,
+    val id: Int?,
     val restaurantId: Int,
     val name: String,
     val price: Int,
     val description: String,
-    val image: String
+    val image: String? = null
 )
 
+// 메뉴 응답 모델
 data class MenuResponse(
     val menuId: Int,
     val restaurantId: Int,
@@ -22,79 +24,84 @@ data class MenuResponse(
     val imageUrl: String
 )
 
-
-
+// 식당 요청 모델
 data class RestaurantRequest(
-    val id: Int?,
+    val id: Int? = null,
     val name: String,
     val doorType: String?,
     val latitude: Double,
     val longitude: Double,
     val address: String,
-    val phoneNumber: String?,
+    val phoneNumber: String? = null,
     val category: String,
-    val subDescription: String?,
+    val subDescription: String? = null,
     val description: String
 )
 
+// 영업일 정보 모델
 data class BusinessDay(
-    val id: Int, // 고유 ID
-    val restaurant_id: Int, // Restaurant의 외래 키
-    val day_of_week: String, // 요일 (enum 값: 'Monday', 'Tuesday', ...)
-    val have_break_time: Boolean, // 쉬는 시간 여부
-    val start_break_time: String?, // 쉬는 시간 시작 (nullable)
-    val stop_break_time: String?, // 쉬는 시간 종료 (nullable)
-    val opening_time: String, // 영업 시작 시간
-    val closing_time: String, // 영업 종료 시간
-    val is_holiday: Boolean // 휴일 여부
+    val id: Int? = null,
+    val restaurantId: Int,
+    val dayOfWeek: String,
+    val haveBreakTime: Boolean,
+    val startBreakTime: String? = null,
+    val stopBreakTime: String? = null,
+    val openingTime: String,
+    val closingTime: String,
+    val isHoliday: Boolean
 )
 
+// 영업일 리스트 모델
 data class BusinessDayList(
     val restaurantId: Int,
     val businessDayInfoList: List<BusinessDayInfo>
 )
 
+// 영업일 정보 모델 (응답)
 data class BusinessDayInfo(
     val id: Int?,
     val dayOfWeek: String,
     val haveBreakTime: Boolean,
-    val startBreakTime: LocalTime?,
-    val stopBreakTime: LocalTime?,
+    val startBreakTime: LocalTime? = null,
+    val stopBreakTime: LocalTime? = null,
     val openingTime: LocalTime,
     val closingTime: LocalTime,
     val holiday: Boolean
 )
 
+// 로컬 시간 모델
 data class LocalTime(
     val hour: Int,
     val minute: Int,
-    val second: Int?,
-    val nano: Int?
+    val second: Int? = null,
+    val nano: Int? = null
 )
 
+// 웹메일 요청 모델
 data class WebmailRequest(
     val email: String,
     val purpose: String
 )
 
-
+// 인증 코드 요청 모델
 data class AuthCodeRequest(
     val email: String,
     val code: String
 )
 
-
+// 식당 이미지 응답 모델
 data class RestaurantImagesResponse(
     val restaurantId: Int,
     val imageList: List<ImageInfo>
 )
 
+// 이미지 정보 모델
 data class ImageInfo(
     val url: String,
-    val description: String?
+    val description: String? = null
 )
 
-
+// 새 메뉴 요청 모델
 data class NewMenuRequest(
     val restaurantId: Int,
     val name: String,
@@ -103,6 +110,7 @@ data class NewMenuRequest(
     val image: String
 )
 
+// 식당 목록 응답 모델 (Parcelable 포함)
 data class RestaurantListResponse(
     val id: Int,
     val name: String,
@@ -113,10 +121,10 @@ data class RestaurantListResponse(
     val category: String,
     val reviewCount: Int,
     val bookmarkCount: Int,
-    val restaurantImage: String?,
-    val doorType: String?, // 새로 추가된 속성
-    val phoneNumber: String? // 새로 추가된 속성
-): Parcelable {
+    val restaurantImage: String? = null,
+    val doorType: String? = null,
+    val phoneNumber: String? = null
+) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readString() ?: "",
@@ -160,6 +168,7 @@ data class RestaurantListResponse(
     }
 }
 
+// 식당 정보 모델
 data class RestaurantInfo(
     val id: Int,
     val name: String,
@@ -173,11 +182,103 @@ data class RestaurantInfo(
     val subDescription: String?,
     val description: String?,
     val reviewCount: Int?,
-    val bookmarkCount: Int?,
-    val businessDays: List<BusinessDay>?
+    val bookmarkCount: Int?
+) : Parcelable {
+
+    // Parcel에서 데이터를 읽어들이는 생성자
+    constructor(parcel: Parcel) : this(
+        id = parcel.readInt(),
+        name = parcel.readString() ?: "",
+        doorType = parcel.readString(),
+        latitude = parcel.readDouble(),
+        longitude = parcel.readDouble(),
+        address = parcel.readString() ?: "",
+        phoneNumber = parcel.readString(),
+        rating = parcel.readValue(Double::class.java.classLoader) as? Double,
+        category = parcel.readString(),
+        subDescription = parcel.readString(),
+        description = parcel.readString(),
+        reviewCount = parcel.readValue(Int::class.java.classLoader) as? Int,
+        bookmarkCount = parcel.readValue(Int::class.java.classLoader) as? Int
+    )
+
+    // 데이터를 Parcel에 쓰는 메서드
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(id)
+        parcel.writeString(name)
+        parcel.writeString(doorType)
+        parcel.writeDouble(latitude)
+        parcel.writeDouble(longitude)
+        parcel.writeString(address)
+        parcel.writeString(phoneNumber)
+        parcel.writeValue(rating)
+        parcel.writeString(category)
+        parcel.writeString(subDescription)
+        parcel.writeString(description)
+        parcel.writeValue(reviewCount)
+        parcel.writeValue(bookmarkCount)
+    }
+
+    override fun describeContents(): Int = 0
+
+    // Parcelable 생성자
+    companion object CREATOR : Parcelable.Creator<RestaurantInfo> {
+        override fun createFromParcel(parcel: Parcel): RestaurantInfo {
+            return RestaurantInfo(parcel)
+        }
+
+        override fun newArray(size: Int): Array<RestaurantInfo?> {
+            return arrayOfNulls(size)
+        }
+    }
+}
+
+data class ReviewRequest(
+    val restaurantId: Int,
+    val body: String,
+    val rating: Double,
+    val dateTime: String,
+    val tag: String?,
+    val reviewEventCheck: Boolean
+)
+
+data class ReportRequest(
+    val reviewId: Int,
+    val detail: String, // "ABUSIVE", "DEROGATORY", "ADVERTISEMENT"
+    val createdAt: String
 )
 
 
+data class ReviewResponse(
+    val id: Int,
+    val restaurantId: Int,
+    val userId: Int,
+    val body: String,
+    val rating: Double,
+    val dateTime: String,
+    val tag: String?,
+    val likeCount: Int,
+    val imageUrls: List<String>?,
+    val reviewEventCheck: Boolean
+)
 
+data class BookmarkResponse(
+    val id: Int,
+    val userId: Int,
+    val restaurantId: Int
+)
 
-
+// 즐겨찾기 응답 모델
+data class BookMarkResponse(
+    val id: Int,            // 북마크 고유 ID
+    val userId: Int,        // 사용자 ID
+    val restaurantId: Int   // 식당 ID
+)
+// 신고 응답 모델
+data class ReportResponse(
+    val id: Int,                // 신고 고유 ID
+    val reviewId: Int,          // 신고된 리뷰 ID
+    val userId: Int,            // 신고한 사용자 ID
+    val detail: String,         // 신고 상세 내용 (예: ABUSIVE, DEROGATORY, ADVERTISEMENT)
+    val createdAt: LocalDateTime // 신고 생성 일시
+)
