@@ -47,6 +47,12 @@ interface RestaurantApi {
         @Header("Cookie") refreshToken: String // Refresh Token을 쿠키로 전송
     ): Response<Unit>
 
+    // 로그아웃
+    @PUT("/api/v1/user/signout")
+    suspend fun logoutUser(
+        @Header("Cookie") refreshToken: String
+    ): Response<Unit>
+
     // 특정 식당 메뉴 수정
     @PUT("/api/v1/restaurant/update/menu")
     suspend fun updateMenu(
@@ -245,7 +251,4 @@ interface RestaurantApi {
     suspend fun getReports(): List<ReportResponse>
 
 
-    // 로그아웃 처리
-    @PUT("/api/v1/user/signout")
-    suspend fun signOut(): Response<Unit>
 }

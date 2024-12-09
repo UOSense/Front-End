@@ -20,3 +20,9 @@ data class LoginRequest(
     val email: String,
     val password: String
 )
+
+data class UserResponse(
+    val userId: Int,
+    val email: String,
+    val nickname: String
+)

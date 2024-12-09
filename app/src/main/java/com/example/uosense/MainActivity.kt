@@ -3,6 +3,7 @@ package com.example.uosense
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.uosense.databinding.ActivityMainBinding
@@ -35,15 +36,26 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var naverMap: NaverMap
     private val restaurantMarkers = mutableListOf<Marker>()
+    private lateinit var userProfileBtn: Button
 
     private val bounds = LatLngBounds.Builder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         // 뷰 바인딩 초기화
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        userProfileBtn = findViewById(R.id.userProfileBtn)
+        // 버튼 클릭 이벤트
+        userProfileBtn.setOnClickListener {
+            navigateToMyPage()
+        }
+
+
+
 
         // 네이버 지도 초기화
         NaverMapSdk.getInstance(this).client = NaverMapSdk.NaverCloudPlatformClient("s78aa7asq0")
@@ -92,6 +104,12 @@ class MainActivity : AppCompatActivity() {
 //        binding.myPageBtn.setOnClickListener {
 //            startActivity(Intent(this, MyPageActivity::class.java))
 //        }
+    }
+
+
+    private fun navigateToMyPage() {
+        val intent = Intent(this, MyPageActivity::class.java)
+        startActivity(intent) // MyPageActivity로 이동
     }
 
     private fun initializeMap() {

@@ -16,10 +16,20 @@ class TokenManager(private val context: Context) {
         return sharedPreferences.getString("refresh_token", null)
     }
 
+    // 토큰 저장
     fun saveAccessToken(token: String) {
         val editor = sharedPreferences.edit()
         editor.putString("access_token", token)
         editor.apply()
+    }
+
+    // 토큰 반납
+    fun clearTokens() {
+        sharedPreferences.edit().apply {
+            remove("access_token")
+            remove("refresh_token")
+            apply()
+        }
     }
 
     suspend fun refreshAccessToken(): Boolean {
