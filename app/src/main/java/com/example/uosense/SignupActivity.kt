@@ -303,7 +303,6 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
     private fun registerUser(email: String, password: String, nickname: String) {
         val newUserRequest = NewUserRequest(email, password, nickname)
 
-        // 비동기 작업 실행
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // API 호출
@@ -311,11 +310,11 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        // 서버에서 반환된 응답 데이터 처리
+                        // 회원가입 성공 시 처리
                         val isSuccess = response.body() ?: false
                         if (isSuccess) {
-                            // 토큰을 헤더에서 가져오기
-                            val accessToken = response.headers()["access"] ?: ""
+                            // Access Token과 Refresh Token 추출
+                            val accessToken = response.headers()["access"]?.removePrefix("Bearer ") ?: ""
                             val refreshToken = response.headers()["Set-Cookie"]?.split(";")
                                 ?.find { it.startsWith("refresh=") }
                                 ?.substringAfter("refresh=") ?: ""
@@ -323,14 +322,20 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
                             if (accessToken.isNotEmpty() && refreshToken.isNotEmpty()) {
                                 // 토큰 저장
                                 saveTokensToLocal(accessToken, refreshToken)
+
+                                // 디버깅용 로그 출력
+                                Log.d("SignupActivity", "Access Token: $accessToken")
+                                Log.d("SignupActivity", "Refresh Token: $refreshToken")
+
+                                Toast.makeText(this@SignupActivity, "회원가입 성공!", Toast.LENGTH_SHORT).show()
+
+                                // 회원가입 완료 화면으로 이동
+                                val intent = Intent(this@SignupActivity, SignupCompleteActivity::class.java)
+                                startActivity(intent)
+                                finish()
+                            } else {
+                                Toast.makeText(this@SignupActivity, "토큰 발급 실패: 서버 응답 확인 필요", Toast.LENGTH_SHORT).show()
                             }
-
-                            Toast.makeText(this@SignupActivity, "회원가입 성공!", Toast.LENGTH_SHORT).show()
-
-                            // 회원가입 완료 화면으로 이동
-                            val intent = Intent(this@SignupActivity, SignupCompleteActivity::class.java)
-                            startActivity(intent)
-                            finish()
                         } else {
                             Toast.makeText(this@SignupActivity, "회원가입 실패. 이미 존재하는 이메일 또는 닉네임입니다.", Toast.LENGTH_SHORT).show()
                         }
@@ -348,16 +353,17 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
 
 //    사용자 로컬 스토리지에 토큰 저장
     private fun saveTokensToLocal(accessToken: String, refreshToken: String) {
-        val sharedPreferences: SharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("access_token", accessToken)
         editor.putString("refresh_token", refreshToken)
         editor.apply()
     }
 
-//    사용자 로컬 스토리지에서 토큰 가져오기
+
+    //    사용자 로컬 스토리지에서 토큰 가져오기
     private fun getTokensFromLocal(): Pair<String?, String?> {
-        val sharedPreferences: SharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         val accessToken = sharedPreferences.getString("access_token", null)
         val refreshToken = sharedPreferences.getString("refresh_token", null)
         return Pair(accessToken, refreshToken)
@@ -365,7 +371,8 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
 
 
 
-//    웹메일 인증 코드 카운트 처리
+
+    //    웹메일 인증 코드 카운트 처리
     private lateinit var countDownTimer: CountDownTimer
 
     private fun startTimer() {
