@@ -1,7 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:descendantFocusability="afterDescendants">
 
     <!-- 검색바 -->
@@ -9,11 +9,10 @@
         android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@color/black"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:layout_marginTop="16dp"
-        >
+        android:layout_marginTop="16dp">
 
         <!-- 지도 아이콘 -->
         <ImageView
@@ -34,8 +33,27 @@
             android:clickable="true"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:enabled="true"
-            />
+            android:enabled="true" />
+
+        <!-- 체크박스 그룹-->
+        <LinearLayout
+            android:id="@+id/nearby_checkbox_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp">
+
+            <!-- 체크박스 -->
+            <CheckBox
+                android:id="@+id/chkNearby"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="주변 식당"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="4dp" />
+        </LinearLayout>
 
         <!-- 검색 버튼 -->
         <ImageView
@@ -47,63 +65,60 @@
             android:src="@drawable/ic_search" />
     </LinearLayout>
 
-    <!-- 버튼 그룹 -->
-    <LinearLayout
-        android:id="@+id/buttonGroup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/search_bar"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <Button
-            android:id="@+id/doorTypeButton1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/button_background"
-            android:text="정문"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
-            android:id="@+id/doorTypeButton2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/button_background"
-            android:text="쪽문"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
-            android:id="@+id/doorTypeButton3"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/button_background"
-            android:text="후문"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
-            android:id="@+id/doorTypeButton4"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/button_background"
-            android:text="남문"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"/>
-    </LinearLayout>
-
     <!-- 지도 -->
     <FrameLayout
         android:id="@+id/map"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/buttonGroup"
-        android:layout_marginTop="14dp" />
+        android:layout_below="@id/search_bar"
+        android:layout_marginTop="8dp" />
+
+    <!-- 버튼 그룹 -->
+    <LinearLayout
+        android:id="@+id/buttonGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/search_bar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:padding="8dp">
+
+        <Button
+            android:id="@+id/doorTypeButton1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/button_selector"
+            android:text="정문"
+            android:textColor="@android:color/black" />
+
+        <Button
+            android:id="@+id/doorTypeButton2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/button_selector"
+            android:text="쪽문"
+            android:textColor="@android:color/black" />
+
+        <Button
+            android:id="@+id/doorTypeButton3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/button_selector"
+            android:text="후문"
+            android:textColor="@android:color/black" />
+
+        <Button
+            android:id="@+id/doorTypeButton4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector"
+            android:text="남문"
+            android:textColor="@android:color/black" />
+    </LinearLayout>
 
     <!-- 목록 보기 버튼 -->
     <Button
@@ -111,11 +126,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="목록 보기"
+        android:textColor="@android:color/black"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="20dp"
-        android:background="@drawable/button_background"
-        />
+        android:background="@drawable/button_background" />
 
     <!-- 사용자 프로필 버튼 -->
     <Button
@@ -126,6 +141,22 @@
         android:layout_alignParentEnd="true"
         android:layout_marginBottom="20dp"
         android:layout_marginEnd="20dp"
-        android:background="@drawable/ic_account_circle"
-        />
+        android:background="@drawable/ic_account_circle" />
+
+    <!-- 내 위치 버튼 -->
+    <Button
+        android:id="@+id/btnUserLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:text="내 위치"
+        android:drawablePadding="8dp"
+        android:background="@drawable/rounded_button"
+        android:elevation="8dp"
+        android:padding="12dp"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:layout_marginStart="20dp" />
 </RelativeLayout>

@@ -95,4 +95,9 @@ dependencies {
     implementation ("com.google.android.material:material:1.9.0")
     implementation ("androidx.viewpager2:viewpager2:1.1.0")
 
+    // Google Play Services 위치 API 추가
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    // 코루틴
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
 }

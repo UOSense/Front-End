@@ -1,0 +1,10 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 버튼이 선택된 상태 -->
+    <item android:state_selected="true"
+        android:drawable="@android:color/holo_orange_light" />
+
+    <!-- 기본 버튼 상태 -->
+    <item android:drawable="@android:color/white" />
+
+</selector>

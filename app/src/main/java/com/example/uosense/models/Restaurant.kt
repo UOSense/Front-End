@@ -3,6 +3,7 @@ package com.example.uosense.models
 import android.os.Parcel
 import android.os.Parcelable
 import java.time.LocalDateTime
+import com.google.gson.annotations.SerializedName
 
 // 메뉴 요청 모델
 data class MenuRequest(
@@ -300,11 +301,7 @@ data class ReviewResponse(
     val reviewEventCheck: Boolean
 )
 
-data class BookmarkResponse(
-    val id: Int,
-    val userId: Int,
-    val restaurantId: Int
-)
+
 
 // 즐겨찾기 응답 모델
 data class BookMarkResponse(
