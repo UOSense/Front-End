@@ -1,6 +1,8 @@
 package com.example.uosense
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.View
@@ -309,9 +311,23 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
+                        // 서버에서 반환된 응답 데이터 처리
                         val isSuccess = response.body() ?: false
                         if (isSuccess) {
+                            // 토큰을 헤더에서 가져오기
+                            val accessToken = response.headers()["access"] ?: ""
+                            val refreshToken = response.headers()["Set-Cookie"]?.split(";")
+                                ?.find { it.startsWith("refresh=") }
+                                ?.substringAfter("refresh=") ?: ""
+
+                            if (accessToken.isNotEmpty() && refreshToken.isNotEmpty()) {
+                                // 토큰 저장
+                                saveTokensToLocal(accessToken, refreshToken)
+                            }
+
                             Toast.makeText(this@SignupActivity, "회원가입 성공!", Toast.LENGTH_SHORT).show()
+
+                            // 회원가입 완료 화면으로 이동
                             val intent = Intent(this@SignupActivity, SignupCompleteActivity::class.java)
                             startActivity(intent)
                             finish()
@@ -319,8 +335,6 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
                             Toast.makeText(this@SignupActivity, "회원가입 실패. 이미 존재하는 이메일 또는 닉네임입니다.", Toast.LENGTH_SHORT).show()
                         }
                     } else {
-                        // 서버 오류 디버깅용 로그
-                        Log.e("SignupActivity", "서버 오류: ${response.code()}, 응답 메시지: ${response.errorBody()?.string()}")
                         Toast.makeText(this@SignupActivity, "서버 오류: ${response.code()}", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -332,7 +346,26 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
         }
     }
 
+//    사용자 로컬 스토리지에 토큰 저장
+    private fun saveTokensToLocal(accessToken: String, refreshToken: String) {
+        val sharedPreferences: SharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("access_token", accessToken)
+        editor.putString("refresh_token", refreshToken)
+        editor.apply()
+    }
 
+//    사용자 로컬 스토리지에서 토큰 가져오기
+    private fun getTokensFromLocal(): Pair<String?, String?> {
+        val sharedPreferences: SharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val accessToken = sharedPreferences.getString("access_token", null)
+        val refreshToken = sharedPreferences.getString("refresh_token", null)
+        return Pair(accessToken, refreshToken)
+    }
+
+
+
+//    웹메일 인증 코드 카운트 처리
     private lateinit var countDownTimer: CountDownTimer
 
     private fun startTimer() {
