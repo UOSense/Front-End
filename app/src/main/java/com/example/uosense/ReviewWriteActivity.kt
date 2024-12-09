@@ -1,5 +1,6 @@
 package com.example.uosense
 
+import TokenManager
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -12,15 +13,19 @@ import android.text.TextWatcher
 import androidx.core.content.ContextCompat
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.example.uosense.models.ReviewRequest
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 class ReviewWriteActivity : AppCompatActivity() {
 
+
+    private lateinit var tokenManager: TokenManager
     // 후기 입력 관련
     private lateinit var reviewInput: EditText
     private lateinit var reviewCharacterCount: TextView
@@ -47,6 +52,8 @@ class ReviewWriteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_review_write)
 
+        // TokenManager 초기화
+        tokenManager = TokenManager(this)
         // 초기화
         reviewInput = findViewById(R.id.reviewInput)
         reviewCharacterCount = findViewById(R.id.reviewCharacterCount)
@@ -78,15 +85,16 @@ class ReviewWriteActivity : AppCompatActivity() {
                 val currentLength = s?.length ?: 0
                 reviewCharacterCount.text = "$currentLength/200"
             }
+
             override fun afterTextChanged(s: Editable?) {}
         })
 
         // 특징 버튼 설정
         setupFeatureButton(R.id.affordableBtn, "GOOD_VALUE", R.color.blue)
         setupFeatureButton(R.id.serviceBtn, "GOOD_SERVICE", R.color.green)
-        setupFeatureButton(R.id.dateRecommendBtn, "DATE_RECOMMENDED", R.color.pink)
-        setupFeatureButton(R.id.soloEatBtn, "SOLO_FRIENDLY", R.color.teal_700)
-        setupFeatureButton(R.id.kindOwnerBtn, "KIND_OWNER", R.color.purple_200)
+        setupFeatureButton(R.id.dateRecommendBtn, "DATE_PLACE", R.color.pink)
+        setupFeatureButton(R.id.soloEatBtn, "SOLO_POSSIBLE", R.color.teal_700)
+        setupFeatureButton(R.id.kindOwnerBtn, "KIND_BOSS", R.color.purple_200)
         setupFeatureButton(R.id.interiorBtn, "NICE_INTERIOR", R.color.orange)
 
         // 등록 버튼 클릭 리스너 설정
@@ -136,39 +144,61 @@ class ReviewWriteActivity : AppCompatActivity() {
         }
     }
 
+
     // 리뷰 등록 API 호출
     private fun submitReview() {
         val reviewBody = reviewInput.text.toString()
         val ratingValue = currentRating
         val dateTime = LocalDateTime.now().toString()
+        val accessToken = tokenManager.getAccessToken()
 
         // 입력 검증
-        if (reviewBody.isBlank() || ratingValue == 0f || selectedTag.isNullOrBlank()) {
-            Toast.makeText(this, "모든 필드를 입력해주세요.", Toast.LENGTH_SHORT).show()
+        if (reviewBody.isBlank()) {
+            Toast.makeText(this, "리뷰 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 리뷰 요청 생성
+        if (ratingValue == 0f) {
+            Toast.makeText(this, "별점을 선택해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (accessToken.isNullOrEmpty()) {
+            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val reviewRequest = ReviewRequest(
-            restaurantId = 1,  // 식당 ID 예시
+            restaurantId = 1,
             body = reviewBody,
             rating = ratingValue.toDouble(),
             dateTime = dateTime,
-            tag = selectedTag,
-            reviewEventCheck = reviewEventCheck
+            isReviewEventCheck = reviewEventCheck,
+            tag = selectedTag // 선택 사항
         )
+
+        // 로그 메시지 출력 (전송 데이터 확인)
+        Log.d("SubmitReview", "ReviewRequest: $reviewRequest")
+        Log.d("SubmitReview", "AccessToken: Bearer $accessToken")
 
         // API 호출
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.createReview(reviewRequest)
+                val response = RetrofitInstance.restaurantApi.createReview(
+                    reviewRequest,
+                    "Bearer $accessToken" // Bearer 포함
+                )
+
+                // 응답 처리
                 if (response.isSuccessful) {
+                    Log.d("SubmitReview", "Response Success: ${response.body()}")
                     Toast.makeText(this@ReviewWriteActivity, "리뷰가 등록되었습니다!", Toast.LENGTH_SHORT).show()
-                    finish()  // 등록 후 Activity 종료
                 } else {
+                    Log.e("SubmitReview", "Response Failed: Code=${response.code()}, Message=${response.errorBody()?.string()}")
                     Toast.makeText(this@ReviewWriteActivity, "등록 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
+                Log.e("SubmitReview", "Server Error: ${e.message}")
                 Toast.makeText(this@ReviewWriteActivity, "서버 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }

@@ -196,7 +196,8 @@ interface RestaurantApi {
     // 리뷰 등록
     @POST("/api/v1/review/create")
     suspend fun createReview(
-        @Body reviewRequest: ReviewRequest
+        @Body reviewRequest: ReviewRequest,
+        @Header("access") accessToken: String
     ): Response<Int>
 
 //    이미지 등록
