@@ -44,6 +44,8 @@ class RestaurantListActivity : AppCompatActivity() {
             intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
         }
 
+        setupRecyclerView(restaurantList)
+
 
 
         adapter = RestaurantListAdapter(mutableListOf()) { restaurant ->
@@ -159,4 +161,23 @@ class RestaurantListActivity : AppCompatActivity() {
         restaurantList.addAll(newList)
         notifyDataSetChanged()
     }
+
+    private fun setupRecyclerView(restaurantList: List<RestaurantListResponse>) {
+        val mutableRestaurantList = restaurantList.toMutableList()
+
+        // 어댑터 초기화 시 클릭 리스너 추가
+        val adapter = RestaurantListAdapter(mutableRestaurantList) { selectedRestaurant ->
+            val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
+                putExtra("restaurantId", selectedRestaurant.id)
+            }
+            startActivity(intent)
+        }
+
+        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
+    }
+
+
+
 }

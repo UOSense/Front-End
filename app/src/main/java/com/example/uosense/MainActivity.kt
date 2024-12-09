@@ -105,6 +105,11 @@ class MainActivity : AppCompatActivity() {
             showToast("남문 위치로 이동합니다.")
         }
 
+        binding.categoryBtn.setOnClickListener {
+            val doorType = selectedDoorType ?: "null" // 필터 선택 여부 확인
+            loadRestaurantsByFilter(doorType)
+        }
+
 
         setContentView(binding.root)
 
@@ -372,7 +377,9 @@ class MainActivity : AppCompatActivity() {
         Log.d("LOCATION_TRACKING", "위치 추적 중지됨")
     }
 
-
+    /**
+     * 식당 호출 (no filter)
+     */
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -780,6 +787,34 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    /**
+     * 필터를 통한 식당 로딩 (by doortype)
+     */
+    private fun loadRestaurantsByFilter(doorType: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val restaurantList = RetrofitInstance.restaurantApi.getRestaurantList(
+                    doorType = if (doorType != "null") doorType else null,
+                    filter = "DEFAULT"
+                )
+
+                withContext(Dispatchers.Main) {
+                    if (restaurantList.isNotEmpty()) {
+                        navigateToRestaurantList(restaurantList)
+                    } else {
+                        showToast("검색 결과가 없습니다.")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showToast("식당 정보를 불러오는 중 오류가 발생했습니다.")
+                }
+                e.printStackTrace()
+            }
+        }
+    }
+
 
 
 
