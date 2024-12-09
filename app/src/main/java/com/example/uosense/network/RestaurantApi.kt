@@ -118,7 +118,7 @@ interface RestaurantApi {
     @GET("/api/v1/restaurant/get/list")
     suspend fun getRestaurantList(
         @Query("doorType") doorType: String? = null,
-        @Query("category") category: String? = null
+        @Query("filter") filter: String? = "DEFAULT"
     ): List<RestaurantListResponse>
 
     // 특정 식당 메뉴 조회
