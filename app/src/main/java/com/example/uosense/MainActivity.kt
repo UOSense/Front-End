@@ -313,30 +313,55 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    //버튼을 누르면 위치 이동
+    // DoorType 버튼 클릭 설정
     private fun setupFilterButtons() {
         binding.doorTypeButton1.setOnClickListener {
-            updateButtonSelection(binding.doorTypeButton1, "정문", 37.5834643, 127.0536246)
-            Toast.makeText(this, "정문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
-            stopLocationTracking()
+            filterMarkersByDoorType("정문", 37.5834643, 127.0536246, binding.doorTypeButton1)
         }
 
         binding.doorTypeButton2.setOnClickListener {
-            updateButtonSelection(binding.doorTypeButton2, "쪽문", 37.5869791, 127.0564010)
-            Toast.makeText(this, "쪽문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
-            stopLocationTracking()
+            filterMarkersByDoorType("쪽문", 37.5869791, 127.0564010, binding.doorTypeButton2)
         }
 
         binding.doorTypeButton3.setOnClickListener {
-            updateButtonSelection(binding.doorTypeButton3, "후문", 37.5869320, 127.0606581)
-            Toast.makeText(this, "후문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
-            stopLocationTracking()
+            filterMarkersByDoorType("후문", 37.5869320, 127.0606581, binding.doorTypeButton3)
         }
 
         binding.doorTypeButton4.setOnClickListener {
-            updateButtonSelection(binding.doorTypeButton4, "남문", 37.5775540, 127.0578147)
-            Toast.makeText(this, "남문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
+            filterMarkersByDoorType("남문", 37.5775540, 127.0578147, binding.doorTypeButton4)
+        }
+    }
+
+    // 특정 DoorType에 해당하는 마커 필터링 및 카메라 이동
+    private fun filterMarkersByDoorType(doorType: String, lat: Double, lon: Double, button: View) {
+        if (selectedButton == button) {
+            // 이미 선택된 버튼 다시 클릭 시 초기화
+            resetToInitialState()
+            showAllMarkers()  // 모든 마커 다시 표시
+            showToast("모든 식당을 다시 표시합니다.")
+        } else {
+            // 버튼 상태 업데이트
+            selectedButton?.isSelected = false
+            button.isSelected = true
+            selectedButton = button
+
+            // 마커 필터링
+            restaurantMarkers.forEach { marker ->
+                marker.map = if (marker.tag == doorType) naverMap else null
+            }
+
+            // 카메라 이동
+            moveCameraToLocation(lat, lon)
+            showToast("$doorType 위치로 이동합니다.")
+            isLocationFixed = true
             stopLocationTracking()
+        }
+    }
+
+    // 모든 마커 다시 표시
+    private fun showAllMarkers() {
+        restaurantMarkers.forEach { marker ->
+            marker.map = naverMap
         }
     }
 
@@ -370,6 +395,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addMarkersToMap(restaurantList: List<RestaurantListResponse>) {
+        restaurantMarkers.clear()
         restaurantList.forEach { restaurant ->
             if (restaurant.latitude != 0.0 && restaurant.longitude != 0.0) {
                 // 마커 추가
@@ -377,7 +403,7 @@ class MainActivity : AppCompatActivity() {
                     position = LatLng(restaurant.latitude, restaurant.longitude)
                     map = naverMap
                     captionText = restaurant.name
-                    tag = restaurant.id
+                    tag = restaurant.doorType
                 }
 
                 // 마커 클릭 이벤트 설정
@@ -394,7 +420,7 @@ class MainActivity : AppCompatActivity() {
                             position = LatLng(lat, lng)
                             map = naverMap
                             captionText = restaurant.name
-                            tag = restaurant.id
+                            tag = restaurant.doorType
                         }
 
                         // 마커 클릭 이벤트 설정
@@ -412,7 +438,7 @@ class MainActivity : AppCompatActivity() {
     // 식당 상세 화면으로 이동
     private fun navigateToRestaurantDetail(restaurantInfo: RestaurantInfo) {
         val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
-            putExtra("restaurantInfo", restaurantInfo)
+            putExtra("restaurantId", restaurantInfo.id)
         }
         startActivity(intent)
     }
