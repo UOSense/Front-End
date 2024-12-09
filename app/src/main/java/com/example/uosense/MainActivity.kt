@@ -61,13 +61,11 @@ class MainActivity : AppCompatActivity() {
     private var userMarker: Marker? = null
     private val restaurantMarkers = mutableListOf<Marker>()
     private lateinit var locationSource: FusedLocationSource
+
     // 위치 추적 모드 관리 변수
     private var isLocationFixed = false
 
     private lateinit var tokenManager: TokenManager
-
-
-
 
 
     //검색을 위해서 새로운 변수
@@ -78,8 +76,6 @@ class MainActivity : AppCompatActivity() {
      * 초기 상태 관리 및 버튼 토글 기능 추가
      */
     private var selectedButton: View? = null
-
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -158,15 +154,30 @@ class MainActivity : AppCompatActivity() {
         mapFragment.getMapAsync { naverMap ->
             this.naverMap = naverMap
             this.naverMap.locationSource = locationSource
-            Log.d("NAVER_MAP_INIT", "NaverMap 초기화 성공")
+
+
+            naverMap.addOnCameraChangeListener { reason, animated ->
+                if (!animated) {  // 애니메이션이 아니면 수동 이동으로 간주
+                    stopLocationTracking()
+                    Log.d("CAMERA_MOVE", "사용자 수동 카메라 이동 감지")
+                }
+            }
+
+            naverMap.addOnCameraIdleListener {
+                Log.d("CAMERA_IDLE", "카메라 이동 완료")
+            }
+
             initializeMapWithoutPermission()
 
             requestLocationPermission()
         }
 
         binding.btnUserLocation.setOnClickListener {
-            checkLocationPermissionAndMoveCamera()
+            enableUserLocation()
+            isLocationFixed = false
+            showToast("내 위치로 돌아갑니다.")
         }
+
 
         setupSearch()
 
@@ -252,7 +263,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     // 전체 식당 로딩 함수
     private fun loadAllRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -276,6 +286,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     // 특정 DoorType 식당 로딩 함수
     private fun loadRestaurantsByFilter(doorType: String) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -293,7 +304,6 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    showToast("데이터 로드 중 오류가 발생했습니다.")
                 }
                 e.printStackTrace()
             }
@@ -323,9 +333,9 @@ class MainActivity : AppCompatActivity() {
             )
         )
     }
+
     // 현재 위치 추적 활성화
     private fun enableUserLocation() {
-        Log.d("SIBAL", "실행됨")
         if (::naverMap.isInitialized && !isLocationFixed) {
             naverMap.locationTrackingMode = LocationTrackingMode.Follow
             naverMap.addOnLocationChangeListener { location ->
@@ -334,9 +344,10 @@ class MainActivity : AppCompatActivity() {
                     Log.d("LOCATION_UPDATE", "현재 위치: (${location.latitude}, ${location.longitude})")
                 }
             }
-            Log.d("LOCATION_TRACKING", "현재 위치 추적 시작")
+            Log.d("LOCATION_TRACKING", "위치 추적 시작")
         }
     }
+
 
 
 
@@ -463,12 +474,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 위치 추적 중지
     private fun stopLocationTracking() {
-        naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
-        isLocationFixed = true
-        Log.d("LOCATION_TRACKING", "위치 추적 중지됨")
+        if (::naverMap.isInitialized) {
+            naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
+            isLocationFixed = true
+            Log.d("LOCATION_TRACKING", "위치 추적 중지됨")
+        }
     }
+
 
 
     private fun loadRestaurants() {

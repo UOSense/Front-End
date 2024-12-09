@@ -278,7 +278,14 @@ data class ReportRequest(
 
 
 data class ReviewResponse(
-    val reviewId: Int
+    val reviewId: Int,
+    val reviewerName: String,
+    val body: String,
+    val rating: Double,
+    val likeCount: Int,
+    val isReviewEventCheck: Boolean,
+    val imageUrls: List<String>?,  // 이미지 URL 리스트
+    val tag: String?  // 선택적 태그
 )
 
 

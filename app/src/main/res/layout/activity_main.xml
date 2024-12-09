@@ -92,7 +92,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/button_selector"
+            android:background="@drawable/background_item"
             android:text="정문"
             android:textColor="@android:color/black" />
 
@@ -101,7 +101,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/button_selector"
+            android:background="@drawable/background_item"
             android:text="쪽문"
             android:textColor="@android:color/black" />
 
@@ -110,7 +110,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/button_selector"
+            android:background="@drawable/background_item"
             android:text="후문"
             android:textColor="@android:color/black" />
 
@@ -118,7 +118,7 @@
             android:id="@+id/doorTypeButton4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/button_selector"
+            android:background="@drawable/background_item"
             android:text="남문"
             android:textColor="@android:color/black" />
     </LinearLayout>

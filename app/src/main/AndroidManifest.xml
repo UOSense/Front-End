@@ -33,10 +33,13 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         tools:targetApi="31">
         <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
             android:name=".SelectedDoorActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ReviewListActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -65,22 +68,22 @@
             android:theme="@style/Theme.AppCompat.DayNight" />
         <activity
             android:name=".StartActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".ReviewWriteActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".RestaurantInfoSuggestionActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".ReportActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".MyPageActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
         <activity
             android:name=".ControlMainActivity"
-            android:exported="false"></activity>
+            android:exported="false" />
 
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
