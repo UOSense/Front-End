@@ -41,6 +41,12 @@ interface RestaurantApi {
         @Body loginRequest: LoginRequest
     ): Response<Unit>
 
+    // 토큰 재발급
+    @GET("/api/v1/user/reissue")
+    suspend fun reissueToken(
+        @Header("Cookie") refreshToken: String // Refresh Token을 쿠키로 전송
+    ): Response<Unit>
+
     // 특정 식당 메뉴 수정
     @PUT("/api/v1/restaurant/update/menu")
     suspend fun updateMenu(
@@ -238,9 +244,6 @@ interface RestaurantApi {
     @GET("/api/v1/report/get/list")
     suspend fun getReports(): List<ReportResponse>
 
-    // 토큰 재발급
-    @GET("/api/v1/user/reissue")
-    suspend fun reissueToken(): Response<Unit>
 
     // 로그아웃 처리
     @PUT("/api/v1/user/signout")

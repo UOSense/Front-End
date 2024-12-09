@@ -1,21 +1,44 @@
-import android.content.SharedPreferences
+import android.content.Context
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class AuthInterceptor(private val sharedPreferences: SharedPreferences) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        // SharedPreferences에서 access token 가져오기
-        val accessToken = sharedPreferences.getString("access_token", "") ?: ""
+class AuthInterceptor(private val context: Context) : Interceptor {
 
-        // access token이 있으면 Authorization 헤더에 추가
-        val request = if (accessToken.isNotEmpty()) {
-            chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer $accessToken")
-                .build()
-        } else {
-            chain.request()
+    private val tokenManager = TokenManager(context)
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val originalRequest = chain.request()
+        val accessToken = tokenManager.getAccessToken()
+
+        if (accessToken.isNullOrEmpty()) {
+            throw IllegalStateException("Access token is missing")
         }
 
-        return chain.proceed(request)
+        val modifiedRequest = originalRequest.newBuilder()
+            .addHeader("Authorization", "Bearer $accessToken")
+            .build()
+
+        val response = chain.proceed(modifiedRequest)
+
+        // Access Token이 만료되었을 경우
+        if (response.code == 401) {
+            response.close()
+
+            // Suspend 함수 호출을 위한 runBlocking 사용
+            val isTokenRefreshed = runBlocking {
+                tokenManager.refreshAccessToken()
+            }
+
+            if (isTokenRefreshed) {
+                val newAccessToken = tokenManager.getAccessToken()
+                val newRequest = originalRequest.newBuilder()
+                    .addHeader("Authorization", "Bearer $newAccessToken")
+                    .build()
+                return chain.proceed(newRequest)
+            }
+        }
+
+        return response
     }
 }
