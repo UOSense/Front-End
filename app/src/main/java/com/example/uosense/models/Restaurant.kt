@@ -266,8 +266,8 @@ data class ReviewRequest(
     val body: String,
     val rating: Double,
     val dateTime: String,
-    val isReviewEventCheck: Boolean, // 필드 이름 및 타입 확인
-    val tag: String?
+    val tag: String?,
+    val isReviewEventCheck: Boolean
 )
 
 data class ReportRequest(
@@ -278,14 +278,16 @@ data class ReportRequest(
 
 
 data class ReviewResponse(
-    val reviewId: Int,
-    val reviewerName: String,
+    val id: Int,
+    val restaurantId: Int,
+    val userId: Int,
     val body: String,
     val rating: Double,
+    val dateTime: String,
+    val tag: String?,
     val likeCount: Int,
-    val isReviewEventCheck: Boolean,
-    val imageUrls: List<String>?,  // 이미지 URL 리스트
-    val tag: String?  // 선택적 태그
+    val imageUrls: List<String>?,
+    val reviewEventCheck: Boolean
 )
 
 
