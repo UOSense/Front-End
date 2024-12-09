@@ -38,11 +38,11 @@ class RestaurantDetailActivity : AppCompatActivity() {
         restaurantId = intent.getIntExtra("restaurantId", -1)
         if (restaurantId != -1) {
             viewModel.fetchRestaurantById(restaurantId)
+            Log.d("RESTAURANT_DETAIL", "받은 식당 ID: $restaurantId")
         } else {
             AppUtils.showToast(this,"식당 정보를 불러오지 못했습니다.")
         }
 
-        Log.d("RESTAURANT_DETAIL", "받은 식당 ID: $restaurantId")
     }
 
     private fun initializeViews() {
