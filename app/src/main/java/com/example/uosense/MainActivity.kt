@@ -1,13 +1,16 @@
 package com.example.uosense
 
+
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.example.uosense.databinding.ActivityMainBinding
 import com.example.uosense.models.RestaurantInfo
+import com.naver.maps.map.util.FusedLocationSource
 
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.models.RestaurantRequest
@@ -16,6 +19,7 @@ import com.naver.maps.geometry.LatLng
 import com.naver.maps.geometry.LatLngBounds
 import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.CameraUpdate
+import com.naver.maps.map.LocationTrackingMode
 import com.naver.maps.map.MapFragment
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.NaverMapSdk
@@ -30,31 +34,82 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location.distanceBetween
+import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import com.naver.maps.map.overlay.OverlayImage
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var naverMap: NaverMap
+    private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
+    private var userMarker: Marker? = null
     private val restaurantMarkers = mutableListOf<Marker>()
-    private lateinit var userProfileBtn: Button
+    private lateinit var locationSource: FusedLocationSource
+    // 위치 추적 모드 관리 변수
+    private var isLocationFixed = false
 
-    private val bounds = LatLngBounds.Builder()
+
+
+    //검색을 위해서 새로운 변수
+    private var selectedDoorType: String? = null
+    private var isNearbySearchEnabled = false
+
+    /**
+     * 초기 상태 관리 및 버튼 토글 기능 추가
+     */
+    private var selectedButton: View? = null
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         // 뷰 바인딩 초기화
         binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
-        userProfileBtn = findViewById(R.id.userProfileBtn)
-        // 버튼 클릭 이벤트
-        userProfileBtn.setOnClickListener {
-            navigateToMyPage()
+        binding.chkNearby.setOnCheckedChangeListener { _, isChecked ->
+            isNearbySearchEnabled = isChecked
+        }
+
+        binding.doorTypeButton1.setOnClickListener {
+            selectedDoorType = "정문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5834643, 127.0536246)
+            showToast("정문 위치로 이동합니다.")
+        }
+
+        binding.doorTypeButton2.setOnClickListener {
+            selectedDoorType = "쪽문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5869791, 127.0564010)
+            showToast("쪽문 위치로 이동합니다.")
+        }
+
+        binding.doorTypeButton3.setOnClickListener {
+            selectedDoorType = "후문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5869320, 127.0606581)
+            showToast("후문 위치로 이동합니다.")
+        }
+
+        binding.doorTypeButton4.setOnClickListener {
+            selectedDoorType = "남문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5775540, 127.0578147)
+            showToast("남문 위치로 이동합니다.")
         }
 
 
+        setContentView(binding.root)
+
+        setupLocationPermissionLauncher()
+        locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
 
 
         // 네이버 지도 초기화
@@ -67,12 +122,33 @@ class MainActivity : AppCompatActivity() {
 
         mapFragment.getMapAsync { naverMap ->
             this.naverMap = naverMap
+            this.naverMap.locationSource = locationSource
             Log.d("NAVER_MAP_INIT", "NaverMap 초기화 성공")
-            initializeMap()
-            loadRestaurants()
+            initializeMapWithoutPermission()
+
+            requestLocationPermission()
         }
 
+        binding.btnUserLocation.setOnClickListener {
+            checkLocationPermissionAndMoveCamera()
+        }
 
+        setupSearch()
+
+        setupFilterButtons()
+
+        setupClickListeners()
+
+        resetToInitialState()
+
+        customizeSearchView()
+
+        // 내 위치 버튼 클릭 시 위치 추적 재시작
+        binding.btnUserLocation.setOnClickListener {
+            enableUserLocation()
+            isLocationFixed = false
+            showToast("내 위치로 돌아갑니다.")
+        }
 
 
 
@@ -96,27 +172,104 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-
-        setupFilterButtons()
-
-
         // MyPage 이동 버튼 클릭 이벤트
 //        binding.myPageBtn.setOnClickListener {
 //            startActivity(Intent(this, MyPageActivity::class.java))
 //        }
     }
 
-
-    private fun navigateToMyPage() {
-        val intent = Intent(this, MyPageActivity::class.java)
-        startActivity(intent) // MyPageActivity로 이동
+    // 위치 권한 요청 초기화
+    private fun setupLocationPermissionLauncher() {
+        locationPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            ) {
+                Log.d("PERMISSION_RESULT", "위치 권한 허용됨")
+                if (::naverMap.isInitialized) {
+                    enableUserLocation()
+                } else {
+                    Log.e("PERMISSION_RESULT", "NaverMap 초기화가 안 됨")
+                }
+            } else {
+                Log.d("PERMISSION_RESULT", "위치 권한 거부됨")
+                if (::naverMap.isInitialized) {
+                    initializeMapWithoutPermission()
+                }
+            }
+        }
     }
 
-    private fun initializeMap() {
-        val initialPosition = LatLng(37.5834643, 127.0536246) // 서울시립대 정문 위치
-        val cameraPosition = CameraPosition(initialPosition, 16.0) // 줌 레벨 15.0 설정
+
+
+
+    private fun checkLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            enableUserLocation()
+        } else {
+            requestLocationPermission()
+        }
+    }
+
+    private fun requestLocationPermission() {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+    // 현재 위치 추적 활성화
+    private fun enableUserLocation() {
+        if (::naverMap.isInitialized && !isLocationFixed) {
+            naverMap.locationTrackingMode = LocationTrackingMode.Follow
+            naverMap.addOnLocationChangeListener { location ->
+                if (!isLocationFixed) {
+                    updateUserLocationMarker(location.latitude, location.longitude)
+                    Log.d("LOCATION_UPDATE", "현재 위치: (${location.latitude}, ${location.longitude})")
+                }
+            }
+            Log.d("LOCATION_TRACKING", "현재 위치 추적 시작")
+        }
+    }
+
+
+
+    private fun initializeMapWithoutPermission() {
+        val defaultPosition = LatLng(37.5834643, 127.0536246) // 서울시립대 정문
+        val cameraPosition = CameraPosition(defaultPosition, 16.0)
         naverMap.cameraPosition = cameraPosition
+        Log.d("MAP_INIT", "기본 위치로 초기화: ($defaultPosition)")
+        loadRestaurants() // 식당 정보 불러오기
     }
+
+
+    private fun updateUserLocationMarker(latitude: Double, longitude: Double) {
+        if (userMarker == null) {
+            userMarker = Marker().apply {
+                position = LatLng(latitude, longitude)
+                icon = OverlayImage.fromResource(R.drawable.ddong_playstore)
+                width = 120
+                height = 120
+                captionText = "현재 위치"
+                map = naverMap
+            }
+            Log.d("USER_MARKER", "사용자 마커 생성됨: ($latitude, $longitude)")
+        } else {
+            userMarker?.position = LatLng(latitude, longitude)
+            Log.d("USER_MARKER", "사용자 마커 업데이트됨: ($latitude, $longitude)")
+        }
+        moveCameraToLocation(latitude, longitude)
+    }
+
+
 
 
     private fun getLatLngFromAddress(address: String, callback: (Double?, Double?) -> Unit) {
@@ -162,35 +315,43 @@ class MainActivity : AppCompatActivity() {
 
     //버튼을 누르면 위치 이동
     private fun setupFilterButtons() {
-        // 정문 버튼 클릭
         binding.doorTypeButton1.setOnClickListener {
-            moveCameraToLocation(37.5834643, 127.0536246) // 정문 좌표
-            Toast.makeText(this, "정문 위치로 이동합니다.", Toast.LENGTH_SHORT).show()
+            updateButtonSelection(binding.doorTypeButton1, "정문", 37.5834643, 127.0536246)
+            Toast.makeText(this, "정문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
+            stopLocationTracking()
         }
 
-        // 쪽문 버튼 클릭
         binding.doorTypeButton2.setOnClickListener {
-            moveCameraToLocation(37.5869791, 127.0564010) // 쪽문 좌표
-            Toast.makeText(this, "쪽문 위치로 이동합니다.", Toast.LENGTH_SHORT).show()
+            updateButtonSelection(binding.doorTypeButton2, "쪽문", 37.5869791, 127.0564010)
+            Toast.makeText(this, "쪽문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
+            stopLocationTracking()
         }
 
-        // 후문 버튼 클릭
         binding.doorTypeButton3.setOnClickListener {
-            moveCameraToLocation(37.5869320, 127.0606581) // 후문 좌표
-            Toast.makeText(this, "후문 위치로 이동합니다.", Toast.LENGTH_SHORT).show()
+            updateButtonSelection(binding.doorTypeButton3, "후문", 37.5869320, 127.0606581)
+            Toast.makeText(this, "후문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
+            stopLocationTracking()
         }
 
-        // 남문 버튼 클릭
         binding.doorTypeButton4.setOnClickListener {
-            moveCameraToLocation(37.5775540, 127.0578147) // 남문 좌표
-            Toast.makeText(this, "남문 위치로 이동합니다.", Toast.LENGTH_SHORT).show()
+            updateButtonSelection(binding.doorTypeButton4, "남문", 37.5775540, 127.0578147)
+            Toast.makeText(this, "남문 위치로 이동합니다.",Toast.LENGTH_SHORT).show()
+            stopLocationTracking()
         }
     }
+
+    // 위치 추적 중지
+    private fun stopLocationTracking() {
+        naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
+        isLocationFixed = true
+        Log.d("LOCATION_TRACKING", "위치 추적 중지됨")
+    }
+
 
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val restaurants = RetrofitInstance.restaurantApi.getAllRestaurants(null, null)
+                val restaurants = RetrofitInstance.restaurantApi.getRestaurantList(null, "DEFAULT")
                 withContext(Dispatchers.Main) {
                     if (restaurants.isNotEmpty()) {
                         addMarkersToMap(restaurants)
@@ -248,6 +409,14 @@ class MainActivity : AppCompatActivity() {
         }
         moveCameraToFitAllMarkers()
     }
+    // 식당 상세 화면으로 이동
+    private fun navigateToRestaurantDetail(restaurantInfo: RestaurantInfo) {
+        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
+            putExtra("restaurantInfo", restaurantInfo)
+        }
+        startActivity(intent)
+    }
+
     private fun fetchRestaurantDetails(restaurantId: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -268,12 +437,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToRestaurantDetail(restaurantInfo: RestaurantInfo) {
-        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
-            putExtra("restaurantInfo", restaurantInfo)
+    private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
+        if (restaurantList.isNotEmpty()) {
+            val intent = Intent(this, RestaurantListActivity::class.java).apply {
+                putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            }
+            startActivity(intent)
+        } else {
+            showToast("검색 결과가 없습니다.")
         }
-        startActivity(intent)
     }
+
+
 
     /*
     private fun addMarkersToMap(restaurantList: List<RestaurantListResponse>) {
@@ -345,36 +520,93 @@ class MainActivity : AppCompatActivity() {
         moveCameraToFitAllMarkers()
     }
     */
+    private fun setupSearch() {
+        binding.svSearch.setOnQueryTextListener(object :
+            androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                val trimmedQuery = query?.trim()
+                if (!trimmedQuery.isNullOrBlank()) {
+                    searchRestaurants(trimmedQuery)
+                } else {
+                    Toast.makeText(this@MainActivity, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean = false
+        })
+    }
 
 
     private fun moveCameraToLocation(latitude: Double, longitude: Double) {
         val cameraUpdate = CameraUpdate.scrollTo(LatLng(latitude, longitude))
         naverMap.moveCamera(cameraUpdate)
+        Log.d("CAMERA_MOVE", "카메라 이동됨: ($latitude, $longitude)")
     }
 
+
     private fun searchRestaurants(keyword: String) {
+        val searchDoorType = when {
+            selectedDoorType != null -> selectedDoorType  // 필터 버튼 선택됨
+            isNearbySearchEnabled && !isLocationFixed -> getClosestDoorType()  // 체크박스 선택 + 위치 추적 가능
+            else -> null  // 기본 검색 (필터 없음)
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.searchRestaurants(keyword, "DEFAULT")
+                val response = RetrofitInstance.restaurantApi.searchRestaurants(
+                    keyword = keyword,
+                    closestDoor = searchDoorType ?: "null"
+                )
+
                 withContext(Dispatchers.Main) {
                     if (response.isNotEmpty()) {
-                        val intent =
-                            Intent(this@MainActivity, RestaurantListActivity::class.java).apply {
-                                putParcelableArrayListExtra("restaurantList", ArrayList(response))
-                            }
-                        startActivity(intent)
+                        navigateToRestaurantList(response)
                     } else {
-                        Toast.makeText(this@MainActivity, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show()
+                        showToast("검색 결과가 없습니다.")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "검색 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                    showToast("검색 중 오류가 발생했습니다.")
                 }
                 e.printStackTrace()
             }
         }
     }
+
+    /** 가장 가까운 문 계산
+     * getClosestDoorType
+     */
+    private fun getClosestDoorType(): String? {
+        val userLocation = locationSource.lastLocation ?: return null
+
+        val doorLocations = mapOf(
+            "정문" to LatLng(37.5834643, 127.0536246),
+            "쪽문" to LatLng(37.5869791, 127.0564010),
+            "후문" to LatLng(37.5869320, 127.0606581),
+            "남문" to LatLng(37.5775540, 127.0578147)
+        )
+
+        val closestDoor = doorLocations.minByOrNull { (_, location) ->
+            distanceBetween(userLocation.latitude, userLocation.longitude, location.latitude, location.longitude)
+        }
+
+        return closestDoor?.key
+    }
+
+    /** 거리 계산 유틸리티 함수
+     * distanceBetween
+     */
+    private fun distanceBetween(
+        lat1: Double, lon1: Double, lat2: Double, lon2: Double
+    ): Float {
+        val result = FloatArray(1)
+        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, result)
+        return result[0]
+    }
+
+
 
     /*
     **하지마 시발
@@ -406,15 +638,128 @@ class MainActivity : AppCompatActivity() {
     private fun moveCameraToFitAllMarkers() {
         if (restaurantMarkers.isNotEmpty()) {
             val bounds = LatLngBounds.Builder().apply {
-                restaurantMarkers.forEach { marker ->
-                    include(marker.position)
-                }
+                restaurantMarkers.forEach { include(it.position) }
+                userMarker?.let { include(it.position) }
             }.build()
 
-            val cameraUpdate = CameraUpdate.fitBounds(bounds, 100) // 패딩 추가
+            val cameraUpdate = CameraUpdate.fitBounds(bounds, 100)
             naverMap.moveCamera(cameraUpdate)
         }
     }
+
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun checkLocationPermissionAndMoveCamera() {
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            || ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            if (::naverMap.isInitialized) {
+                val lastLocation = locationSource.lastLocation
+                if (lastLocation != null) {
+                    moveCameraToLocation(lastLocation.latitude, lastLocation.longitude)
+                    showToast("사용자 위치로 이동했습니다.")
+                } else {
+                    showToast("현재 위치를 가져올 수 없습니다.")
+                }
+            } else {
+                Log.e("NAVER_MAP_ERROR", "NaverMap 초기화가 안됨")
+            }
+        } else {
+            requestLocationPermission()
+        }
+    }
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
+    }
+
+    private fun resetToInitialState() {
+        selectedButton?.isSelected = false
+        selectedButton = null
+        selectedDoorType = null
+        isLocationFixed = false
+
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            || ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            checkLocationPermissionAndMoveCamera()
+        } else {
+            // 위치 권한이 없을 경우 정문으로 이동
+            moveCameraToLocation(37.5834643, 127.0536246)
+            showToast("위치 권한이 없어 정문 위치로 이동합니다.")
+        }
+    }
+
+    private fun updateButtonSelection(newButton: View, doorType: String, lat: Double, lon: Double) {
+        if (selectedButton == newButton) {
+            // 이미 선택된 버튼을 다시 누르면 초기 상태로 복귀
+            resetToInitialState()
+        } else {
+            // 버튼 선택 상태 업데이트
+            selectedButton?.isSelected = false
+            newButton.isSelected = true
+            selectedButton = newButton
+            selectedDoorType = doorType
+            isLocationFixed = true
+
+            // 해당 위치로 이동
+            moveCameraToLocation(lat, lon)
+            showToast("$doorType 위치로 이동합니다.")
+        }
+    }
+
+    /**
+     * 검색창 글씨체는 따로 함수정의해서 색상 변경
+     */
+    private fun customizeSearchView() {
+        try {
+            // SearchView의 AutoCompleteTextView 가져오기
+            val searchAutoComplete = binding.svSearch.javaClass
+                .getDeclaredField("mSearchSrcTextView")
+                .apply { isAccessible = true }
+                .get(binding.svSearch) as? android.widget.AutoCompleteTextView
+
+            searchAutoComplete?.apply {
+                setHintTextColor(resources.getColor(R.color.black, null))  // 힌트 텍스트 색상 설정
+                setTextColor(resources.getColor(R.color.black, null))     // 입력 텍스트 색상 설정
+                textSize = 16f                                            // 텍스트 크기 설정
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * (iv_search) 검색 버튼 눌러질 떄 이벤트 처리
+     */
+    private fun setupClickListeners() {
+        binding.ivSearch.setOnClickListener {
+            val query = binding.svSearch.query.toString().trim()
+            if (query.isNotBlank()) {
+                searchRestaurants(query)
+            } else {
+                Toast.makeText(this, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
+
+
+
+
 }
 
 

@@ -91,12 +91,8 @@ dependencies {
     implementation ("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
 
-    // TabLayout에 필요한 뷰 페이저
+
     implementation ("com.google.android.material:material:1.9.0")
     implementation ("androidx.viewpager2:viewpager2:1.1.0")
-
-    // 코루틴 최신 버전 사용
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-
 
 }

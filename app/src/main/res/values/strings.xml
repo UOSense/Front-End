@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">UOSense</string>
+    <string name="favorite_button_desc">즐겨찾기 버튼</string>
+    <string name="restaurant_image">Restaurant Image</string>
 </resources>
