@@ -46,7 +46,6 @@ class RestaurantDetailActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
-        favoriteButton = findViewById(R.id.favoriteButton)
         favoriteButton.setOnClickListener { handleFavoriteButtonClick() }
 
         val businessDaysRecyclerView = findViewById<RecyclerView>(R.id.businessDaysRecyclerView)
