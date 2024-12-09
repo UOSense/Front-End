@@ -116,7 +116,7 @@ interface RestaurantApi {
 
     // 식당 정보 일괄 조회
     @GET("/api/v1/restaurant/get/list")
-    suspend fun getAllRestaurants(
+    suspend fun getRestaurantList(
         @Query("doorType") doorType: String? = null,
         @Query("category") category: String? = null
     ): List<RestaurantListResponse>

@@ -115,17 +115,6 @@ data class LocalTime(
     val nano: Int? = null
 )
 
-// 웹메일 요청 모델
-data class WebmailRequest(
-    val email: String,
-    val purpose: String
-)
-
-// 인증 코드 요청 모델
-data class AuthCodeRequest(
-    val email: String,
-    val code: String
-)
 
 // 식당 이미지 응답 모델
 data class RestaurantImagesResponse(
