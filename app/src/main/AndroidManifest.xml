@@ -61,7 +61,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="false">
-
         </activity>
 
         <activity android:name=".ReviewWriteActivity"
@@ -80,6 +79,11 @@
 
         <activity
             android:name=".MyPageActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".ControlMainActivity"
             android:exported="false">
         </activity>
 

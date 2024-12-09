@@ -14,11 +14,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.util.Base64
+import androidx.core.content.ContextCompat.startActivity
+import org.json.JSONObject
 
 class StartActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStartBinding
     private lateinit var tokenManager: TokenManager
+    private var userRole: String? = null // admin인지 user인지 저장
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,44 +58,84 @@ class StartActivity : AppCompatActivity() {
         }
     }
 
-//    로그인 처리
-private fun loginUser(email: String, password: String) {
-    val loginRequest = LoginRequest(email, password)
+    //    로그인 처리
+    private fun loginUser(email: String, password: String) {
+        val loginRequest = LoginRequest(email, password)
 
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            val response = RetrofitInstance.restaurantApi.loginUser(loginRequest)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitInstance.restaurantApi.loginUser(loginRequest)
 
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    val accessToken = response.headers()["access"]?.removePrefix("Bearer ") ?: ""
-                    val refreshToken = response.headers()["Set-Cookie"]?.split(";")
-                        ?.find { it.startsWith("refresh=") }
-                        ?.substringAfter("refresh=") ?: ""
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val accessToken =
+                            response.headers()["access"]?.removePrefix("Bearer ") ?: ""
+                        val refreshToken = response.headers()["Set-Cookie"]?.split(";")
+                            ?.find { it.startsWith("refresh=") }
+                            ?.substringAfter("refresh=") ?: ""
 
-                    if (accessToken.isNotEmpty() && refreshToken.isNotEmpty()) {
-                        saveTokensToLocal(accessToken, refreshToken)
-                        Toast.makeText(this@StartActivity, "로그인 성공!", Toast.LENGTH_SHORT).show()
-                        navigateToMainActivity()
+                        if (accessToken.isNotEmpty() && refreshToken.isNotEmpty()) {
+                            // 토큰 저장 및 role 파싱
+                            saveTokensToLocal(accessToken, refreshToken)
+                            parseRoleFromToken(refreshToken)
+
+                            if (userRole == "USER") {
+                                Toast.makeText(
+                                    this@StartActivity,
+                                    "로그인 성공! 사용자 역할: USER",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                navigateToMainActivity()
+                            } else if (userRole == "ADMIN") {
+                                Toast.makeText(
+                                    this@StartActivity,
+                                    "로그인 성공! 관리자 역할: ADMIN",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                navigateToControlMainActivity()
+                            } else {
+                                Toast.makeText(
+                                    this@StartActivity,
+                                    "알 수 없는 사용자 역할: $userRole",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            Toast.makeText(this@StartActivity, "토큰 발급 실패", Toast.LENGTH_SHORT)
+                                .show()
+                        }
                     } else {
-                        Toast.makeText(this@StartActivity, "토큰 발급 실패", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@StartActivity,
+                            "로그인 실패: ${response.code()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                } else {
-                    Toast.makeText(this@StartActivity, "로그인 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@StartActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@StartActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
         }
     }
-}
 
 
+    //    리프레시 토큰 파싱 처리
+    private fun parseRoleFromToken(refreshToken: String) {
+        try {
+            // JWT 토큰의 Payload 부분만 추출
+            val payloadBase64 = refreshToken.split(".")[1]
+            val payload = String(Base64.decode(payloadBase64, Base64.URL_SAFE))
 
-
-
+            // JSON 객체로 변환하여 role 값 추출
+            val jsonObject = JSONObject(payload)
+            userRole = jsonObject.getString("role") // admin 또는 user
+        } catch (e: Exception) {
+            Log.e("ParseRole", "토큰 파싱 중 오류 발생: ${e.message}")
+        }
+    }
 
 
     private fun saveTokensToLocal(accessToken: String, refreshToken: String) {
@@ -104,6 +148,12 @@ private fun loginUser(email: String, password: String) {
 
     private fun navigateToMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToControlMainActivity() {
+        val intent = Intent(this, ControlMainActivity::class.java)
         startActivity(intent)
         finish()
     }
