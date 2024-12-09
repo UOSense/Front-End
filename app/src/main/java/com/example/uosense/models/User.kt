@@ -15,3 +15,8 @@ data class AuthCodeRequest(
     val email: String,
     val code: String // 사용자가 입력한 인증 코드
 )
+
+data class LoginRequest(
+    val email: String,
+    val password: String
+)

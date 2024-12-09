@@ -35,6 +35,12 @@ interface RestaurantApi {
         @Body authCodeRequest: AuthCodeRequest
     ): Response<Boolean>
 
+    // 로그인
+    @POST("/api/v1/user/signin")
+    suspend fun loginUser(
+        @Body loginRequest: LoginRequest
+    ): Response<Unit>
+
     // 특정 식당 메뉴 수정
     @PUT("/api/v1/restaurant/update/menu")
     suspend fun updateMenu(
