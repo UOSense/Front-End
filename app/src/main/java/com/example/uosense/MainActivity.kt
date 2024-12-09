@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     // 위치 추적 모드 관리 변수
     private var isLocationFixed = false
 
+
+
     //검색을 위해서 새로운 변수
     private var selectedDoorType: String? = null
     private var isNearbySearchEnabled = false
@@ -134,7 +136,11 @@ class MainActivity : AppCompatActivity() {
 
         setupFilterButtons()
 
+        setupClickListeners()
+
         resetToInitialState()
+
+        customizeSearchView()
 
         // 내 위치 버튼 클릭 시 위치 추적 재시작
         binding.btnUserLocation.setOnClickListener {
@@ -164,7 +170,6 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
         })
-
 
         // MyPage 이동 버튼 클릭 이벤트
 //        binding.myPageBtn.setOnClickListener {
@@ -705,6 +710,41 @@ class MainActivity : AppCompatActivity() {
             // 해당 위치로 이동
             moveCameraToLocation(lat, lon)
             showToast("$doorType 위치로 이동합니다.")
+        }
+    }
+
+    /**
+     * 검색창 글씨체는 따로 함수정의해서 색상 변경
+     */
+    private fun customizeSearchView() {
+        try {
+            // SearchView의 AutoCompleteTextView 가져오기
+            val searchAutoComplete = binding.svSearch.javaClass
+                .getDeclaredField("mSearchSrcTextView")
+                .apply { isAccessible = true }
+                .get(binding.svSearch) as? android.widget.AutoCompleteTextView
+
+            searchAutoComplete?.apply {
+                setHintTextColor(resources.getColor(R.color.black, null))  // 힌트 텍스트 색상 설정
+                setTextColor(resources.getColor(R.color.black, null))     // 입력 텍스트 색상 설정
+                textSize = 16f                                            // 텍스트 크기 설정
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * (iv_search) 검색 버튼 눌러질 떄 이벤트 처리
+     */
+    private fun setupClickListeners() {
+        binding.ivSearch.setOnClickListener {
+            val query = binding.svSearch.query.toString().trim()
+            if (query.isNotBlank()) {
+                searchRestaurants(query)
+            } else {
+                Toast.makeText(this, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
