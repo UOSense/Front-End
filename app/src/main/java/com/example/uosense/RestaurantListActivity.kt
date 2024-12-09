@@ -1,5 +1,8 @@
 package com.example.uosense
 
+import com.example.uosense.AppUtils
+import android.content.Intent
+import com.example.uosense.MainActivity
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
@@ -41,8 +44,13 @@ class RestaurantListActivity : AppCompatActivity() {
             intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
         }
 
-        adapter = RestaurantListAdapter(restaurantList)
+
+
+        adapter = RestaurantListAdapter(mutableListOf()) { restaurant ->
+            navigateToDetailActivity(restaurant)
+        }
         recyclerView.adapter = adapter
+
 
         checkIfListIsEmpty()
 
@@ -66,16 +74,16 @@ class RestaurantListActivity : AppCompatActivity() {
         val buttonBackGate = findViewById<Button>(R.id.doorTypeButton3)
         val buttonSouthGate = findViewById<Button>(R.id.doorTypeButton4)
 
-        buttonFrontGate.setOnClickListener { fetchFilteredRestaurants("FRONT") }
-        buttonSideGate.setOnClickListener { fetchFilteredRestaurants("SIDE") }
-        buttonBackGate.setOnClickListener { fetchFilteredRestaurants("BACK") }
-        buttonSouthGate.setOnClickListener { fetchFilteredRestaurants("SOUTH") }
+        buttonFrontGate.setOnClickListener { fetchFilteredRestaurants("FRONT", "DEFAULT") }
+        buttonSideGate.setOnClickListener { fetchFilteredRestaurants("SIDE", "DEFAULT") }
+        buttonBackGate.setOnClickListener { fetchFilteredRestaurants("BACK", "DEFAULT") }
+        buttonSouthGate.setOnClickListener { fetchFilteredRestaurants("SOUTH", "DEFAULT") }
     }
 
-    private fun fetchFilteredRestaurants(doorType: String) {
+    private fun fetchFilteredRestaurants(doorType: String, filter: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantList(doorType)
+                val response = RetrofitInstance.restaurantApi.getRestaurantList(doorType, filter)
                 withContext(Dispatchers.Main) {
                     if (response.isNotEmpty()) {
                         adapter.updateList(response)
@@ -136,6 +144,13 @@ class RestaurantListActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun navigateToDetailActivity(restaurant: RestaurantListResponse) {
+        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
+            putExtra("restaurantId", restaurant.id)
+        }
+        startActivity(intent)
     }
 
     // 어댑터 업데이트 함수

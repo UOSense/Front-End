@@ -126,7 +126,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:gravity="center_vertical"
-            android:text="선택되지 않음"
+            android:text="즐겨찾기 많은 순"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
     </LinearLayout>
@@ -135,6 +135,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:visibility="visible"
         app:layout_constraintTop_toBottomOf="@id/sortBox"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

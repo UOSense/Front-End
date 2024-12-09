@@ -1,151 +1,69 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    >
-    <LinearLayout
-        android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="8dp"
+    android:background="@android:color/white"
+    android:elevation="2dp">
+
+    <!-- 식당 이미지 -->
+    <ImageView
+        android:id="@+id/restaurantImage"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@string/restaurant_image"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:src="@drawable/ic_launcher_foreground" />
+
+    <!-- 식당 이름 -->
+    <TextView
+        android:id="@+id/restaurantName"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="@android:color/white"
-        android:elevation="2dp">
+        android:text=""
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        app:layout_constraintStart_toEndOf="@id/restaurantImage"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!--    식당 세부 정보-->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="5dp"
-            >
+    <!-- 식당 카테고리 -->
+    <TextView
+        android:id="@+id/restaurantCategory"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="@android:color/darker_gray"
+        app:layout_constraintStart_toEndOf="@id/restaurantImage"
+        app:layout_constraintTop_toBottomOf="@id/restaurantName"
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 식당 주소 -->
+    <TextView
+        android:id="@+id/restaurantAddress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="@android:color/darker_gray"
+        app:layout_constraintStart_toEndOf="@id/restaurantImage"
+        app:layout_constraintTop_toBottomOf="@id/restaurantCategory"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                >
+    <!-- 식당 평점 -->
+    <TextView
+        android:id="@+id/restaurantRating"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="16sp"
+        android:textColor="#FF0000"
+        app:layout_constraintStart_toEndOf="@id/restaurantImage"
+        app:layout_constraintTop_toBottomOf="@id/restaurantAddress" />
 
-                <!--    식당 이름   -->
-                <TextView
-                    android:id="@+id/restaurantName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="18dp"
-                    android:textStyle="bold"
-                    android:textColor="@android:color/black"
-                    />
-                <!--    식당 유형   -->
-                <TextView
-                    android:id="@+id/restaurantCategory"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:textColor="@android:color/black"
-                    />
-                <!--    식당 영업 여부    -->
-                <TextView
-                    android:id="@+id/restaurantDoorType"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="영업 중"
-                    android:textSize="16dp"
-                    android:layout_marginLeft="90dp"
-                    android:textStyle="bold"
-                    android:textColor="@android:color/black"
-                    />
-
-            </LinearLayout>
-
-                <!--    식당 위치   -->
-            <TextView
-                android:id="@+id/restaurantAddress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textColor="@android:color/black"
-            />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                >
-
-                    <!--    별 출력    -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="★"
-                    android:textColor="#FF0000"
-                    android:gravity="center"
-
-                    />
-                    <!--    평점      -->
-                <TextView
-                    android:id="@+id/restaurantRating"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
-                    android:textStyle="bold"
-                    />
-                    <!--    리뷰 출력   -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="25dp"/>
-                    <!--    리뷰 수    -->
-                <TextView
-                    android:id="@+id/restaurantReviewCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"/>
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="데이트 추천"
-                    android:padding="5dp"
-                    android:textColor="@color/pink"
-                    android:background="@drawable/rounded_border_pink"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:textColor="@color/green"
-                    android:background="@drawable/rounded_border_green"
-                    android:text="착한 가격"/>
-
-
-
-            </LinearLayout>
-
-
-    <!--    식당 이미지-->
-
-
-        </LinearLayout>
-
-        <ImageView
-            android:id="@+id/restaurantImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="15dp"
-            android:background="@drawable/ic_launcher_background"
-            android:src="@drawable/ic_launcher_foreground" />
-
-
-
-    </LinearLayout>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

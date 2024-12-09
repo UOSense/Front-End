@@ -1,5 +1,6 @@
 package com.example.uosense
 
+
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -338,6 +339,7 @@ class MainActivity : AppCompatActivity() {
             stopLocationTracking()
         }
     }
+
     // 위치 추적 중지
     private fun stopLocationTracking() {
         naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
@@ -436,11 +438,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
-        val intent = Intent(this, RestaurantListActivity::class.java).apply {
-            putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+        if (restaurantList.isNotEmpty()) {
+            val intent = Intent(this, RestaurantListActivity::class.java).apply {
+                putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            }
+            startActivity(intent)
+        } else {
+            showToast("검색 결과가 없습니다.")
         }
-        startActivity(intent)
     }
+
 
 
     /*

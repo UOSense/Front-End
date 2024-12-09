@@ -1,6 +1,8 @@
 package com.example.uosense
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.geometry.LatLngBounds
 import com.naver.maps.map.CameraUpdate
@@ -91,5 +93,12 @@ object AppUtils {
         val result = FloatArray(1)
         android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, result)
         return result[0]
+    }
+
+    /**
+     * Toast 메시지 출력
+     */
+    fun showToast(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
+        Toast.makeText(context, message, duration).show()
     }
 }
