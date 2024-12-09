@@ -34,12 +34,16 @@ class RestaurantDetailActivity : AppCompatActivity() {
         initializeViews()
         observeViewModel()
 
-        restaurantId = intent.getIntExtra("restaurantId", -1)
+        val receivedInfo: RestaurantInfo? = intent.getParcelableExtra("restaurantInfo")
 
-        if (restaurantId != -1) {
-            viewModel.fetchRestaurantById(restaurantId)
+        if (receivedInfo != null) {
+            updateUI(receivedInfo)
+            restaurantId = receivedInfo.id
+            bookmarkId = receivedInfo.bookmarkId
+            isFavorite = bookmarkId != null
+            updateFavoriteButtonIcon()
         } else {
-            createTestData() // Mock 데이터 생성
+            showToast("식당 정보를 불러오지 못했습니다.")
         }
     }
 

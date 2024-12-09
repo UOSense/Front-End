@@ -17,10 +17,11 @@ class RestaurantListAdapter(private var restaurantList: List<RestaurantListRespo
         val nameTextView: TextView = view.findViewById(R.id.restaurantName)
         val categoryTextView: TextView = view.findViewById(R.id.restaurantCategory)
         val ratingTextView: TextView = view.findViewById(R.id.restaurantRating)
+        val addressTextView: TextView = view.findViewById(R.id.restaurantAddress)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_restaurant, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_user_restaurant, parent, false)
         return ViewHolder(view)
     }
 
@@ -29,6 +30,7 @@ class RestaurantListAdapter(private var restaurantList: List<RestaurantListRespo
         holder.nameTextView.text = restaurant.name
         holder.categoryTextView.text = restaurant.category
         holder.ratingTextView.text = "평점: ${restaurant.rating}"
+        holder.addressTextView.text = restaurant.address
 
         holder.itemView.setOnClickListener {
             val intent = Intent(it.context, RestaurantDetailActivity::class.java).apply {

@@ -80,9 +80,9 @@ interface RestaurantApi {
 
     // 식당 정보 일괄 조회
     @GET("/api/v1/restaurant/get/list")
-    suspend fun getAllRestaurants(
+    suspend fun getRestaurantList(
         @Query("doorType") doorType: String? = null,
-        @Query("category") category: String? = null
+        @Query("filter") filter: String? = "DEFAULT"
     ): List<RestaurantListResponse>
 
     // 특정 식당 메뉴 조회
@@ -104,7 +104,7 @@ interface RestaurantApi {
         @Query("closestDoor") closestDoor: String
     ): List<RestaurantListResponse>
 
-    // 검색 결과 정렬
+    // 검색 결과 정렬 (검색시에만)
     @GET("/api/v1/search/sort")
     suspend fun sortRestaurants(
         @Query("keyword") keyword: String,

@@ -349,7 +349,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val restaurants = RetrofitInstance.restaurantApi.getAllRestaurants(null, null)
+                val restaurants = RetrofitInstance.restaurantApi.getRestaurantList(null, "DEFAULT")
                 withContext(Dispatchers.Main) {
                     if (restaurants.isNotEmpty()) {
                         addMarkersToMap(restaurants)
@@ -549,7 +549,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 val response = RetrofitInstance.restaurantApi.searchRestaurants(
                     keyword = keyword,
-                    closestDoor = searchDoorType ?: "DEFAULT"
+                    closestDoor = searchDoorType ?: "null"
                 )
 
                 withContext(Dispatchers.Main) {

@@ -33,17 +33,17 @@
                     android:id="@+id/restaurantName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="실크로드"
                     android:textSize="18dp"
                     android:textStyle="bold"
+                    android:textColor="@android:color/black"
                     />
                 <!--    식당 유형   -->
                 <TextView
                     android:id="@+id/restaurantCategory"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="바(bar)"
                     android:layout_marginLeft="10dp"
+                    android:textColor="@android:color/black"
                     />
                 <!--    식당 영업 여부    -->
                 <TextView
@@ -54,6 +54,7 @@
                     android:textSize="16dp"
                     android:layout_marginLeft="90dp"
                     android:textStyle="bold"
+                    android:textColor="@android:color/black"
                     />
 
             </LinearLayout>
@@ -63,8 +64,8 @@
                 android:id="@+id/restaurantAddress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="서울 동대문구 전농로 219"
                 android:textStyle="bold"
+                android:textColor="@android:color/black"
             />
 
             <LinearLayout
@@ -80,13 +81,13 @@
                     android:text="★"
                     android:textColor="#FF0000"
                     android:gravity="center"
+
                     />
                     <!--    평점      -->
                 <TextView
                     android:id="@+id/restaurantRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="4.64"
                     android:layout_marginStart="5dp"
                     android:textStyle="bold"
                     />
@@ -94,14 +95,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="리뷰"
                     android:layout_marginStart="25dp"/>
                     <!--    리뷰 수    -->
                 <TextView
-                    android:id="@+id/restaurantReview"
+                    android:id="@+id/restaurantReviewCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="35"
                     android:layout_marginStart="5dp"/>
 
 
