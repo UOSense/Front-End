@@ -1,6 +1,7 @@
 package com.example.uosense
 
 
+import TokenManager
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -41,8 +42,18 @@ import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import com.naver.maps.map.overlay.OverlayImage
 
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import kotlin.math.log
+
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var naverMap: NaverMap
@@ -52,6 +63,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationSource: FusedLocationSource
     // 위치 추적 모드 관리 변수
     private var isLocationFixed = false
+
+    private lateinit var tokenManager: TokenManager
+
+
 
 
 
@@ -68,6 +83,16 @@ class MainActivity : AppCompatActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // TokenManager 초기화
+        tokenManager = TokenManager(this)
+
+        // 리프레시 토큰 검증
+        val refreshToken = tokenManager.getRefreshToken()
+        if (refreshToken.isNullOrEmpty()) {
+            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+            navigateToLoginActivity() // 로그인 화면으로 이동
+            return
+        }
         super.onCreate(savedInstanceState)
 
         // 뷰 바인딩 초기화
@@ -107,6 +132,16 @@ class MainActivity : AppCompatActivity() {
 
 
         setContentView(binding.root)
+
+        // 위치 서비스 초기화
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    Log.d("LOCATION_UPDATE", "위치 업데이트: ${location.latitude}, ${location.longitude}")
+                }
+            }
+        }
 
         setupLocationPermissionLauncher()
         locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
@@ -149,6 +184,21 @@ class MainActivity : AppCompatActivity() {
             isLocationFixed = false
             showToast("내 위치로 돌아갑니다.")
         }
+
+        // "목록 보기" 버튼 클릭 시 동작 수정
+        binding.categoryBtn.setOnClickListener {
+            if (selectedDoorType.isNullOrBlank()) {
+                loadAllRestaurants() // 전체 식당 목록 보기
+            } else {
+                loadRestaurantsByFilter(selectedDoorType!!)
+            }
+        }
+
+        binding.userProfileBtn.setOnClickListener {
+            val intent = Intent(this, MyPageActivity::class.java)
+            startActivity(intent)
+        }
+
 
 
 
@@ -203,6 +253,53 @@ class MainActivity : AppCompatActivity() {
 
 
 
+    // 전체 식당 로딩 함수
+    private fun loadAllRestaurants() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val restaurantList = RetrofitInstance.restaurantApi.getRestaurantList(
+                    doorType = null,  // 전체 목록 보기
+                    filter = "DEFAULT"
+                )
+                withContext(Dispatchers.Main) {
+                    if (restaurantList.isNotEmpty()) {
+                        navigateToRestaurantList(restaurantList)
+                    } else {
+                        showToast("식당 목록이 없습니다.")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showToast("데이터 로드 중 오류가 발생했습니다.")
+                }
+                e.printStackTrace()
+            }
+        }
+    }
+    // 특정 DoorType 식당 로딩 함수
+    private fun loadRestaurantsByFilter(doorType: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val restaurantList = RetrofitInstance.restaurantApi.getRestaurantList(
+                    doorType = doorType,  // 특정 문 필터 적용
+                    filter = "DEFAULT"
+                )
+                withContext(Dispatchers.Main) {
+                    if (restaurantList.isNotEmpty()) {
+                        navigateToSelectedDoorList(restaurantList, doorType)
+                    } else {
+                        showToast("필터 조건에 맞는 식당이 없습니다.")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showToast("데이터 로드 중 오류가 발생했습니다.")
+                }
+                e.printStackTrace()
+            }
+        }
+    }
+
 
     private fun checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(
@@ -228,6 +325,7 @@ class MainActivity : AppCompatActivity() {
     }
     // 현재 위치 추적 활성화
     private fun enableUserLocation() {
+        Log.d("SIBAL", "실행됨")
         if (::naverMap.isInitialized && !isLocationFixed) {
             naverMap.locationTrackingMode = LocationTrackingMode.Follow
             naverMap.addOnLocationChangeListener { location ->
@@ -387,7 +485,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "데이터 로드 중 오류 발생", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "데이터 로드 중 오류 발생 2", Toast.LENGTH_SHORT).show()
                 }
                 e.printStackTrace()
             }
@@ -462,18 +560,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
-        if (restaurantList.isNotEmpty()) {
-            val intent = Intent(this, RestaurantListActivity::class.java).apply {
-                putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
-            }
-            startActivity(intent)
-        } else {
-            showToast("검색 결과가 없습니다.")
-        }
-    }
-
 
 
     /*
@@ -781,6 +867,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 필터를 통한 식당 로딩 (by doortype)
+     */
+
+
+
+    /**
+     * 필터 설정한 후 "목록보기" 버튼 누를 시 필터(doorType)없는 리스트 액티비티 이동
+     */
+    private fun navigateToSelectedDoorList(restaurantList: List<RestaurantListResponse>) {
+        val intent = Intent(this, SelectedDoorActivity::class.java).apply {
+            putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            putExtra("doorType", selectedDoorType)
+        }
+        startActivity(intent)
+    }
+
+    // 특정 DoorType 필터 식당 목록으로 이동하는 함수
+    private fun navigateToSelectedDoorList(
+        restaurantList: List<RestaurantListResponse>,
+        doorType: String
+    ) {
+        val intent = Intent(this, SelectedDoorActivity::class.java).apply {
+            putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            putExtra("doorType", doorType)
+        }
+        startActivity(intent)
+    }
+
+    // 전체 목록 보기로 이동 (정문 기본 선택)
+    private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
+        val intent = Intent(this, RestaurantListActivity::class.java).apply {
+            putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            putExtra("defaultDoorType", "정문") // 정문 기본 선택
+        }
+        startActivity(intent)
+    }
+    // 로그인 화면으로 이동
+    private fun navigateToLoginActivity() {
+        val intent = Intent(this, StartActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
+    }
 
 
 
