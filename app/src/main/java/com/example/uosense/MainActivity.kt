@@ -97,42 +97,6 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // 뷰 바인딩 초기화
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        binding.chkNearby.setOnCheckedChangeListener { _, isChecked ->
-            isNearbySearchEnabled = isChecked
-        }
-
-        binding.doorTypeButton1.setOnClickListener {
-            selectedDoorType = "정문"
-            isLocationFixed = true
-            moveCameraToLocation(37.5834643, 127.0536246)
-            showToast(this, "정문 위치로 이동합니다.")
-        }
-
-        binding.doorTypeButton2.setOnClickListener {
-            selectedDoorType = "쪽문"
-            isLocationFixed = true
-            moveCameraToLocation(37.5869791, 127.0564010)
-            showToast(this,"쪽문 위치로 이동합니다.")
-        }
-
-        binding.doorTypeButton3.setOnClickListener {
-            selectedDoorType = "후문"
-            isLocationFixed = true
-            moveCameraToLocation(37.5869320, 127.0606581)
-            showToast(this,"후문 위치로 이동합니다.")
-        }
-
-        binding.doorTypeButton4.setOnClickListener {
-            selectedDoorType = "남문"
-            isLocationFixed = true
-            moveCameraToLocation(37.5775540, 127.0578147)
-            showToast(this,"남문 위치로 이동합니다.")
-        }
-
 
         /**
          * 어플 들어올 때마다 위치 권한 설정되어 있으면 문제없이 넘어가야함
@@ -178,6 +142,42 @@ class MainActivity : AppCompatActivity() {
             initializeMapWithoutPermission()
             requestLocationPermission()
         }
+        // 뷰 바인딩 초기화
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.chkNearby.setOnCheckedChangeListener { _, isChecked ->
+            isNearbySearchEnabled = isChecked
+        }
+
+        binding.doorTypeButton1.setOnClickListener {
+            selectedDoorType = "정문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5834643, 127.0536246)
+            showToast(this, "정문 위치로 이동합니다.")
+        }
+
+        binding.doorTypeButton2.setOnClickListener {
+            selectedDoorType = "쪽문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5869791, 127.0564010)
+            showToast(this,"쪽문 위치로 이동합니다.")
+        }
+
+        binding.doorTypeButton3.setOnClickListener {
+            selectedDoorType = "후문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5869320, 127.0606581)
+            showToast(this,"후문 위치로 이동합니다.")
+        }
+
+        binding.doorTypeButton4.setOnClickListener {
+            selectedDoorType = "남문"
+            isLocationFixed = true
+            moveCameraToLocation(37.5775540, 127.0578147)
+            showToast(this,"남문 위치로 이동합니다.")
+        }
+
 
         binding.btnUserLocation.setOnClickListener {
             enableUserLocation()
