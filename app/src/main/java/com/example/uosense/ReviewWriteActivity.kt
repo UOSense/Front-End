@@ -1,6 +1,7 @@
 package com.example.uosense
 
 import TokenManager
+import android.content.ContentResolver
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -173,13 +174,40 @@ class ReviewWriteActivity : AppCompatActivity() {
     }
 
 //    이미지 파일 변환
-    private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
-        val file = File(fileUri.path ?: "")
-        val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-        return MultipartBody.Part.createFormData(partName, file.name, requestFile)
+private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
+    val fileDescriptor = contentResolver.openFileDescriptor(fileUri, "r") ?: return MultipartBody.Part.createFormData(partName, "")
+    val inputStream = contentResolver.openInputStream(fileUri)
+    val file = File(cacheDir, contentResolver.getFileName(fileUri)) // 캐시에 저장
+
+    file.outputStream().use { output ->
+        inputStream?.copyTo(output)
     }
 
-//    리뷰 이미지 업로드 함수
+    // 로그: 파일 경로 및 크기 확인
+    Log.d("FilePart", "File Path: ${file.absolutePath}, File Size: ${file.length()} bytes")
+
+    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+    Log.d("RequestFile", "Request File Size: ${requestFile.contentLength()} bytes")
+    return MultipartBody.Part.createFormData(partName, file.name, requestFile)
+}
+
+    // 파일 이름 가져오기 함수 추가
+    private fun ContentResolver.getFileName(uri: Uri): String {
+        var name = "temp_file"
+        val cursor = query(uri, null, null, null, null)
+        if (cursor != null) {
+            val nameIndex = cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
+            if (nameIndex != -1) {
+                cursor.moveToFirst()
+                name = cursor.getString(nameIndex)
+            }
+            cursor.close()
+        }
+        return name
+    }
+
+
+    //    리뷰 이미지 업로드 함수
     private fun uploadReviewImages(reviewId: Int) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -188,9 +216,19 @@ class ReviewWriteActivity : AppCompatActivity() {
                     prepareFilePart("images[$index]", uri)
                 }
 
+                // 로그: 변환된 이미지 데이터와 리뷰 ID 확인
+                Log.d("ImageUpload", "Review ID: $reviewId")
+                imageParts.forEachIndexed { index, part ->
+                    Log.d("ImageUpload", "Image Part [$index]: ${part.body.contentType()} - ${part.headers}")
+                }
+
+                // API 호출 전
+                Log.d("ImageUpload", "Requesting upload for Review ID: $reviewId with ${imageParts.size} parts")
+
                 // API 호출
                 val response = RetrofitInstance.restaurantApi.uploadReviewImages(reviewId, imageParts)
                 if (response.isSuccessful) {
+                    Log.d("ImageUpload", "Image upload successful. Response code: ${response.code()}")
                     Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 성공!", Toast.LENGTH_SHORT).show()
                 } else {
                     Log.e("ImageUpload", "이미지 업로드 실패: ${response.code()} - ${response.errorBody()?.string()}")
@@ -237,9 +275,6 @@ class ReviewWriteActivity : AppCompatActivity() {
         )
 
         // 로그 메시지 출력 (전송 데이터 확인)
-        Log.d("SubmitReview", "ReviewRequest: $reviewRequest")
-        Log.d("SubmitReview", "AccessToken: Bearer $accessToken")
-        Log.d("SubmitReview", "Tag : $selectedTag")
 
         // API 호출
         CoroutineScope(Dispatchers.Main).launch {
@@ -251,8 +286,13 @@ class ReviewWriteActivity : AppCompatActivity() {
 
                 // 응답 처리
                 if (response.isSuccessful) {
-                    Log.d("SubmitReview", "Response Success: ${response.body()}")
-                    Toast.makeText(this@ReviewWriteActivity, "리뷰가 등록되었습니다!", Toast.LENGTH_SHORT).show()
+                    val reviewId = response.body() // 서버가 반환한 리뷰 ID 가져오기
+                    if (reviewId != null) {
+                        Toast.makeText(this@ReviewWriteActivity, "리뷰가 등록되었습니다!", Toast.LENGTH_SHORT).show()
+                        uploadReviewImages(reviewId) // 이미지 업로드 호출
+                    } else {
+                        Toast.makeText(this@ReviewWriteActivity, "리뷰 ID를 가져오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
                     Log.e("SubmitReview", "Response Failed: Code=${response.code()}, Message=${response.errorBody()?.string()}")
                     Toast.makeText(this@ReviewWriteActivity, "등록 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
