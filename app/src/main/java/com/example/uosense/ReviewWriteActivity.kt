@@ -20,6 +20,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 import java.time.LocalDateTime
 
 class ReviewWriteActivity : AppCompatActivity() {
@@ -44,6 +48,12 @@ class ReviewWriteActivity : AppCompatActivity() {
     // 리뷰 이벤트 체크박스
     private lateinit var reviewEventCheckBox: CheckBox
     private var reviewEventCheck = false
+
+//    선택된 이미지 URI 관리
+    private val selectedImageUris: MutableList<Uri> = mutableListOf()
+
+
+
 
     // 등록 버튼
     private lateinit var registerReviewBtn: Button
@@ -110,22 +120,21 @@ class ReviewWriteActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
-            val imageUri: Uri? = data.data
-            addImageToLayout(imageUri)
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data?.data != null) {
+            val imageUri = data.data
+            if (imageUri != null) {
+                selectedImageUris.add(imageUri)
+                addImageToLayout(imageUri)
+            }
         }
     }
 
-    private fun addImageToLayout(imageUri: Uri?) {
+    private fun addImageToLayout(imageUri: Uri) {
         val imageView = ImageView(this)
-        val layoutParams = LinearLayout.LayoutParams(200, 200).apply {
-            setMargins(8, 8, 8, 8)
-        }
-        imageView.layoutParams = layoutParams
         imageView.setImageURI(imageUri)
-        photoAttachmentLayout.addView(imageView, 0)
-        Toast.makeText(this, "이미지가 추가되었습니다.", Toast.LENGTH_SHORT).show()
+        photoAttachmentLayout.addView(imageView)
     }
+
 
     // 특징 버튼 설정 함수
     private fun setupFeatureButton(buttonId: Int, tag: String, colorId: Int) {
@@ -163,6 +172,37 @@ class ReviewWriteActivity : AppCompatActivity() {
         }
     }
 
+//    이미지 파일 변환
+    private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
+        val file = File(fileUri.path ?: "")
+        val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+        return MultipartBody.Part.createFormData(partName, file.name, requestFile)
+    }
+
+//    리뷰 이미지 업로드 함수
+    private fun uploadReviewImages(reviewId: Int) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // 선택된 이미지 URI를 MultipartBody.Part로 변환
+                val imageParts = selectedImageUris.mapIndexed { index, uri ->
+                    prepareFilePart("images[$index]", uri)
+                }
+
+                // API 호출
+                val response = RetrofitInstance.restaurantApi.uploadReviewImages(reviewId, imageParts)
+                if (response.isSuccessful) {
+                    Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 성공!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Log.e("ImageUpload", "이미지 업로드 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                    Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("ImageUpload", "오류 발생: ${e.message}")
+                Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 중 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     // 리뷰 등록 API 호출
     private fun submitReview() {
@@ -192,7 +232,7 @@ class ReviewWriteActivity : AppCompatActivity() {
             body = reviewBody,
             rating = ratingValue.toDouble(),
             dateTime = dateTime,
-            isReviewEventCheck = reviewEventCheck,
+            reviewEventCheck = reviewEventCheck,
             tag = selectedTag // 선택 사항
         )
 

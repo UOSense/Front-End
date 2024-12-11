@@ -266,7 +266,7 @@ data class ReviewRequest(
     val rating: Double,
     val dateTime: String,
     val tag: String?,
-    val isReviewEventCheck: Boolean
+    val reviewEventCheck: Boolean
 )
 
 data class ReportRequest(
