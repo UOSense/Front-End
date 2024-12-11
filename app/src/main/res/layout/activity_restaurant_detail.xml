@@ -34,7 +34,7 @@
             android:id="@+id/restaurantName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="실크로드"
+            android:text="이름"
             android:textColor="@color/orange"
             android:textStyle="bold"
             android:textSize="18sp"/>
@@ -44,7 +44,7 @@
             android:id="@+id/restaurantCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="바(Bar)"
+            android:text="카테고리"
             android:textSize="14sp"
             android:layout_marginStart="10dp"/>
 
@@ -68,7 +68,7 @@
             android:id="@+id/restaurantDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="아지트 시립대 앞 분위기 좋은 칵테일바"
+            android:text="설명"
             android:textSize="14sp"
             android:layout_marginBottom="5dp"/>
 
@@ -158,7 +158,7 @@
                     android:id="@+id/restaurantIsOpened"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="영업 중"
+                    android:text="영"
                     android:textSize="16dp"
                     android:textStyle="bold"
                     />
@@ -167,15 +167,19 @@
                     android:id="@+id/restaurantTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="(16:30 - 01:00)"
+                    android:text="( - )"
                     android:layout_marginStart="10dp"
                     />
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
 
                 <Button
                     android:id="@+id/restaurantUpdateBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="수정 제안"
+                    android:text="수"
                     android:layout_marginStart="130dp"
                     />
 
@@ -185,7 +189,7 @@
                 android:id="@+id/restaurantAddress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="주소 : 서울 동대문구 전농로 219"
+                android:text="주소"
                 android:textSize="14dp"
                 android:layout_marginBottom="8dp"/>
 
@@ -194,7 +198,7 @@
                 android:id="@+id/restaurantPhoneNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="전화 : 02-2244-2229"
+                android:text="전화"
                 android:textSize="14dp"
                 android:layout_marginBottom="8dp"/>
 
@@ -208,11 +212,11 @@
             >
 
             <Button
-                android:id="@+id/newsBtn"
+                android:id="@+id/businessDaysBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="소식"
+                android:text="영업일"
             />
 
             <Button
@@ -234,6 +238,34 @@
 
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/reviewOptionsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_marginTop="60dp">
+
+            <Button
+                android:id="@+id/reviewListBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="50dp"
+                android:background="@drawable/rounded_border_green"
+                android:textColor="@color/white"
+                android:text="리뷰 목록" />
+
+            <Button
+                android:id="@+id/reviewWriteBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_border_green"
+                android:textColor="@color/white"
+                android:text="리뷰 쓰기" />
+        </LinearLayout>
+
         <!-- BusinessDays RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/businessDaysRecyclerView"
@@ -241,3 +273,4 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp" />
     </LinearLayout>
+

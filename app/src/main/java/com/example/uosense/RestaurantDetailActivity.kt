@@ -1,26 +1,35 @@
 package com.example.uosense
 
+import BusinessDayAdapter
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.TextView
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.uosense.adapters.GenericAdapter
+import com.example.uosense.adapters.MenuAdapter
+import com.example.uosense.models.BusinessDayInfo
+import com.example.uosense.models.MenuResponse
 
 class RestaurantDetailActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var newsBtn: Button
+    private lateinit var businessDaysBtn: Button
     private lateinit var menuBtn: Button
     private lateinit var reviewBtn: Button
     private lateinit var backBtn: Button
     private lateinit var favoriteButton: ImageButton
+    private lateinit var reviewOptionsLayout: LinearLayout
+    private lateinit var reviewListBtn: Button
+    private lateinit var reviewWriteBtn: Button
 
-    private lateinit var adapter: GenericAdapter
+    private lateinit var businessDayAdapter: BusinessDayAdapter
+    private lateinit var menuAdapter: MenuAdapter
 
     private var isFavorite = false
 
@@ -30,40 +39,84 @@ class RestaurantDetailActivity : AppCompatActivity() {
 
         // UI 초기화
         recyclerView = findViewById(R.id.businessDaysRecyclerView)
-        newsBtn = findViewById(R.id.newsBtn)
+        businessDaysBtn = findViewById(R.id.businessDaysBtn)
         menuBtn = findViewById(R.id.menuBtn)
         reviewBtn = findViewById(R.id.reviewBtn)
         backBtn = findViewById(R.id.backBtn)
         favoriteButton = findViewById(R.id.favoriteButton)
+        reviewOptionsLayout = findViewById(R.id.reviewOptionsLayout)
+        reviewListBtn = findViewById(R.id.reviewListBtn)
+        reviewWriteBtn = findViewById(R.id.reviewWriteBtn)
 
         // 리사이클러 뷰 설정
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = GenericAdapter()
-        recyclerView.adapter = adapter
+        businessDayAdapter = BusinessDayAdapter()
+        menuAdapter = MenuAdapter()
+        recyclerView.adapter = businessDayAdapter
 
         // 버튼 클릭 리스너 설정
-        newsBtn.setOnClickListener { showList("소식") }
-        menuBtn.setOnClickListener { showList("메뉴") }
-        reviewBtn.setOnClickListener { showList("리뷰") }
+        businessDaysBtn.setOnClickListener { showBusinessDays() }
+        menuBtn.setOnClickListener { showMenuItems() }
+        reviewBtn.setOnClickListener { showReviewOptions() }
+
+        reviewListBtn.setOnClickListener {
+            val intent = Intent(this, StartActivity::class.java)
+            startActivity(intent)
+        }
+
+        reviewWriteBtn.setOnClickListener {
+            val intent = Intent(this, ReviewWriteActivity::class.java)
+            startActivity(intent)
+        }
 
         // 뒤로 가기 버튼 클릭
-        backBtn.setOnClickListener {
-            finish()  // 현재 액티비티 종료
-        }
+        backBtn.setOnClickListener { finish() }
+
+        // 물리적 뒤로 가기 활성화
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                finish()
+            }
+        })
 
         // 즐겨찾기 버튼 클릭
-        favoriteButton.setOnClickListener {
-            toggleFavorite()
-        }
-
-        // 초기 데이터 로드
-        loadRestaurantData()
+        favoriteButton.setOnClickListener { toggleFavorite() }
     }
 
-    // 버튼 클릭 시 데이터 변경
-    private fun showList(section: String) {
-        val items = List(10) { "$section 아이템 $it" }
-        adapter.submitList(items)
+    // 더미 데이터 - 영업일
+    private fun showBusinessDays() {
+        recyclerView.adapter = businessDayAdapter
+        reviewOptionsLayout.visibility = View.GONE
+        recyclerView.visibility = View.VISIBLE
+
+        val dummyBusinessDays = listOf(
+            BusinessDayInfo(1, "월요일", true, "12:00", "14:00", "09:00", "18:00", false),
+            BusinessDayInfo(2, "화요일", false, "14:00", "15:00", "09:00", "18:00", false),
+            BusinessDayInfo(3, "수요일", true, "13:00", "15:00", "09:00", "18:00", false)
+        )
+
+        businessDayAdapter.submitList(dummyBusinessDays)
+    }
+
+    // 더미 데이터 - 메뉴
+    private fun showMenuItems() {
+        recyclerView.adapter = menuAdapter
+        reviewOptionsLayout.visibility = View.GONE
+        recyclerView.visibility = View.VISIBLE
+
+        val dummyMenuItems = listOf(
+            MenuResponse(1, 101, "치킨", 15000, "바삭한 후라이드 치킨", "https://example.com/chicken.jpg"),
+            MenuResponse(2, 101, "피자", 18000, "고소한 치즈 피자", "https://example.com/pizza.jpg"),
+            MenuResponse(3, 101, "스테이크", 35000, "프리미엄 비프 스테이크", "https://example.com/steak.jpg")
+        )
+
+        menuAdapter.submitList(dummyMenuItems)
+    }
+
+    // 리뷰 옵션 보이기
+    private fun showReviewOptions() {
+        reviewOptionsLayout.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
     }
 
     // 즐겨찾기 상태 토글
@@ -79,15 +132,5 @@ class RestaurantDetailActivity : AppCompatActivity() {
         favoriteButton.setImageResource(
             if (isFavorite) R.drawable.favorite_icon else R.drawable.ic_bookmark
         )
-    }
-
-    // 식당 정보 로딩 (가상 데이터)
-    private fun loadRestaurantData() {
-        findViewById<TextView>(R.id.restaurantName).text = "실크로드"
-        findViewById<TextView>(R.id.restaurantCategory).text = "바(Bar)"
-        findViewById<TextView>(R.id.restaurantDescription).text = "아지트 시립대 앞 분위기 좋은 칵테일바"
-        findViewById<TextView>(R.id.restaurantAddress).text = "주소: 서울 동대문구 전농로 219"
-        findViewById<TextView>(R.id.restaurantPhoneNumber).text = "전화: 02-2244-2229"
-        findViewById<TextView>(R.id.restaurantRating).text = "평점: 4.65"
     }
 }
