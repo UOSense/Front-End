@@ -90,7 +90,6 @@ class ReviewWriteActivity : AppCompatActivity() {
         })
 
         // 특징 버튼 설정
-        setupFeatureButton(R.id.affordableBtn, "GOOD_VALUE", R.color.blue)
         setupFeatureButton(R.id.serviceBtn, "GOOD_SERVICE", R.color.green)
         setupFeatureButton(R.id.dateRecommendBtn, "DATE_PLACE", R.color.pink)
         setupFeatureButton(R.id.soloEatBtn, "SOLO_POSSIBLE", R.color.teal_700)
@@ -134,13 +133,33 @@ class ReviewWriteActivity : AppCompatActivity() {
         val defaultBackground: Drawable = button.background
 
         button.setOnClickListener {
-            selectedTag = if (selectedTag == tag) {
+            // 이전에 선택된 버튼 초기화
+            if (selectedTag == tag) {
+                selectedTag = null
                 button.background = defaultBackground
-                null
             } else {
+                // 모든 버튼 초기화
+                resetFeatureButtons()
+                // 새로운 버튼 활성화
+                selectedTag = tag
                 button.setBackgroundColor(ContextCompat.getColor(this, colorId))
-                tag
             }
+        }
+    }
+
+    // 모든 버튼 상태 초기화 함수
+    private fun resetFeatureButtons() {
+        val buttonBackgrounds = mapOf(
+            R.id.serviceBtn to R.drawable.rounded_border_green,
+            R.id.dateRecommendBtn to R.drawable.rounded_border_pink,
+            R.id.soloEatBtn to R.drawable.rounded_border_tealed_700,
+            R.id.kindOwnerBtn to R.drawable.rounded_border_purple_200,
+            R.id.interiorBtn to R.drawable.rounded_border_orange
+        )
+
+        buttonBackgrounds.forEach { (id, backgroundRes) ->
+            val button: Button = findViewById(id)
+            button.background = ContextCompat.getDrawable(this, backgroundRes)
         }
     }
 
@@ -180,6 +199,7 @@ class ReviewWriteActivity : AppCompatActivity() {
         // 로그 메시지 출력 (전송 데이터 확인)
         Log.d("SubmitReview", "ReviewRequest: $reviewRequest")
         Log.d("SubmitReview", "AccessToken: Bearer $accessToken")
+        Log.d("SubmitReview", "Tag : $selectedTag")
 
         // API 호출
         CoroutineScope(Dispatchers.Main).launch {
