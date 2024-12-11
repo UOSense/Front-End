@@ -220,7 +220,7 @@ interface RestaurantApi {
     @GET("/api/v1/review/get/list")
     suspend fun getRestaurantReviews(
         @Query("restaurantId") restaurantId: Int
-    ): List<ReviewResponse>
+    ): Response<List<ReviewItem>>
 
     // 특정 사용자 리뷰 조회
     @GET("/api/v1/review/get/user")

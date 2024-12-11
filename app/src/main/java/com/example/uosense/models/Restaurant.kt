@@ -289,6 +289,21 @@ data class ReviewResponse(
     val reviewEventCheck: Boolean
 )
 
+data class ReviewItem(
+    val id: Int,
+    val restaurantId: Int,
+    val userId: Int,
+    val nickname: String,
+    val userImage: String,
+    val body: String,
+    val rating: Double,
+    val dateTime: String,
+    val reviewEventCheck: Boolean,
+    val tag: String?,
+    val likeCount: Int,
+    val imageUrls: List<String>?
+)
+
 
 
 // 즐겨찾기 응답 모델

@@ -164,14 +164,5 @@
             android:textColor="@color/blue"
             android:textSize="12sp" />
 
-        <TextView
-            android:id="@+id/featureTag2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="인테리어가 멋져요"
-            android:background="@drawable/rounded_border_orange"
-            android:padding="4dp"
-            android:textColor="@color/orange"
-            android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>
