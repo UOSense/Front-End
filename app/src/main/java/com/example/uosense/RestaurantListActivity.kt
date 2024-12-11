@@ -36,21 +36,14 @@ class RestaurantListActivity : AppCompatActivity() {
         noResultsTextView = findViewById(R.id.tvNoResults)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
-        restaurantList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableArrayListExtra("restaurantList", RestaurantListResponse::class.java)
-                ?: mutableListOf()
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
-        }
-
-        setupRecyclerView(restaurantList)
+        restaurantList = intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
 
 
 
-        adapter = RestaurantListAdapter(mutableListOf()) { restaurant ->
-            navigateToDetailActivity(restaurant)
-        }
+
+
+        adapter = RestaurantListAdapter(restaurantList) { navigateToDetailActivity(it) }
+        recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
 
@@ -70,6 +63,7 @@ class RestaurantListActivity : AppCompatActivity() {
         }
     }
 
+
     private fun setupFilterButtons() {
         val buttonFrontGate = findViewById<Button>(R.id.doorTypeButton1)
         val buttonSideGate = findViewById<Button>(R.id.doorTypeButton2)
@@ -87,8 +81,8 @@ class RestaurantListActivity : AppCompatActivity() {
             try {
                 val response = RetrofitInstance.restaurantApi.getRestaurantList(doorType, filter)
                 withContext(Dispatchers.Main) {
-                    if (response.isNotEmpty()) {
-                        adapter.updateList(response)
+                    if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
+                        adapter.updateList(response.body()!!)
                     } else {
                         adapter.updateList(emptyList())
                     }
@@ -101,6 +95,7 @@ class RestaurantListActivity : AppCompatActivity() {
             }
         }
     }
+
 
     private fun setupSortButton() {
         findViewById<Button>(R.id.btnFilter).setOnClickListener {
@@ -129,12 +124,13 @@ class RestaurantListActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitInstance.restaurantApi.sortRestaurants(
-                    keyword = "",  // 기존 검색 키워드 필요 시 추가
+                    keyword = "",  // 필요 시 검색 키워드 추가
                     filter = sortOption
                 )
+
                 withContext(Dispatchers.Main) {
-                    if (response.isNotEmpty()) {
-                        adapter.updateList(response)
+                    if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
+                        adapter.updateList(response.body()!!)
                     } else {
                         adapter.updateList(emptyList())
                     }
@@ -147,6 +143,7 @@ class RestaurantListActivity : AppCompatActivity() {
             }
         }
     }
+
 
     private fun navigateToDetailActivity(restaurant: RestaurantListResponse) {
         val intent = Intent(this, RestaurantDetailActivity::class.java).apply {

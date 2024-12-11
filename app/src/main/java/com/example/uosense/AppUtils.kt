@@ -97,6 +97,7 @@ object AppUtils {
 
     /**
      * Toast 메시지 출력
+     * 되도록이면 사용 X
      */
     fun showToast(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, message, duration).show()

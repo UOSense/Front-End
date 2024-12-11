@@ -3,7 +3,6 @@ package com.example.uosense.models
 import android.os.Parcel
 import android.os.Parcelable
 import java.time.LocalDateTime
-import com.google.gson.annotations.SerializedName
 
 // 메뉴 요청 모델
 data class MenuRequest(
@@ -21,8 +20,8 @@ data class MenuResponse(
     val restaurantId: Int,
     val name: String,
     val price: Int,
-    val description: String,
-    val imageUrl: String
+    val description: String?,
+    val imageUrl: String?
 )
 
 // 식당 요청 모델
@@ -49,7 +48,7 @@ data class BusinessDay(
     val stopBreakTime: String? = null,
     val openingTime: String,
     val closingTime: String,
-    val isHoliday: Boolean
+    val holiday: Boolean
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         id = parcel.readValue(Int::class.java.classLoader) as? Int,
@@ -60,7 +59,7 @@ data class BusinessDay(
         stopBreakTime = parcel.readString(),
         openingTime = parcel.readString() ?: "",
         closingTime = parcel.readString() ?: "",
-        isHoliday = parcel.readByte() != 0.toByte()
+        holiday = parcel.readByte() != 0.toByte()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -72,7 +71,7 @@ data class BusinessDay(
         parcel.writeString(stopBreakTime)
         parcel.writeString(openingTime)
         parcel.writeString(closingTime)
-        parcel.writeByte(if (isHoliday) 1 else 0)
+        parcel.writeByte(if (holiday) 1 else 0)
     }
 
     override fun describeContents(): Int = 0
@@ -99,11 +98,11 @@ data class BusinessDayList(
 data class BusinessDayInfo(
     val id: Int?,
     val dayOfWeek: String,
-    val haveBreakTime: Boolean,
-    val startBreakTime: LocalTime? = null,
-    val stopBreakTime: LocalTime? = null,
-    val openingTime: LocalTime,
-    val closingTime: LocalTime,
+    val breakTime: Boolean,
+    val startBreakTime: String? ,
+    val stopBreakTime: String? ,
+    val openingTime: String?,
+    val closingTime: String?,
     val holiday: Boolean
 )
 
@@ -115,28 +114,19 @@ data class LocalTime(
     val nano: Int? = null
 )
 
-// 웹메일 요청 모델
-data class WebmailRequest(
-    val email: String,
-    val purpose: String
-)
-
-// 인증 코드 요청 모델
-data class AuthCodeRequest(
-    val email: String,
-    val code: String
-)
 
 // 식당 이미지 응답 모델
 data class RestaurantImagesResponse(
     val restaurantId: Int,
     val imageList: List<ImageInfo>
-)
+) {
+
+}
 
 // 이미지 정보 모델
 data class ImageInfo(
     val url: String,
-    val description: String? = null
+    val id: Int
 )
 
 // 새 메뉴 요청 모델
@@ -278,7 +268,7 @@ data class ReviewRequest(
     val rating: Double,
     val dateTime: String,
     val tag: String?,
-    val reviewEventCheck: Boolean
+    val isReviewEventCheck: Boolean
 )
 
 data class ReportRequest(

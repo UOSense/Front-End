@@ -1,11 +1,8 @@
 package com.example.uosense.viewmodel
 
-
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-
-import com.example.uosense.models.BusinessDay
 import com.example.uosense.models.RestaurantInfo
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.network.RetrofitInstance
@@ -18,26 +15,33 @@ class RestaurantViewModel : ViewModel() {
     val restaurantInfo = MutableLiveData<RestaurantInfo?>()
     val isBookmarked = MutableLiveData<Boolean>()
 
-
-
-
+    // 식당 목록 가져오기
     fun fetchAllRestaurants(doorType: String? = null, filter: String? = "DEFAULT") {
         viewModelScope.launch {
             try {
                 val response = api.getRestaurantList(doorType)
-                restaurantList.postValue(response)
+                if (response.isSuccessful && response.body() != null) {
+                    restaurantList.postValue(response.body())
+                } else {
+                    restaurantList.postValue(emptyList())
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
+                restaurantList.postValue(emptyList())
             }
         }
     }
 
-
+    // 특정 식당 정보 가져오기
     fun fetchRestaurantById(restaurantId: Int) {
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantById(restaurantId)
-                restaurantInfo.postValue(response)
+                val response = api.getRestaurantById(restaurantId)
+                if (response.isSuccessful && response.body() != null) {
+                    restaurantInfo.postValue(response.body())
+                } else {
+                    restaurantInfo.postValue(null)
+                }
             } catch (e: Exception) {
                 restaurantInfo.postValue(null)
                 e.printStackTrace()
@@ -50,11 +54,7 @@ class RestaurantViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = api.addBookmark(restaurantId)
-                if (response.isSuccessful) {
-                    isBookmarked.postValue(true)
-                } else {
-                    isBookmarked.postValue(false)
-                }
+                isBookmarked.postValue(response.isSuccessful)
             } catch (e: Exception) {
                 e.printStackTrace()
                 isBookmarked.postValue(false)
@@ -67,22 +67,11 @@ class RestaurantViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = api.deleteBookmark(bookmarkId)
-                if (response.isSuccessful) {
-                    isBookmarked.postValue(false)
-                } else {
-                    isBookmarked.postValue(true)
-                }
+                isBookmarked.postValue(response.isSuccessful.not())
             } catch (e: Exception) {
                 e.printStackTrace()
                 isBookmarked.postValue(true)
             }
         }
     }
-
-
-
-
-
-
-
 }

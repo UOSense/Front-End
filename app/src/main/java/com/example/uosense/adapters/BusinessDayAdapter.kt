@@ -4,20 +4,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.R
-import com.example.uosense.models.BusinessDay
+import com.example.uosense.models.BusinessDayInfo
 
-class BusinessDayAdapter :
-    ListAdapter<BusinessDay, BusinessDayAdapter.ViewHolder>(DiffCallback()) {
+class BusinessDayAdapter : RecyclerView.Adapter<BusinessDayAdapter.ViewHolder>() {
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private var businessDays = listOf<BusinessDayInfo>()
+
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val dayOfWeek: TextView = itemView.findViewById(R.id.dayOfWeek)
         val openingTime: TextView = itemView.findViewById(R.id.openingTime)
         val closingTime: TextView = itemView.findViewById(R.id.closingTime)
-        val breakTime: TextView = itemView.findViewById(R.id.breakTime)
+        val startBreakTime: TextView = itemView.findViewById(R.id.startBreakTime)
+        val stopBreakTime: TextView = itemView.findViewById(R.id.stopBreakTime)
+        val holiday: TextView = itemView.findViewById(R.id.holiday)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -27,25 +28,20 @@ class BusinessDayAdapter :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val businessDay = getItem(position)
+        val businessDay = businessDays[position]
         holder.dayOfWeek.text = businessDay.dayOfWeek
-        holder.openingTime.text = "오픈 시간: ${businessDay.openingTime}"
-        holder.closingTime.text = "끝나는 시간: ${businessDay.closingTime}"
-        holder.breakTime.text = if (businessDay.haveBreakTime) {
-            "브레이크 타임: ${businessDay.startBreakTime} - ${businessDay.stopBreakTime}"
-        } else {
-            "No Break Time"
-        }
+        holder.openingTime.text = businessDay.openingTime.toString()
+        holder.closingTime.text = businessDay.closingTime.toString()
+
+        holder.startBreakTime.text = businessDay.startBreakTime ?: "없음"
+        holder.stopBreakTime.text = businessDay.stopBreakTime ?: "없음"
+        holder.holiday.text = if (businessDay.holiday) "휴일" else "영업 중"
     }
 
+    override fun getItemCount(): Int = businessDays.size
 
-    class DiffCallback : DiffUtil.ItemCallback<BusinessDay>() {
-        override fun areItemsTheSame(oldItem: BusinessDay, newItem: BusinessDay): Boolean {
-            return oldItem.id == newItem.id
-        }
-
-        override fun areContentsTheSame(oldItem: BusinessDay, newItem: BusinessDay): Boolean {
-            return oldItem == newItem
-        }
+    fun submitList(newBusinessDays: List<BusinessDayInfo>) {
+        businessDays = newBusinessDays
+        notifyDataSetChanged()
     }
 }
