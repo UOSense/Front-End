@@ -98,6 +98,8 @@ object AppUtils {
     /**
      * Toast 메시지 출력
      * 되도록이면 사용 X
+     * 만약 사용시 Coroutine 내에서는 this@특정액티비티, 아닐때는 this만 사용
+     * duration은 Toast.LENGTH_SHORT 또는 Toast.LENGTH_LONG만 사용
      */
     fun showToast(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, message, duration).show()
