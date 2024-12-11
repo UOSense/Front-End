@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- Android 13(API 33) 이상 -->
     <uses-permission
@@ -41,9 +42,9 @@
             android:exported="false" />
         <activity
             android:name=".SelectedDoorActivity"
-            android:exported="false" />
+            android:exported="true" />
         <activity
-            android:name=".StartActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -71,7 +72,7 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.DayNight" />
         <activity
-            android:name=".MainActivity"
+            android:name=".StartActivity"
             android:exported="true" />
         <activity
             android:name=".ReviewWriteActivity"

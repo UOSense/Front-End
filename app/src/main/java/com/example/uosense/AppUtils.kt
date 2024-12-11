@@ -13,6 +13,7 @@ import com.naver.maps.map.util.FusedLocationSource
 
 /**
  * MainActivity에서 쓰는 일부 함수 리팩토링하기 위해서
+ * Coroutine 쓰는 것은 여기에서 정의 금지
  */
 object AppUtils {
     

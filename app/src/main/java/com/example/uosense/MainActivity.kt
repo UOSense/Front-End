@@ -41,6 +41,7 @@ import android.location.Location.distanceBetween
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import com.example.uosense.AppUtils.showToast
+import com.example.uosense.network.RetrofitInstance.restaurantApi
 import com.naver.maps.map.overlay.OverlayImage
 
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -48,6 +49,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import java.net.URLDecoder
 import kotlin.math.log
 
 
@@ -67,6 +69,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tokenManager: TokenManager
 
+    private var currentPage = 1
+    private val pageSize = 10
+
 
 
 
@@ -81,39 +86,35 @@ class MainActivity : AppCompatActivity() {
     private var selectedButton: View? = null
 
 
+    /**
+     * 다시 돌아왔을 때 마커 재생성 -> 곧 위도 경도 저장해서 로딩 시간 줄일 것
+     */
+    override fun onResume() {
+        super.onResume()
+        if (::naverMap.isInitialized) {
+            clearMarkers()  // 마커 초기화
+            loadRestaurants()  // 식당 목록 다시 로딩
+        }
+    }
 
+    /**
+     * onResume()을 위한 함수, 로그 확인 완료
+     */
+    private fun clearMarkers() {
+        restaurantMarkers.forEach { it.map = null }
+        restaurantMarkers.clear()
+        Log.d("MARKERS_RESET", "모든 마커 초기화")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         // TokenManager 초기화
         tokenManager = TokenManager(this)
 
-        // 리프레시 토큰 검증
-        val refreshToken = tokenManager.getRefreshToken()
-        if (refreshToken.isNullOrEmpty()) {
-            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
-            navigateToLoginActivity() // 로그인 화면으로 이동
-            return
-        }
-
-        super.onCreate(savedInstanceState)
-
-
-        /**
-         * 어플 들어올 때마다 위치 권한 설정되어 있으면 문제없이 넘어가야함
-         * 만약 설정되어 있지 않으면 사용자 위치 권한 요청 TOAST 출력
-         */
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                for (location in locationResult.locations) {
-                    Log.d("LOCATION_UPDATE", "위치 업데이트: ${location.latitude}, ${location.longitude}")
-                }
-            }
-        }
-
-        setupLocationPermissionLauncher()
-        locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
-
+        // 뷰 바인딩 초기화
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // 네이버 지도 초기화
         NaverMapSdk.getInstance(this).client = NaverMapSdk.NaverCloudPlatformClient("s78aa7asq0")
@@ -142,50 +143,73 @@ class MainActivity : AppCompatActivity() {
             initializeMapWithoutPermission()
             requestLocationPermission()
         }
-        // 뷰 바인딩 초기화
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+
+        // 리프레시 토큰 검증
+        val refreshToken = tokenManager.getRefreshToken()
+        if (refreshToken.isNullOrEmpty()) {
+            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+            navigateToLoginActivity() // 로그인 화면으로 이동
+            return
+        }
+
+
+
+        /**
+         * 어플 들어올 때마다 위치 권한 설정되어 있으면 문제없이 넘어가야함
+         * 만약 설정되어 있지 않으면 사용자 위치 권한 요청 TOAST 출력
+         */
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                for (location in locationResult.locations) {
+                    Log.d("LOCATION_UPDATE", "위치 업데이트: ${location.latitude}, ${location.longitude}")
+                }
+            }
+        }
+
+        setupLocationPermissionLauncher()
+        locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
+
 
         binding.chkNearby.setOnCheckedChangeListener { _, isChecked ->
             isNearbySearchEnabled = isChecked
         }
 
         binding.doorTypeButton1.setOnClickListener {
-            selectedDoorType = "정문"
+            selectedDoorType = "FRONT"
             isLocationFixed = true
             moveCameraToLocation(37.5834643, 127.0536246)
             showToast(this, "정문 위치로 이동합니다.")
         }
 
         binding.doorTypeButton2.setOnClickListener {
-            selectedDoorType = "쪽문"
+            selectedDoorType = "SIDE"
             isLocationFixed = true
             moveCameraToLocation(37.5869791, 127.0564010)
             showToast(this,"쪽문 위치로 이동합니다.")
         }
 
         binding.doorTypeButton3.setOnClickListener {
-            selectedDoorType = "후문"
+            selectedDoorType = "BACK"
             isLocationFixed = true
             moveCameraToLocation(37.5869320, 127.0606581)
             showToast(this,"후문 위치로 이동합니다.")
         }
 
         binding.doorTypeButton4.setOnClickListener {
-            selectedDoorType = "남문"
+            selectedDoorType = "SOUTH"
             isLocationFixed = true
             moveCameraToLocation(37.5775540, 127.0578147)
             showToast(this,"남문 위치로 이동합니다.")
         }
 
 
-        binding.btnUserLocation.setOnClickListener {
-            enableUserLocation()
-            isLocationFixed = false
-        }
 
+        // 내 위치 버튼 클릭 시 위치 추적 재시작
         binding.btnUserLocation.setOnClickListener {
             checkLocationPermissionAndMoveCamera()
+            enableUserLocation()
+            isLocationFixed = false
         }
 
         setupSearch()
@@ -198,18 +222,16 @@ class MainActivity : AppCompatActivity() {
 
         customizeSearchView()
 
-        // 내 위치 버튼 클릭 시 위치 추적 재시작
-        binding.btnUserLocation.setOnClickListener {
-            enableUserLocation()
-            isLocationFixed = false
-        }
 
         // "목록 보기" 버튼 클릭 시 동작 수정
+        // 수정된 CategoryBtn 클릭 리스너
         binding.categoryBtn.setOnClickListener {
             if (selectedDoorType.isNullOrBlank()) {
-                loadAllRestaurants() // 전체 식당 목록 보기
+                loadAllRestaurants()  // 선택된 문이 없으면 전체 식당 로딩
             } else {
-                loadRestaurantsByFilter(selectedDoorType!!)
+                binding.categoryBtn.isEnabled = false  // 버튼 비활성화
+                val doorTypeForApi = mapDoorTypeForApi(selectedDoorType!!)
+                loadRestaurantsByFilter(doorTypeForApi)
             }
         }
 
@@ -219,28 +241,16 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
-
-        binding.svSearch.setOnQueryTextListener(object :
-            androidx.appcompat.widget.SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                val trimmedQuery = query?.trim()
-                if (!trimmedQuery.isNullOrBlank()) {
-                    searchRestaurants(trimmedQuery)
-                } else {
-                    Toast.makeText(this@MainActivity, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                }
-                return true
-            }
-
-            /**
-             * 실시간 검색 로직 구현 시
-             */
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return false
-            }
-        })
-
+    }
+    // doorType을 API에서 사용하는 값으로 매핑하는 함수
+    private fun mapDoorTypeForApi(doorType: String): String {
+        return when (doorType) {
+            "정문" -> "FRONT"
+            "남문" -> "SOUTH"
+            "쪽문" -> "SIDE"
+            "후문" -> "BACK"
+            else -> "DEFAULT"  // 기본값 처리
+        }
     }
 
     // 위치 권한 요청 초기화
@@ -251,20 +261,13 @@ class MainActivity : AppCompatActivity() {
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
             ) {
-                Log.d("PERMISSION_RESULT", "위치 권한 허용됨")
-                if (::naverMap.isInitialized) {
                     enableUserLocation()
                 } else {
-                    Log.e("PERMISSION_RESULT", "NaverMap 초기화가 안 됨")
-                }
-            } else {
-                Log.d("PERMISSION_RESULT", "위치 권한 거부됨")
-                if (::naverMap.isInitialized) {
                     initializeMapWithoutPermission()
                 }
             }
         }
-    }
+
 
 
 
@@ -272,40 +275,65 @@ class MainActivity : AppCompatActivity() {
     private fun loadAllRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantList(
+                val response = restaurantApi.getRestaurantList(
                     doorType = null,
                     filter = "DEFAULT"
                 )
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
-                        navigateToRestaurantList(response.body()!!)
+                    response.body()?.let {
+                        if (it.isNotEmpty()) {
+                            navigateToRestaurantList(it)
+                        } else {
+                            showToast(this@MainActivity, "식당 정보가 없습니다.", Toast.LENGTH_SHORT)
+                        }
                     }
                 }
             } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showToast(this@MainActivity, "API 호출 오류 발생", Toast.LENGTH_SHORT)
+                }
                 e.printStackTrace()
             }
         }
     }
 
+    // 필터 누름에 따라 식당 리스트 반환 1. 검색 2. 목록 보기
     private fun loadRestaurantsByFilter(doorType: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantList(
+                Log.d("API_CALL", "doorType: $doorType")  // 로그 추가
+                val response = restaurantApi.getRestaurantList(
                     doorType = doorType,
                     filter = "DEFAULT"
                 )
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
-                        navigateToSelectedDoorList(response.body()!!, doorType)
+                    if (response.isSuccessful && response.body() != null) {
+                        val restaurantList = response.body()!!
+                        if (restaurantList.isNotEmpty()) {
+                            navigateToSelectedDoorList(restaurantList, doorType)
+                        } else {
+                            showToast(this@MainActivity, "선택한 문 주변 식당이 없습니다.")
+                            Log.d("API_RESULT", "빈 목록 반환됨")
+                        }
+                    } else {
+                        showToast(this@MainActivity, "API 응답 오류 발생")
+                        Log.e("API_ERROR", "응답 오류: ${response.errorBody()?.string()}")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
+                    showToast(this@MainActivity, "API 호출 오류 발생: ${e.message}")
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    binding.categoryBtn.isEnabled = true  // 버튼 활성화
                 }
             }
         }
     }
+
+
     // 위치 권한 접근 요청
     private fun requestLocationPermission() {
         locationPermissionLauncher.launch(
@@ -413,20 +441,27 @@ class MainActivity : AppCompatActivity() {
 
     // DoorType에 해당하는 마커 필터링 및 카메라 이동
     private fun filterMarkersByDoorType(doorType: String, lat: Double, lon: Double, button: View) {
+        // 선택된 버튼이 이미 눌렸을 경우 전체 마커를 보여주는 로직
         if (selectedButton == button) {
             resetToInitialState()
-            showAllMarkers()
-
+            showAllMarkers()  // 모든 마커를 다시 표시
         } else {
+            // 다른 버튼을 클릭했을 때 마커를 필터링하여 보여주는 로직
             selectedButton?.isSelected = false
             button.isSelected = true
             selectedButton = button
+            selectedDoorType = doorType
 
+            // 선택된 doorType에 해당하는 마커만 보이게
             restaurantMarkers.forEach { marker ->
-                marker.map = if (marker.tag == doorType) naverMap else null
+                if (marker.tag == doorType) {
+                    marker.isVisible = true // 해당 doorType에 맞는 마커만 지도에 표시
+                } else {
+                    marker.isVisible = false // 다른 doorType의 마커는 숨기기
+                }
             }
-            moveCameraToLocation(lat, lon)
 
+            moveCameraToLocation(lat, lon)  // 해당 위치로 카메라 이동
             isLocationFixed = true
             stopLocationTracking()
         }
@@ -435,9 +470,10 @@ class MainActivity : AppCompatActivity() {
     // 모든 마커 다시 표시
     private fun showAllMarkers() {
         restaurantMarkers.forEach { marker ->
-            marker.map = naverMap
+            marker.isVisible = true  // 모든 마커를 지도에 다시 표시
         }
     }
+
 
     // 위치 추적 중지
     private fun stopLocationTracking() {
@@ -453,19 +489,38 @@ class MainActivity : AppCompatActivity() {
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantList(null, "DEFAULT")
-                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        addMarkersToMap(response.body()!!)
+                // API 호출
+                val response = restaurantApi.getRestaurantList(
+                    doorType = null,
+                    filter = "DEFAULT"
+                )
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+                        addMarkersToMap(response.body()!!)  // 마커 추가
+                    } else {
+                        showToast(
+                            this@MainActivity,
+                            "식당 정보가 없습니다.",
+                            Toast.LENGTH_SHORT
+                        )
                     }
-                } else {
-                    showToast(this@MainActivity,"식당 정보가 없습니다.", Toast.LENGTH_SHORT)
                 }
+
             } catch (e: Exception) {
-                    //필요시 TOAST 메시지 출력
+                e.printStackTrace()  // 에러 로그 출력
+
+                withContext(Dispatchers.Main) {
+                    showToast(
+                        this@MainActivity,
+                        "API 호출 오류 발생: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    )
                 }
             }
         }
+    }
+
 
 
 
@@ -481,6 +536,7 @@ class MainActivity : AppCompatActivity() {
                     map = naverMap
                     captionText = restaurant.name
                     tag = restaurant.doorType
+                    isVisible = true  // 초기에는 모든 마커를 표시하도록 설정
                 }
 
                 marker.setOnClickListener {
@@ -498,6 +554,7 @@ class MainActivity : AppCompatActivity() {
                             map = naverMap
                             captionText = restaurant.name
                             tag = restaurant.doorType
+                            isVisible = true
                         }
 
                         marker.setOnClickListener {
@@ -545,14 +602,15 @@ class MainActivity : AppCompatActivity() {
                 if (!trimmedQuery.isNullOrBlank()) {
                     searchRestaurants(trimmedQuery)
                 } else {
-                    Toast.makeText(this@MainActivity, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                    showToast(this@MainActivity, "검색어를 입력해주세요.")
                 }
                 return true
             }
-            // 검색하면서 변할 때 어떻게 처리할 것인지?
+
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
     }
+
 
 
     private fun moveCameraToLocation(latitude: Double, longitude: Double) {
@@ -565,7 +623,7 @@ class MainActivity : AppCompatActivity() {
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.searchRestaurants(
+                val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
                     doorType = selectedDoorType
                 )
@@ -600,7 +658,7 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // updatedRequest를 전달하도록 수정
-                val response = RetrofitInstance.restaurantApi.editRestaurant(updatedRequest)
+                val response = restaurantApi.editRestaurant(updatedRequest)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
@@ -665,8 +723,8 @@ class MainActivity : AppCompatActivity() {
     private fun resetToInitialState() {
         selectedButton?.isSelected = false
         selectedButton = null
-        selectedDoorType = null
         isLocationFixed = false
+        selectedDoorType = null
 
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -734,11 +792,12 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+
     // 전체 목록 보기로 이동 (정문 기본 선택)
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
         val intent = Intent(this, RestaurantListActivity::class.java).apply {
             putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
-            putExtra("defaultDoorType", "정문") // 정문 기본 선택
+            putExtra("defaultDoorType", "FRONT") // 정문 기본 선택
         }
         startActivity(intent)
     }
