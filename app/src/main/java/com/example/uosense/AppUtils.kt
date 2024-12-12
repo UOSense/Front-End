@@ -1,8 +1,14 @@
 package com.example.uosense
 
 import android.content.Context
+import android.location.Location
 import android.util.Log
 import android.widget.Toast
+import com.example.uosense.models.CategoryType
+import com.example.uosense.models.DoorType
+import com.example.uosense.models.FilterType
+import com.example.uosense.models.ReportDetailType
+import com.example.uosense.models.SubDescriptionType
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.geometry.LatLngBounds
 import com.naver.maps.map.CameraUpdate
@@ -29,6 +35,14 @@ object AppUtils {
     var userMarker: Marker? = null
     val restaurantMarkers = mutableListOf<Marker>()
     lateinit var locationSource: FusedLocationSource
+
+    // 문 좌표 정의
+    private val doorCoordinates = mapOf(
+        "FRONT" to LatLng(37.5834643, 127.0536246),  // 정문
+        "SIDE" to LatLng(37.5869791, 127.0564010),   // 쪽문
+        "BACK" to LatLng(37.5869320, 127.0606581),   // 후문
+        "SOUTH" to LatLng(37.5775540, 127.0578147)   // 남문
+    )
 
 
     /**
@@ -94,6 +108,8 @@ object AppUtils {
         return closestDoor?.key
     }
 
+
+
     /**
      * 두 좌표 간 거리 계산
      */
@@ -153,4 +169,5 @@ object AppUtils {
             }
         }
     }
+
 }

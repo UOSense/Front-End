@@ -42,6 +42,9 @@ import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import com.example.uosense.AppUtils.getClosestDoorType
 import com.example.uosense.AppUtils.showToast
+import com.example.uosense.models.CategoryType
+import com.example.uosense.models.DoorType
+import com.example.uosense.models.SubDescriptionType
 import com.example.uosense.network.RetrofitInstance.restaurantApi
 import com.naver.maps.map.overlay.OverlayImage
 
@@ -52,6 +55,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.naver.maps.map.OnMapReadyCallback
 import java.net.URLDecoder
+import java.sql.Types.NULL
 import kotlin.math.log
 
 
@@ -266,9 +270,31 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             "남문" -> "SOUTH"
             "쪽문" -> "SIDE"
             "후문" -> "BACK"
-            else -> "null"  // 기본값 처리
+            else -> "NULL"  // 기본값 처리
         }
     }
+    // CategoryType 매핑 함수
+    private fun mapCategoryForApi(category: String): String {
+        return when (category.uppercase()) {
+            "한식" -> "KOREAN"
+            "중식" -> "CHINESE"
+            "일식" -> "JAPANESE"
+            "양식" -> "WESTERN"
+            "기타" -> "OTHER"
+            else -> "NULL"
+        }
+    }
+
+    // SubDescriptionType 매핑 함수
+    private fun mapSubDescription(subDescription: String): String {
+        return when (subDescription.uppercase()) {
+            "술집" -> "BAR"
+            "카페" -> "CAFE"
+            "식당" -> "RESTAURANT"
+            else -> "NULL"
+        }
+    }
+
 
     // 위치 권한 요청 초기화
     private fun setupLocationPermissionLauncher() {
@@ -293,7 +319,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = restaurantApi.getRestaurantList(
-                    doorType = null,
                     filter = "DEFAULT"
                 )
                 withContext(Dispatchers.Main) {
@@ -394,30 +419,61 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    // 위도 및 경도 업데이트 함수
-    private fun updateRestaurantCoordinatesToServer(restaurantId: Int, latitude: Double, longitude: Double) {
+    private fun updateRestaurantCoordinatesToServer(
+        restaurantId: Int, latitude: Double, longitude: Double
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val updatedRequest = RestaurantRequest(
+                // 기존 레스토랑 정보 가져오기
+                val existingResponse = restaurantApi.getRestaurantById(restaurantId)
+
+                if (!existingResponse.isSuccessful || existingResponse.body() == null) {
+                    Log.e("SERVER_FETCH_ERROR", "기존 정보 가져오기 실패: ${existingResponse.errorBody()?.string()}")
+                    return@launch
+                }
+
+                val existingRestaurant = existingResponse.body()!!
+
+                // 위치 업데이트 요청 생성 (기존 데이터 유지)
+                val updateRequest = RestaurantRequest(
                     id = restaurantId,
+                    name = existingRestaurant.name.ifBlank { "Unknown" },
+                    doorType = mapDoorTypeForApi(existingRestaurant.doorType ?: "NULL"),
                     latitude = latitude,
-                    longitude = longitude
+                    longitude = longitude,
+                    address = existingRestaurant.address ?: "",
+                    phoneNumber = existingRestaurant.phoneNumber ?: "",
+                    category = mapCategoryForApi(existingRestaurant.category ?:"음식점") ,
+                    subDescription = mapSubDescription(existingRestaurant.subDescription ?:"기타") ,
+                    description = existingRestaurant.description ?: ""
                 )
 
-                val response = restaurantApi.updateRestaurantLocation(updatedRequest)
+                // 위치 업데이트 요청 전송
+                val updateResponse = restaurantApi.updateRestaurantLocation(updateRequest)
 
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        Log.d("SERVER_UPDATE", "레스토랑 위치 업데이트 성공: $latitude, $longitude")
+                    if (updateResponse.isSuccessful) {
+                        Log.d("SERVER_UPDATE", "레스토랑 위치 업데이트 성공: ($latitude, $longitude)")
+                        showToast(this@MainActivity, "위치 업데이트 성공!")
                     } else {
-                        Log.e("SERVER_UPDATE_ERROR", "업데이트 실패: ${response.errorBody()?.string()}")
+                        val errorMessage = updateResponse.errorBody()?.string()
+                        Log.e("SERVER_UPDATE_ERROR", "업데이트 실패: $errorMessage")
+                        showToast(this@MainActivity, "업데이트 실패: $errorMessage")
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    showToast(this@MainActivity, "위치 업데이트 중 오류 발생: ${e.message}")
+                }
+                Log.e("SERVER_ERROR", "위치 업데이트 중 예외 발생", e)
             }
         }
     }
+
+
+
+
+
 
     // 도로명 주소 -> 위도, 경도 변환
     private fun getLatLngFromAddress(restaurant: RestaurantListResponse, callback: (Double?, Double?) -> Unit) {
@@ -529,7 +585,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // 식당 정보 로딩 후 마커 표시
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -541,7 +596,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && !response.body().isNullOrEmpty()) {
-                        addMarkersToMap(response.body()!!)  // 마커 추가
+                        restaurantList = response.body()!!.toMutableList()
+
+                        // DoorType 업데이트
+                        addMarkersToMap(restaurantList)  // 마커 추가
                     } else {
                         showToast(
                             this@MainActivity,
@@ -877,6 +935,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         startActivity(intent)
         finish()
     }
+
+
+
+
 
 
 
