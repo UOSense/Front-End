@@ -186,10 +186,12 @@ interface RestaurantApi {
         @Header("access") accessToken: String // access 헤더 추가
     ): Response<Unit>
 
-//    // 즐겨찾기 조회 (사용자 기준)
-//    @GET("/api/v1/bookmark/get/mine")
-//    suspend fun getMyBookmarks(): List<BookMarkResponse>
-//
+    // 즐겨찾기 조회 (사용자 기준)
+    @GET("/api/v1/bookmark/get/mine")
+    suspend fun getMyBookmarks(
+        @Header("access") accessToken: String // access 헤더 추가
+    ): List<BookMarkResponse>
+
 //    @GET("/api/v1/bookmark/get/user")
 //    suspend fun getUserBookmarks(
 //        @Query("userId") userId: Int

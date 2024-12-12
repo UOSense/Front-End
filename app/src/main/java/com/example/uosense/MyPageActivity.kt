@@ -4,6 +4,7 @@ import TokenManager
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -55,6 +56,13 @@ class MyPageActivity : AppCompatActivity() {
                 navigateToMainActivity()
             }
         })
+
+        // 전체보기 버튼 클릭 리스너
+        val favoriteDetails: TextView = findViewById(R.id.favoriteDetails)
+        favoriteDetails.setOnClickListener {
+            val intent = Intent(this, FavoriteListActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     // 로그아웃 처리 함수
