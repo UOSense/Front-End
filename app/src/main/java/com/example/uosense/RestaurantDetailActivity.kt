@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 class RestaurantDetailActivity : AppCompatActivity() {
 
     // 식당 id 임의 선언
-    private var restaurantId: Int = 1
+    private var restaurantId: Int = 0
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var businessDaysBtn: Button
@@ -50,7 +50,7 @@ class RestaurantDetailActivity : AppCompatActivity() {
         tokenManager = TokenManager(this)
 
         // 식당 ID 전달받기
-        restaurantId = intent.getIntExtra("restaurantId", 1)
+        restaurantId = intent.getIntExtra("restaurantId", 2)
 
         // UI 초기화
         recyclerView = findViewById(R.id.businessDaysRecyclerView)

@@ -232,6 +232,11 @@ interface RestaurantApi {
         @Query("userId") userId: Int
     ): List<ReviewResponse>
 
+    @GET("/api/v1/review/get/mine")
+    suspend fun getMyReviews(
+        @Header("access") accessToken: String
+    ): List<ReviewItem>
+
     // 특정 리뷰 조회
     @GET("/api/v1/review/get")
     suspend fun getReviewById(

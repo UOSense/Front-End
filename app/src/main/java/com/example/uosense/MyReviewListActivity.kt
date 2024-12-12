@@ -9,43 +9,44 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.uosense.adapters.FavoriteAdapter
-import com.example.uosense.models.BookMarkResponse
+import com.example.uosense.adapters.ReviewAdapter
+import com.example.uosense.models.ReviewItem
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class FavoriteListActivity : AppCompatActivity() {
+class MyReviewListActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var favoriteAdapter: FavoriteAdapter
-    private lateinit var tokenManager: TokenManager
+    private lateinit var reviewAdapter: ReviewAdapter
     private lateinit var backBtn: Button
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_favorite_list)
+        setContentView(R.layout.activity_my_review_list)
 
         tokenManager = TokenManager(this)
 
+        // UI 초기화
+        recyclerView = findViewById(R.id.reviewRecyclerView)
         backBtn = findViewById(R.id.backBtn)
         backBtn.setOnClickListener {
             navigateToMyPage()
         }
 
         setupRecyclerView()
-        fetchFavorites()
+        fetchMyReviews()
     }
 
     private fun setupRecyclerView() {
-        recyclerView = findViewById(R.id.favoriteRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        favoriteAdapter = FavoriteAdapter(emptyList())
-        recyclerView.adapter = favoriteAdapter
+        reviewAdapter = ReviewAdapter(emptyList())
+        recyclerView.adapter = reviewAdapter
     }
 
-    private fun fetchFavorites() {
+    private fun fetchMyReviews() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val accessToken = tokenManager.getAccessToken().orEmpty()
@@ -54,12 +55,13 @@ class FavoriteListActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                val favorites = RetrofitInstance.restaurantApi.getMyBookmarks("Bearer $accessToken")
-                if (favorites.isNotEmpty()) {
-                    favoriteAdapter.updateData(favorites)
+                val reviews = RetrofitInstance.restaurantApi.getMyReviews("Bearer $accessToken")
+                if (reviews.isNotEmpty()) {
+                    reviewAdapter = ReviewAdapter(reviews)
+                    recyclerView.adapter = reviewAdapter
                     recyclerView.visibility = View.VISIBLE
                 } else {
-                    showToast("즐겨찾기 목록이 비어 있습니다.")
+                    showToast("작성한 리뷰가 없습니다.")
                 }
             } catch (e: Exception) {
                 showToast("오류 발생: ${e.message}")
@@ -67,13 +69,13 @@ class FavoriteListActivity : AppCompatActivity() {
         }
     }
 
+    private fun showToast(message: String) {
+        Toast.makeText(this@MyReviewListActivity, message, Toast.LENGTH_SHORT).show()
+    }
+
     private fun navigateToMyPage() {
         val intent = Intent(this, MyPageActivity::class.java)
         startActivity(intent)
         finish() // 현재 액티비티 종료
-    }
-
-    private fun showToast(message: String) {
-        Toast.makeText(this@FavoriteListActivity, message, Toast.LENGTH_SHORT).show()
     }
 }

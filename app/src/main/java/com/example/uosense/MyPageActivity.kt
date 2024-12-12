@@ -63,6 +63,11 @@ class MyPageActivity : AppCompatActivity() {
             val intent = Intent(this, FavoriteListActivity::class.java)
             startActivity(intent)
         }
+        val reviewDetails: TextView = findViewById(R.id.reviewDetails)
+        reviewDetails.setOnClickListener {
+            val intent = Intent(this, MyReviewListActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     // 로그아웃 처리 함수
