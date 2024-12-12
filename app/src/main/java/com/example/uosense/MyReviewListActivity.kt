@@ -42,7 +42,10 @@ class MyReviewListActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         recyclerView.layoutManager = LinearLayoutManager(this)
-        reviewAdapter = ReviewAdapter(emptyList())
+        reviewAdapter = ReviewAdapter(emptyList()) { holder ->
+            holder.reportBtn.visibility = View.GONE
+            holder.deleteBtn.visibility = View.VISIBLE
+        }
         recyclerView.adapter = reviewAdapter
     }
 
@@ -57,7 +60,10 @@ class MyReviewListActivity : AppCompatActivity() {
 
                 val reviews = RetrofitInstance.restaurantApi.getMyReviews("Bearer $accessToken")
                 if (reviews.isNotEmpty()) {
-                    reviewAdapter = ReviewAdapter(reviews)
+                    reviewAdapter = ReviewAdapter(reviews){ holder ->
+                        holder.reportBtn.visibility = View.GONE
+                        holder.deleteBtn.visibility = View.VISIBLE
+                    }
                     recyclerView.adapter = reviewAdapter
                     recyclerView.visibility = View.VISIBLE
                 } else {

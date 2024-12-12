@@ -22,7 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.joda.time.LocalDateTime
 
-class ReviewAdapter(private val reviews: List<ReviewItem>) :
+class ReviewAdapter(private val reviews: List<ReviewItem>,
+                    private val configureButtons: (ReviewViewHolder) -> Unit) :
     RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder>() {
 
     inner class ReviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -37,15 +38,21 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
         val reviewImage1: ImageView = itemView.findViewById(R.id.reviewImage1)
         val reviewImage2: ImageView = itemView.findViewById(R.id.reviewImage2)
         val reportBtn: Button = itemView.findViewById(R.id.reportBtn)
+        val deleteBtn: Button = itemView.findViewById(R.id.deleteBtn)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_review, parent, false)
         return ReviewViewHolder(view)
+
+
     }
 
     override fun onBindViewHolder(holder: ReviewViewHolder, position: Int) {
         val review = reviews[position]
+
+        // 버튼 설정 람다 호출
+        configureButtons(holder)
 
         // 1. 닉네임
         holder.reviewerName.text = review.nickname

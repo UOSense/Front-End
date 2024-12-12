@@ -43,11 +43,7 @@
 
 
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/line_1"
-        android:layout_marginTop="10dp"/>
+
 
     <!-- 리뷰 목록 제목 -->
     <TextView

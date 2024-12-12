@@ -2,6 +2,7 @@ package com.example.uosense
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,7 +26,12 @@ class ReviewListActivity : AppCompatActivity() {
 
         reviewRecyclerView = findViewById(R.id.reviewRecyclerView)
         reviewRecyclerView.layoutManager = LinearLayoutManager(this)
-        reviewAdapter = ReviewAdapter(reviews)
+        reviewAdapter = ReviewAdapter(reviews) { holder ->
+            holder.reportBtn.visibility = View.VISIBLE
+            holder.deleteBtn.visibility = View.GONE
+        }
+
+
         reviewRecyclerView.adapter = reviewAdapter
 
         fetchReviews()

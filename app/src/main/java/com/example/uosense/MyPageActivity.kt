@@ -104,7 +104,7 @@ class MyPageActivity : AppCompatActivity() {
 
     // 메인 액티비티로 이동
     private fun navigateToMainActivity() {
-        val intent = Intent(this, MainActivity::class.java).apply {
+        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)
