@@ -28,6 +28,7 @@
             android:layout_marginEnd="8dp"
             android:contentDescription="@string/common_google_play_services_enable_button"
             android:src="@drawable/ic_map_image"
+            android:layout_marginStart="10dp"
             android:clickable="true"
             android:focusable="true"/>
 

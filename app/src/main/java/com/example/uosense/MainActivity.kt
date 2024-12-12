@@ -320,7 +320,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             try {
                 Log.d("API_CALL", "doorType: $doorType")  // 로그 추가
                 val response = restaurantApi.getRestaurantList(
-                    doorType = doorType,
+                    doorType = mapDoorTypeForApi(doorType),
                     filter = "DEFAULT"
                 )
                 withContext(Dispatchers.Main) {
@@ -703,7 +703,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
                         if (isNearbySearchEnabled && selectedDoorType != null) {
                             // 체크박스 눌려 있을 때 검색 시 특정 문으로 이동
-                            navigateToSelectedDoorList(response.body()!!, selectedDoorType!!)
+                            navigateToSelectedDoorList(response.body()!!, mapDoorTypeForApi(selectedDoorType!!))
                         } else {
                             // 체크박스 해제 시 전체 목록 이동
                             navigateToRestaurantList(response.body()!!)

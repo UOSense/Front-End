@@ -33,8 +33,7 @@ class SelectedDoorActivity : AppCompatActivity() {
         setContentView(R.layout.activity_selected_door)
 
         binding.ivMap.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            onBackPressedDispatcher.onBackPressed()  // 뒤로 가기 액션 실행
         }
 
         // 초기화
