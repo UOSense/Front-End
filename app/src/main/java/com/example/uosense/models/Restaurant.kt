@@ -301,7 +301,7 @@ data class ReviewItem(
     val dateTime: List<Int>, // 배열 형태로 정의
     val reviewEventCheck: Boolean,
     val tag: String?,
-    val likeCount: Int,
+    var likeCount: Int,
     val imageUrls: List<String>?
 ){
     // 날짜 포맷 변환 함수

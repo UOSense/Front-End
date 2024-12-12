@@ -1,5 +1,7 @@
 package com.example.uosense.adapters
 
+import TokenManager
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.RatingBar
@@ -10,6 +12,12 @@ import com.example.uosense.R
 import com.example.uosense.models.ReviewItem
 import android.view.ViewGroup
 import android.view.LayoutInflater
+import android.widget.Button
+import android.widget.Toast
+import com.example.uosense.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ReviewAdapter(private val reviews: List<ReviewItem>) :
     RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder>() {
@@ -22,6 +30,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
         val eventParticipation: TextView = itemView.findViewById(R.id.eventParticipation)
         val writeDate: TextView = itemView.findViewById(R.id.writeDate)
         val likeCount: TextView = itemView.findViewById(R.id.likeCount)
+        val likeCountBtn: Button = itemView.findViewById(R.id.likeCountBtn)
         val reviewImage1: ImageView = itemView.findViewById(R.id.reviewImage1)
         val reviewImage2: ImageView = itemView.findViewById(R.id.reviewImage2)
     }
@@ -75,6 +84,82 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
                 .load(images[1])
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .into(holder.reviewImage2)
+        }
+
+        // 좋아요 버튼 클릭 이벤트 처리
+        holder.likeCountBtn.setOnClickListener {
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    // TokenManager에서 AccessToken 가져오기
+                    val accessToken = TokenManager(holder.itemView.context).getAccessToken()
+                    if (accessToken.isNullOrEmpty()) {
+                        Toast.makeText(
+                            holder.itemView.context,
+                            "로그인이 필요합니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@launch
+                    }
+
+                    // API 요청: 좋아요
+                    val response = RetrofitInstance.restaurantApi.likeReview(
+                        review.id,
+                        "Bearer $accessToken"
+                    )
+
+                    when (response.code()) {
+                        200 -> {
+                            // 좋아요 성공
+                            review.likeCount += 1
+                            holder.likeCount.text = review.likeCount.toString()
+                            Toast.makeText(
+                                holder.itemView.context,
+                                "리뷰를 추천했습니다!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        403 -> {
+                            // 좋아요 제한
+                            Toast.makeText(
+                                holder.itemView.context,
+                                "리뷰 좋아요는 한 번만 가능합니다.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        404 -> {
+                            // 리뷰 없음
+                            Toast.makeText(
+                                holder.itemView.context,
+                                "리뷰를 찾을 수 없습니다.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        500 -> {
+                            // 서버 오류
+                            Toast.makeText(
+                                holder.itemView.context,
+                                "서버 오류가 발생했습니다.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        else -> {
+                            // 기타 예외 처리
+                            Toast.makeText(
+                                holder.itemView.context,
+                                "알 수 없는 오류: ${response.code()}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    // 네트워크 오류 처리
+                    Toast.makeText(
+                        holder.itemView.context,
+                        "네트워크 오류 발생: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
 
     }
