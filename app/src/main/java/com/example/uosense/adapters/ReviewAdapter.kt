@@ -14,10 +14,13 @@ import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import com.example.uosense.models.ReportRequest
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.joda.time.LocalDateTime
 
 class ReviewAdapter(private val reviews: List<ReviewItem>) :
     RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder>() {
@@ -33,6 +36,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
         val likeCountBtn: Button = itemView.findViewById(R.id.likeCountBtn)
         val reviewImage1: ImageView = itemView.findViewById(R.id.reviewImage1)
         val reviewImage2: ImageView = itemView.findViewById(R.id.reviewImage2)
+        val reportBtn: Button = itemView.findViewById(R.id.reportBtn)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
@@ -65,7 +69,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
         // 7. 프로필 이미지 로드 (Glide 사용)
         Glide.with(holder.itemView.context)
             .load(review.userImage ?: R.drawable.ic_user)
-             // 기본 이미지
+            // 기본 이미지
             .into(holder.profileImage)
 
         // 8. 리뷰 이미지 로드
@@ -118,6 +122,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+
                         403 -> {
                             // 좋아요 제한
                             Toast.makeText(
@@ -126,6 +131,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+
                         404 -> {
                             // 리뷰 없음
                             Toast.makeText(
@@ -134,6 +140,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+
                         500 -> {
                             // 서버 오류
                             Toast.makeText(
@@ -142,6 +149,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+
                         else -> {
                             // 기타 예외 처리
                             Toast.makeText(
@@ -162,8 +170,102 @@ class ReviewAdapter(private val reviews: List<ReviewItem>) :
             }
         }
 
+        // 신고 버튼 클릭 리스너 설정
+        holder.reportBtn.setOnClickListener {
+            // 신고 사유 선택 다이얼로그 표시
+            val reasons = arrayOf("ABUSIVE", "DEROGATORY", "ADVERTISEMENT")
+
+            val builder = AlertDialog.Builder(holder.itemView.context)
+            builder.setTitle("신고 사유 선택")
+            builder.setItems(reasons) { _, which ->
+                val selectedReason = reasons[which]
+
+                // 토큰 가져오기
+                val accessToken = TokenManager(holder.itemView.context).getAccessToken()
+
+                // 액세스 토큰 확인
+                if (accessToken.isNullOrEmpty()) {
+                    Toast.makeText(
+                        holder.itemView.context,
+                        "로그인이 필요합니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setItems
+                }
+
+                // 신고 요청 생성
+                val reportRequest = ReportRequest(
+                    reviewId = review.id,
+                    detail = selectedReason,
+                    createdAt = LocalDateTime.now().toString()
+                )
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        // API 요청
+                        val response = RetrofitInstance.restaurantApi.reportReview(
+                            reportRequest,
+                            "Bearer $accessToken"
+                        )
+
+                        when (response.code()) {
+                            200 -> {
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "리뷰 신고가 접수되었습니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            400 -> {
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "잘못된 요청입니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            401 -> {
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "인증 오류: 다시 로그인하세요.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            404 -> {
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "리뷰를 찾을 수 없습니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            500 -> {
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "서버 오류가 발생했습니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                            else -> {
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "알 수 없는 오류 발생: ${response.code()}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            holder.itemView.context,
+                            "네트워크 오류 발생: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            builder.show()
+        }
     }
 
     override fun getItemCount(): Int = reviews.size
+
 }
 

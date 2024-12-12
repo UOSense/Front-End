@@ -58,7 +58,7 @@
 
         <!-- 신고 버튼 -->
         <Button
-            android:id="@+id/reportButton"
+            android:id="@+id/reportBtn"
             android:layout_width="60dp"
             android:layout_height="40dp"
             android:text="신고"

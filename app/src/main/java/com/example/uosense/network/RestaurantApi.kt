@@ -244,7 +244,8 @@ interface RestaurantApi {
     // 리뷰 신고
     @POST("/api/v1/report/create/review")
     suspend fun reportReview(
-        @Body reportRequest: ReportRequest
+        @Body reportRequest: ReportRequest,
+        @Header("access") accessToken: String // access 헤더 추가
     ): Response<Unit>
 
     // 모든 신고 내역 조회
