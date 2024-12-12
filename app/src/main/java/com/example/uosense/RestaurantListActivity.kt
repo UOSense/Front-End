@@ -46,13 +46,13 @@ class RestaurantListActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
-
+    // RecyclerView 설정 함수
     private fun setupRecyclerView() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = RestaurantListAdapter(restaurantList) { navigateToDetailActivity(it) }
         binding.recyclerView.adapter = adapter
     }
-
+    // 리스트가 비어있는지 체크하고, 빈 경우에는 "결과 없음" 텍스트를 보여줌
     private fun checkIfListIsEmpty() {
         if (restaurantList.isEmpty()) {
             binding.recyclerView.visibility = RecyclerView.GONE
@@ -62,7 +62,7 @@ class RestaurantListActivity : AppCompatActivity() {
             binding.tvNoResults.visibility = TextView.GONE
         }
     }
-
+    // 필터 버튼에 대한 클릭 리스너 설정
     private fun setupFilterButtons() {
         binding.apply {
             doorTypeButton1.setOnClickListener { fetchFilteredRestaurants("FRONT") }
@@ -71,7 +71,7 @@ class RestaurantListActivity : AppCompatActivity() {
             doorTypeButton4.setOnClickListener { fetchFilteredRestaurants("SOUTH") }
         }
     }
-
+    // 필터된 레스토랑 데이터를 서버에서 받아오는 함수
     private fun fetchFilteredRestaurants(doorType: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -91,13 +91,13 @@ class RestaurantListActivity : AppCompatActivity() {
             }
         }
     }
-
+    // 정렬 버튼 클릭 시 옵션을 보여주는 함수
     private fun setupSortButton() {
         binding.btnFilter.setOnClickListener {
             showSortOptions()
         }
     }
-
+    // 정렬 기준을 선택하는 다이얼로그를 띄우는 함수
     private fun showSortOptions() {
         val sortOptions = arrayOf("리뷰 많은 순", "즐겨찾기 많은 순", "평점 순", "가격 낮은 순", "거리 가까운 순")
         val apiValues = arrayOf("REVIEW", "BOOKMARK", "RATING", "PRICE", "DISTANCE")
@@ -112,7 +112,7 @@ class RestaurantListActivity : AppCompatActivity() {
             .setNegativeButton("취소", null)
             .show()
     }
-
+    // 정렬된 레스토랑 데이터를 서버에서 받아오는 함수
     private fun fetchSortedRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -132,20 +132,20 @@ class RestaurantListActivity : AppCompatActivity() {
             }
         }
     }
-
+    // 레스토랑 상세보기 화면으로 이동하는 함수
     private fun navigateToDetailActivity(restaurant: RestaurantListResponse) {
         val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
             putExtra("restaurantId", restaurant.id)
         }
         startActivity(intent)
     }
-
+    // RestaurantListAdapter에서 리스트를 갱신하는 함수
     fun RestaurantListAdapter.updateList(newList: List<RestaurantListResponse>) {
         restaurantList.clear()
         restaurantList.addAll(newList)
         notifyDataSetChanged()
     }
-
+    // 검색 기능을 위한 설정 함수
     private fun setupSearch() {
         binding.svSearch.setOnQueryTextListener(object :
             androidx.appcompat.widget.SearchView.OnQueryTextListener {
@@ -162,7 +162,7 @@ class RestaurantListActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
     }
-
+    // 검색어를 기반으로 레스토랑을 검색하는 함수
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {

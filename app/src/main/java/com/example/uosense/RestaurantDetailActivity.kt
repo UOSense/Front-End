@@ -112,13 +112,10 @@ class RestaurantDetailActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         bindRestaurantData(response.body()!!)
-                    } else {
-                        showToast("식당 정보를 불러올 수 없습니다.")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                showToast("식당 정보를 불러오는 중 오류 발생")
             }
         }
     }
@@ -143,13 +140,10 @@ class RestaurantDetailActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         businessDayAdapter.submitList(response.body()!!.businessDayInfoList)
-                    } else {
-                        showToast("영업일 정보를 불러올 수 없습니다.")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                showToast("영업일 정보를 불러오는 중 오류 발생")
             }
         }
     }
@@ -162,13 +156,10 @@ class RestaurantDetailActivity : AppCompatActivity() {
                     if (response.isSuccessful && response.body() != null) {
                         val images = response.body()!!.imageList.map { it.url }
                         imageAdapter.submitList(images)
-                    } else {
-                        showToast("이미지를 불러올 수 없습니다.")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                showToast("이미지를 불러오는 중 오류 발생")
             }
         }
     }
@@ -188,7 +179,6 @@ class RestaurantDetailActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                showToast("즐겨찾기 업데이트 실패")
             }
         }
     }
@@ -222,13 +212,10 @@ class RestaurantDetailActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         menuAdapter.submitList(response.body()!!)
-                    } else {
-                        showToast("메뉴 정보를 불러올 수 없습니다.")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                showToast("메뉴 로딩 중 오류 발생")
             }
         }
     }

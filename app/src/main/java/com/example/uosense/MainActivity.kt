@@ -40,6 +40,7 @@ import android.content.pm.PackageManager
 import android.location.Location.distanceBetween
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
+import com.example.uosense.AppUtils.getClosestDoorType
 import com.example.uosense.AppUtils.showToast
 import com.example.uosense.network.RetrofitInstance.restaurantApi
 import com.naver.maps.map.overlay.OverlayImage
@@ -54,10 +55,10 @@ import kotlin.math.log
 
 
 class MainActivity : AppCompatActivity() {
-
+    //위치 관련 변수
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
-
+    //지도 관련 변수
     private lateinit var binding: ActivityMainBinding
     private lateinit var naverMap: NaverMap
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
@@ -485,7 +486,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
+    // 식당 정보 로딩 후 마커 표시
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -569,7 +570,7 @@ class MainActivity : AppCompatActivity() {
         moveCameraToFitAllMarkers()
     }
 
-
+    // 마커 클릭 -> fetchRestaurantDetails -> 특정 식당 정보 조회
     private fun fetchRestaurantDetails(restaurantId: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -593,7 +594,7 @@ class MainActivity : AppCompatActivity() {
         }
         startActivity(intent)
     }
-
+    // 검색 설정 (로직 X)
     private fun setupSearch() {
         binding.svSearch.setOnQueryTextListener(object :
             androidx.appcompat.widget.SearchView.OnQueryTextListener {
@@ -609,17 +610,54 @@ class MainActivity : AppCompatActivity() {
 
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
+
+        // 주변 검색 체크박스를 눌렀을 때
+        binding.chkNearby.setOnCheckedChangeListener { _, isChecked ->
+            isNearbySearchEnabled = isChecked
+            if (isNearbySearchEnabled) {
+                // 주변 검색이 활성화되면 가장 가까운 문을 계산하여 필터링
+                getUserLocationAndSearchRestaurants()
+            } else {
+                // 주변 검색이 비활성화되면 전체 식당 검색
+                loadAllRestaurants()
+            }
+        }
+    }
+    // 사용자의 위치를 얻고, 가장 가까운 문을 계산하여 식당을 검색
+    private fun getUserLocationAndSearchRestaurants() {
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            // 위치 권한이 있으면 위치를 가져옴
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                location?.let {
+                    // 사용자의 위치로 가장 가까운 문을 계산
+                    val closestDoorType = getClosestDoorType(it.latitude, it.longitude)
+                    selectedDoorType = closestDoorType
+                    Log.d("CLOSEST_DOOR", "가장 가까운 문: $closestDoorType")
+
+                    // 해당 문을 기준으로 식당 검색
+                    loadRestaurantsByFilter(closestDoorType!!)
+                }
+            }
+        } else {
+            // 위치 권한이 없으면 권한 요청
+            requestLocationPermission()
+        }
     }
 
 
-
+    // 카메라 위치에 맞게 조정
     private fun moveCameraToLocation(latitude: Double, longitude: Double) {
         val cameraUpdate = CameraUpdate.scrollTo(LatLng(latitude, longitude))
         naverMap.moveCamera(cameraUpdate)
         Log.d("CAMERA_MOVE", "카메라 이동됨: ($latitude, $longitude)")
     }
 
-
+    // 검색 API 호출 
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -677,7 +715,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
+    // 모든 마커에 맞춰서 카메라 이동
     private fun moveCameraToFitAllMarkers() {
         if (restaurantMarkers.isNotEmpty()) {
             val bounds = LatLngBounds.Builder().apply {
@@ -691,7 +729,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
+// 위치 권한 확인 및 카메라 이동
     private fun checkLocationPermissionAndMoveCamera() {
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -704,7 +742,6 @@ class MainActivity : AppCompatActivity() {
                 val lastLocation = locationSource.lastLocation
                 if (lastLocation != null) {
                     moveCameraToLocation(lastLocation.latitude, lastLocation.longitude)
-                    showToast(this,"사용자 위치로 이동했습니다.")
                 } else {
 
                 }
@@ -719,7 +756,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
     }
-
+    // 초기 맵 위치 설정
     private fun resetToInitialState() {
         selectedButton?.isSelected = false
         selectedButton = null

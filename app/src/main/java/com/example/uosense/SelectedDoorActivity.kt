@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.adapters.RestaurantListAdapter
+import com.example.uosense.databinding.ActivityRestaurantListBinding
+import com.example.uosense.databinding.ActivitySelectedDoorBinding
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
@@ -23,10 +25,17 @@ class SelectedDoorActivity : AppCompatActivity() {
     private lateinit var adapter: RestaurantListAdapter
     private lateinit var noResultsTextView: TextView
     private var doorType: String? = null
+    private lateinit var binding: ActivitySelectedDoorBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivitySelectedDoorBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_selected_door)
+
+        binding.ivMap.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
 
         // 초기화
         restaurantList = mutableListOf()
