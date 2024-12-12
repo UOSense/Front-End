@@ -270,6 +270,67 @@ class ReviewAdapter(private val reviews: List<ReviewItem>,
             }
             builder.show()
         }
+        // 삭제 버튼 클릭 이벤트 처리
+        holder.deleteBtn.setOnClickListener {
+            AlertDialog.Builder(holder.itemView.context)
+                .setTitle("리뷰 삭제")
+                .setMessage("이 리뷰를 삭제하시겠습니까?")
+                .setPositiveButton("삭제") { _, _ ->
+                    CoroutineScope(Dispatchers.Main).launch {
+                        try {
+                            val accessToken = TokenManager(holder.itemView.context).getAccessToken()
+                            if (accessToken.isNullOrEmpty()) {
+                                Toast.makeText(
+                                    holder.itemView.context,
+                                    "로그인이 필요합니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@launch
+                            }
+
+                            Log.d("ReviewDelete", "Deleting reviewId=${review.id}, accessToken=$accessToken")
+
+                            val response = RetrofitInstance.restaurantApi.deleteReview(
+                                review.id, "Bearer $accessToken"
+                            )
+
+                            when (response.code()) {
+                                200 -> {
+                                    Toast.makeText(
+                                        holder.itemView.context,
+                                        "리뷰가 삭제되었습니다.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    reviews.toMutableList().removeAt(position)
+                                    notifyItemRemoved(position)
+                                }
+                                404 -> {
+                                    Toast.makeText(
+                                        holder.itemView.context,
+                                        "리뷰를 찾을 수 없습니다.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                else -> {
+                                    Toast.makeText(
+                                        holder.itemView.context,
+                                        "오류 발생: ${response.code()}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                holder.itemView.context,
+                                "네트워크 오류 발생: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+                .setNegativeButton("취소", null)
+                .show()
+        }
     }
 
     override fun getItemCount(): Int = reviews.size

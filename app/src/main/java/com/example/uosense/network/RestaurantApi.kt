@@ -217,7 +217,8 @@ interface RestaurantApi {
     // 리뷰 삭제
     @DELETE("/api/v1/review/delete")
     suspend fun deleteReview(
-        @Query("reviewId") reviewId: Int
+        @Query("reviewId") reviewId: Int,
+        @Header("access") accessToken: String
     ): Response<Unit>
 
     // 리뷰 목록 조회 (식당 기준)
