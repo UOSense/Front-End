@@ -60,7 +60,7 @@ class RestaurantDetailActivity : AppCompatActivity() {
         reviewBtn.setOnClickListener { showReviewOptions() }
 
         reviewListBtn.setOnClickListener {
-            val intent = Intent(this, StartActivity::class.java)
+            val intent = Intent(this, ReviewListActivity::class.java)
             startActivity(intent)
         }
 

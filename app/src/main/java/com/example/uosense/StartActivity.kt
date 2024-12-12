@@ -153,7 +153,7 @@ class StartActivity : AppCompatActivity() {
     }
 
     private fun navigateToControlMainActivity() {
-        val intent = Intent(this, ReviewWriteActivity::class.java)
+        val intent = Intent(this, RestaurantDetailActivity::class.java)
         startActivity(intent)
         finish()
     }

@@ -289,6 +289,7 @@ data class ReviewResponse(
     val reviewEventCheck: Boolean
 )
 
+//리뷰 목록 조회 시 날라오는 것들
 data class ReviewItem(
     val id: Int,
     val restaurantId: Int,
@@ -297,12 +298,22 @@ data class ReviewItem(
     val userImage: String,
     val body: String,
     val rating: Double,
-    val dateTime: String,
+    val dateTime: List<Int>, // 배열 형태로 정의
     val reviewEventCheck: Boolean,
     val tag: String?,
     val likeCount: Int,
     val imageUrls: List<String>?
-)
+){
+    // 날짜 포맷 변환 함수
+    fun getFormattedDate(): String {
+        return if (dateTime.size >= 3) {
+            "${dateTime[0]}-${"%02d".format(dateTime[1])}-${"%02d".format(dateTime[2])}" +
+                    " ${"%02d".format(dateTime[3])}:${"%02d".format(dateTime[4])}:${"%02d".format(dateTime[5])}"
+        } else {
+            "Invalid Date"
+        }
+    }
+}
 
 
 
