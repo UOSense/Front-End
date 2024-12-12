@@ -266,7 +266,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             "남문" -> "SOUTH"
             "쪽문" -> "SIDE"
             "후문" -> "BACK"
-            else -> "DEFAULT"  // 기본값 처리
+            else -> "null"  // 기본값 처리
         }
     }
 
@@ -693,7 +693,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 val apiDoorType = if (!selectedDoorType.isNullOrEmpty()) {
                     mapDoorTypeForApi(selectedDoorType!!)
                 }else {
-                    "DEFAULT"
+                    null
                 }
                 val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
