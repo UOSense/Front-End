@@ -212,8 +212,8 @@ private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part 
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 // 선택된 이미지 URI를 MultipartBody.Part로 변환
-                val imageParts = selectedImageUris.mapIndexed { index, uri ->
-                    prepareFilePart("images[$index]", uri)
+                val imageParts = selectedImageUris.map { uri ->
+                    prepareFilePart("images", uri)
                 }
 
                 // 로그: 변환된 이미지 데이터와 리뷰 ID 확인
