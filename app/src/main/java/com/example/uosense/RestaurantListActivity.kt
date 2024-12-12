@@ -12,6 +12,7 @@ import com.example.uosense.adapters.RestaurantListAdapter
 import com.example.uosense.databinding.ActivityRestaurantListBinding
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.network.RetrofitInstance
+import com.example.uosense.network.RetrofitInstance.restaurantApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,6 +20,7 @@ import kotlinx.coroutines.withContext
 
 class RestaurantListActivity : AppCompatActivity() {
 
+    private lateinit var originalRestaurantList: MutableList<RestaurantListResponse>
     private lateinit var restaurantList: MutableList<RestaurantListResponse>
     private lateinit var adapter: RestaurantListAdapter
     private lateinit var binding: ActivityRestaurantListBinding
@@ -33,12 +35,21 @@ class RestaurantListActivity : AppCompatActivity() {
         binding = ActivityRestaurantListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        restaurantList = intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
+        originalRestaurantList = intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
+        restaurantList = ArrayList(originalRestaurantList)
 
         setupRecyclerView()
+
+        setupSearch()
+
         setupFilterButtons()
+
+        setupClickListeners()
+
         setupSortButton()
+
         checkIfListIsEmpty()
+
         customizeSearchView()
 
         binding.ivMap.setOnClickListener {
@@ -62,35 +73,37 @@ class RestaurantListActivity : AppCompatActivity() {
             binding.tvNoResults.visibility = TextView.GONE
         }
     }
-    // 필터 버튼에 대한 클릭 리스너 설정
+    // DoorType 필터 버튼 클릭 리스너 등록
     private fun setupFilterButtons() {
         binding.apply {
-            doorTypeButton1.setOnClickListener { fetchFilteredRestaurants("FRONT") }
-            doorTypeButton2.setOnClickListener { fetchFilteredRestaurants("SIDE") }
-            doorTypeButton3.setOnClickListener { fetchFilteredRestaurants("BACK") }
-            doorTypeButton4.setOnClickListener { fetchFilteredRestaurants("SOUTH") }
+            doorTypeButton1.setOnClickListener { filterRestaurantsLocally("정문") }
+            doorTypeButton2.setOnClickListener { filterRestaurantsLocally("쪽문") }
+            doorTypeButton3.setOnClickListener { filterRestaurantsLocally("후문") }
+            doorTypeButton4.setOnClickListener { filterRestaurantsLocally("남문")}
         }
     }
-    // 필터된 레스토랑 데이터를 서버에서 받아오는 함수
-    private fun fetchFilteredRestaurants(doorType: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantList(doorType, selectedFilter)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && !response.body().isNullOrEmpty()) {
-                        adapter.updateList(response.body()!!)
-                    } else {
-                        adapter.updateList(emptyList())
-                    }
-                    checkIfListIsEmpty()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@RestaurantListActivity, "서버 오류 발생", Toast.LENGTH_SHORT).show()
-                }
-            }
+
+
+    // DoorType 필터 적용
+    private fun filterRestaurantsLocally(doorType: String) {
+        selectedDoorType = doorType
+
+        // DoorType에 해당하는 필터된 리스트 생성
+        val filteredList = originalRestaurantList.filter { it.doorType == doorType }
+
+        if (filteredList.isEmpty()) {
+            showToast(this, "선택된 필터에 해당하는 식당이 없습니다.")
         }
+
+        // 어댑터에 필터된 결과 업데이트
+        restaurantList.clear()
+        restaurantList.addAll(filteredList)
+        adapter.updateList(filteredList)  // 필터 결과 전달
+
+        checkIfListIsEmpty()  // 결과가 없으면 "결과 없음" 표시
     }
+
+
     // 정렬 버튼 클릭 시 옵션을 보여주는 함수
     private fun setupSortButton() {
         binding.btnFilter.setOnClickListener {
@@ -139,13 +152,7 @@ class RestaurantListActivity : AppCompatActivity() {
         }
         startActivity(intent)
     }
-    // RestaurantListAdapter에서 리스트를 갱신하는 함수
-    fun RestaurantListAdapter.updateList(newList: List<RestaurantListResponse>) {
-        restaurantList.clear()
-        restaurantList.addAll(newList)
-        notifyDataSetChanged()
-    }
-    // 검색 기능을 위한 설정 함수
+    // 검색어 기반으로 RestaurantListActivity에서 검색 수행
     private fun setupSearch() {
         binding.svSearch.setOnQueryTextListener(object :
             androidx.appcompat.widget.SearchView.OnQueryTextListener {
@@ -162,11 +169,13 @@ class RestaurantListActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
     }
-    // 검색어를 기반으로 레스토랑을 검색하는 함수
+
+    // 검색 메서드 수정
+    // 검색 API 호출
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.restaurantApi.searchRestaurants(
+                val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
                     doorType = selectedDoorType
                 )
@@ -185,15 +194,16 @@ class RestaurantListActivity : AppCompatActivity() {
             }
         }
     }
-
     // 전체 목록 보기로 이동 (정문 기본 선택)
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
         val intent = Intent(this, RestaurantListActivity::class.java).apply {
             putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
-            putExtra("defaultDoorType", "정문") // 정문 기본 선택
+            putExtra("defaultDoorType", "FRONT") // 정문 기본 선택
         }
         startActivity(intent)
     }
+
+
 
     /**
      * 검색창 글씨체는 따로 함수정의해서 색상 변경
@@ -216,4 +226,19 @@ class RestaurantListActivity : AppCompatActivity() {
             e.printStackTrace()
         }
     }
+
+    /**
+     * (iv_search) 검색 버튼 눌러질 떄 이벤트 처리
+     */
+    private fun setupClickListeners() {
+        binding.ivSearch.setOnClickListener {
+            val query = binding.svSearch.query.toString().trim()
+            if (query.isNotBlank()) {
+                searchRestaurants(query)
+            } else {
+                Toast.makeText(this, "검색어를 입력해주세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 }

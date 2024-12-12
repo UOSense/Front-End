@@ -1,5 +1,3 @@
-package com.example.uosense.adapters
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,8 +28,8 @@ class BusinessDayAdapter : RecyclerView.Adapter<BusinessDayAdapter.ViewHolder>()
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val businessDay = businessDays[position]
         holder.dayOfWeek.text = businessDay.dayOfWeek
-        holder.openingTime.text = businessDay.openingTime.toString()
-        holder.closingTime.text = businessDay.closingTime.toString()
+        holder.openingTime.text = businessDay.openingTime
+        holder.closingTime.text = businessDay.closingTime
 
         holder.startBreakTime.text = businessDay.startBreakTime ?: "없음"
         holder.stopBreakTime.text = businessDay.stopBreakTime ?: "없음"

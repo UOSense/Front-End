@@ -52,8 +52,10 @@
             android:layout_height="30dp"
             android:layout_marginStart="8dp"
             android:src="@drawable/ic_search"
+            android:gravity="center"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:layout_gravity="center"/>
     </LinearLayout>
 
     <!-- 버튼 그룹 -->

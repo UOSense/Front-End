@@ -1,71 +1,81 @@
 package com.example.uosense
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.adapters.ReviewAdapter
-import com.example.uosense.databinding.ActivityReviewListBinding
-import com.example.uosense.models.ReviewResponse
+import com.example.uosense.models.ReviewItem
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class ReviewListActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityReviewListBinding
+    private lateinit var reviewRecyclerView: RecyclerView
     private lateinit var reviewAdapter: ReviewAdapter
-    private var restaurantId: Int = 0
+    private val reviews = mutableListOf<ReviewItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityReviewListBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_review_list)
 
-        restaurantId = intent.getIntExtra("restaurantId", -1)
-        if (restaurantId == -1) {
-            Toast.makeText(this, "잘못된 식당 정보입니다.", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
+        reviewRecyclerView = findViewById(R.id.reviewRecyclerView)
+        reviewRecyclerView.layoutManager = LinearLayoutManager(this)
+        reviewAdapter = ReviewAdapter(reviews)
+        reviewRecyclerView.adapter = reviewAdapter
 
-        setupRecyclerView()
-        loadReviews()
-
-        binding.backBtn.setOnClickListener {
-            finish()
-        }
+        fetchReviews()
     }
 
-    private fun setupRecyclerView() {
-        reviewAdapter = ReviewAdapter()
-        binding.reviewRecyclerView.apply {
-            layoutManager = LinearLayoutManager(this@ReviewListActivity)
-            adapter = reviewAdapter
-        }
-    }
-
-    private fun loadReviews() {
-        CoroutineScope(Dispatchers.IO).launch {
+    private fun fetchReviews() {
+        val restaurantId = intent.getIntExtra("restaurantId", 1) // 임시 restaurantId
+        CoroutineScope(Dispatchers.Main).launch {
             try {
                 val response = RetrofitInstance.restaurantApi.getRestaurantReviews(restaurantId)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
-                        reviewAdapter.submitList(response.body()!!)
-                    } else {
-                        Toast.makeText(this@ReviewListActivity, "리뷰가 없습니다.", Toast.LENGTH_SHORT).show()
+                if (response.isSuccessful) {
+                    val reviewList = response.body() ?: emptyList()
+
+                    // ReviewResponse -> ReviewItem 변환
+                    val reviewItems = reviewList.map { reviewResponse ->
+                        ReviewItem(
+                            id = reviewResponse.id,
+                            restaurantId = reviewResponse.restaurantId,
+                            userId = reviewResponse.userId,
+                            nickname = "익명", // nickname이 없으므로 기본값 설정
+                            userImage = "", // userImage가 없으므로 기본값 설정
+                            body = reviewResponse.body,
+                            rating = reviewResponse.rating,
+                            dateTime = reviewResponse.dateTime,
+                            reviewEventCheck = reviewResponse.reviewEventCheck,
+                            tag = reviewResponse.tag,
+                            likeCount = reviewResponse.likeCount,
+                            imageUrls = reviewResponse.imageUrls ?: emptyList() // 이미지 URL이 없을 경우 빈 리스트
+                        )
                     }
+
+                    reviews.clear()
+                    reviews.addAll(reviewItems)
+                    reviewAdapter.notifyDataSetChanged()
+                } else {
+                    Toast.makeText(
+                        this@ReviewListActivity,
+                        "Failed to fetch reviews: ${response.code()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ReviewListActivity, "리뷰 불러오기 실패", Toast.LENGTH_SHORT).show()
-                }
-                Log.e("LOAD_REVIEWS", "오류: ${e.message}", e)
+                Toast.makeText(
+                    this@ReviewListActivity,
+                    "Error occurred: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
+
 }
+

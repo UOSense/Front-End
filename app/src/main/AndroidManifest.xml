@@ -69,8 +69,7 @@
             android:exported="false" />
         <activity
             android:name=".RestaurantDetailActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.DayNight" />
+            android:exported="false" />
         <activity
             android:name=".StartActivity"
             android:exported="true" />

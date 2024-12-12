@@ -10,6 +10,13 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.overlay.Marker
 import com.naver.maps.map.overlay.OverlayImage
 import com.naver.maps.map.util.FusedLocationSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 
 /**
  * MainActivity에서 쓰는 일부 함수 리팩토링하기 위해서
@@ -104,5 +111,46 @@ object AppUtils {
      */
     fun showToast(context: Context, message: String, duration: Int = Toast.LENGTH_SHORT) {
         Toast.makeText(context, message, duration).show()
+    }
+
+    // 도로명 주소 -> 위도, 경도 변환
+    fun getLatLngFromAddress(address: String, callback: (Double?, Double?) -> Unit) {
+        val client = OkHttpClient()
+        val url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${address}"
+        println(url)
+        // ID, KEY 절대 수정 X , SECRET 사용 가능
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("X-NCP-APIGW-API-KEY-ID", "s78aa7asq0")
+            .addHeader("X-NCP-APIGW-API-KEY", "WGmu5zQXqTGWOy7Bj9PWwrD8HeQezlBvZ675Q24K")
+            .build()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string()
+                val json = JSONObject(responseBody ?: "")
+                val addresses = json.getJSONArray("addresses")
+
+                if (addresses.length() > 0) {
+                    val location = addresses.getJSONObject(0)
+                    val latitude = location.getDouble("y")
+                    val longitude = location.getDouble("x")
+
+                    withContext(Dispatchers.Main) {
+                        callback(latitude, longitude)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        callback(null, null)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    callback(null, null)
+                }
+            }
+        }
     }
 }

@@ -26,16 +26,16 @@ data class MenuResponse(
 
 // 식당 요청 모델
 data class RestaurantRequest(
-    val id: Int? = null,
-    val name: String,
-    val doorType: String?,
-    val latitude: Double,
-    val longitude: Double,
-    val address: String,
+    val id: Int, // 수정할 레스토랑의 ID 필수
+    val name: String? = null,
+    val doorType: String? = null,
+    val latitude: Double? = null,  // 업데이트 시 null 허용
+    val longitude: Double? = null, // 업데이트 시 null 허용
+    val address: String? = null,
     val phoneNumber: String? = null,
-    val category: String,
+    val category: String? = null,
     val subDescription: String? = null,
-    val description: String
+    val description: String? = null
 )
 
 // 영업일 정보 모델
@@ -98,11 +98,11 @@ data class BusinessDayList(
 data class BusinessDayInfo(
     val id: Int?,
     val dayOfWeek: String,
-    val breakTime: Boolean,
-    val startBreakTime: String? ,
-    val stopBreakTime: String? ,
-    val openingTime: String?,
-    val closingTime: String?,
+    val haveBreakTime: Boolean,
+    val startBreakTime: String? = null,
+    val stopBreakTime: String? = null,
+    val openingTime: String,
+    val closingTime: String,
     val holiday: Boolean
 )
 
@@ -142,8 +142,8 @@ data class NewMenuRequest(
 data class RestaurantListResponse(
     val id: Int,
     val name: String,
-    val longitude: Double,
-    val latitude: Double,
+    var longitude: Double,
+    var latitude: Double,
     val address: String,
     val rating: Double,
     val category: String,
@@ -268,13 +268,47 @@ data class ReviewRequest(
     val rating: Double,
     val dateTime: String,
     val tag: String?,
-    val isReviewEventCheck: Boolean
+    val reviewEventCheck: Boolean
+)
+data class ReviewListResponse(
+    val reviews: List<ReviewResponse> // 리뷰 목록
+)
+
+data class ReviewCreateResponse(
+    val reviewId: Int  // 생성된 리뷰 ID
+)
+
+data class ReviewLikeResponse(
+    val likeCount: Int // 리뷰 좋아요 수 (증가된 후)
+)
+
+data class ReviewLikeRequest(
+    val reviewId: Int  // 좋아요를 누를 리뷰 ID
 )
 
 data class ReportRequest(
     val reviewId: Int,
     val detail: String, // "ABUSIVE", "DEROGATORY", "ADVERTISEMENT"
     val createdAt: String
+)
+
+data class ReviewGetResponse(
+    val review: ReviewResponse  // 단일 리뷰 정보
+)
+
+data class ReviewItem(
+    val id: Int,
+    val restaurantId: Int,
+    val userId: Int,
+    val nickname: String,
+    val userImage: String,
+    val body: String,
+    val rating: Double,
+    val dateTime: String,
+    val reviewEventCheck: Boolean,
+    val tag: String?,
+    val likeCount: Int,
+    val imageUrls: List<String>?
 )
 
 

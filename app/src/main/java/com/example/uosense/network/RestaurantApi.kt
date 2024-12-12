@@ -80,6 +80,11 @@ interface RestaurantApi {
         @Body menuRequest: MenuRequest
     ): Response<Unit>
 
+    @PUT("/api/v1/restaurant/update")
+    suspend fun updateRestaurantLocation(
+        @Body updatedRequest: RestaurantRequest
+    ): Response<Unit>
+
     @PUT("/api/v1/restaurant/update/businessday")
     suspend fun editBusinessDay(
         @Body businessDayList: BusinessDayList

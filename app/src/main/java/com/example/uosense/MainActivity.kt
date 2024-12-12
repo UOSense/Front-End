@@ -50,11 +50,12 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.naver.maps.map.OnMapReadyCallback
 import java.net.URLDecoder
 import kotlin.math.log
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     //위치 관련 변수
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
@@ -69,6 +70,8 @@ class MainActivity : AppCompatActivity() {
     private var isLocationFixed = false
 
     private lateinit var tokenManager: TokenManager
+
+    private lateinit var restaurantList: MutableList<RestaurantListResponse>
 
     private var currentPage = 1
     private val pageSize = 10
@@ -107,6 +110,28 @@ class MainActivity : AppCompatActivity() {
         Log.d("MARKERS_RESET", "모든 마커 초기화")
     }
 
+    override fun onMapReady(map: NaverMap) {
+        naverMap = map
+        naverMap.locationSource = locationSource
+
+        // 기본 위치로 초기화 (서울시립대 정문)
+        val defaultPosition = LatLng(37.5834643, 127.0536246)
+        val cameraPosition = CameraPosition(defaultPosition, 16.0)
+        naverMap.cameraPosition = cameraPosition
+
+        // 카메라 이동 시 수동 이동으로 간주
+        naverMap.addOnCameraChangeListener { reason, animated ->
+            if (!animated) stopLocationTracking()
+        }
+
+        // 위치 권한 요청
+        requestLocationPermission()
+        loadRestaurants()
+
+        Log.d("NAVER_MAP_INIT", "초기 카메라 위치 설정 완료: $defaultPosition")
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -125,25 +150,9 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.beginTransaction().add(R.id.map, it).commit()
             }
 
-        mapFragment.getMapAsync { naverMap ->
-            this.naverMap = naverMap
-            this.naverMap.locationSource = locationSource
+        locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
 
-            Log.d("NAVER_MAP_INIT", "NaverMap 초기화 성공")
-
-            /**
-             * 카메라 이동 시 해당 위치에 고정 (위치 추적 X)
-             */
-            naverMap.addOnCameraChangeListener { reason, animated ->
-                if (!animated) {  // 애니메이션이 아니면 수동 이동으로 간주
-                    stopLocationTracking()
-                }
-            }
-
-
-            initializeMapWithoutPermission()
-            requestLocationPermission()
-        }
+        mapFragment.getMapAsync(this)
 
         // 리프레시 토큰 검증
         val refreshToken = tokenManager.getRefreshToken()
@@ -169,11 +178,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupLocationPermissionLauncher()
-        locationSource = FusedLocationSource(this, LOCATION_PERMISSION_REQUEST_CODE)
 
 
+
+        // 체크박스 리스너 설정
         binding.chkNearby.setOnCheckedChangeListener { _, isChecked ->
             isNearbySearchEnabled = isChecked
+            if (isChecked) {
+                // 가장 가까운 문 계산 및 필터 적용
+                getUserLocationAndSearchRestaurants()
+            } else {
+                // 체크박스 해제 시 전체 식당 로딩
+                selectedDoorType = null
+            }
         }
 
         binding.doorTypeButton1.setOnClickListener {
@@ -219,8 +236,6 @@ class MainActivity : AppCompatActivity() {
 
         setupClickListeners()
 
-        resetToInitialState()
-
         customizeSearchView()
 
 
@@ -243,6 +258,7 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
     // doorType을 API에서 사용하는 값으로 매핑하는 함수
     private fun mapDoorTypeForApi(doorType: String): String {
         return when (doorType) {
@@ -378,12 +394,36 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    // 위도 및 경도 업데이트 함수
+    private fun updateRestaurantCoordinatesToServer(restaurantId: Int, latitude: Double, longitude: Double) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val updatedRequest = RestaurantRequest(
+                    id = restaurantId,
+                    latitude = latitude,
+                    longitude = longitude
+                )
+
+                val response = restaurantApi.updateRestaurantLocation(updatedRequest)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Log.d("SERVER_UPDATE", "레스토랑 위치 업데이트 성공: $latitude, $longitude")
+                    } else {
+                        Log.e("SERVER_UPDATE_ERROR", "업데이트 실패: ${response.errorBody()?.string()}")
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     // 도로명 주소 -> 위도, 경도 변환
-    private fun getLatLngFromAddress(address: String, callback: (Double?, Double?) -> Unit) {
+    private fun getLatLngFromAddress(restaurant: RestaurantListResponse, callback: (Double?, Double?) -> Unit) {
         val client = OkHttpClient()
-        val url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${address}"
-        println(url)
+        val url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${restaurant.address}"
+
         // ID, KEY 절대 수정 X , SECRET 사용 가능
         val request = Request.Builder()
             .url(url)
@@ -402,6 +442,10 @@ class MainActivity : AppCompatActivity() {
                     val location = addresses.getJSONObject(0)
                     val latitude = location.getDouble("y")
                     val longitude = location.getDouble("x")
+
+                    // 서버 업데이트 호출
+                    updateRestaurantCoordinatesToServer(restaurant.id, latitude, longitude)
+
 
                     withContext(Dispatchers.Main) {
                         callback(latitude, longitude)
@@ -485,7 +529,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     // 식당 정보 로딩 후 마커 표시
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -548,7 +591,7 @@ class MainActivity : AppCompatActivity() {
                 restaurantMarkers.add(marker)
             } else {
                 // (위도 경도 0, 0)대부분 해당, Geocoding API 호출
-                getLatLngFromAddress(restaurant.address) { lat, lng ->
+                getLatLngFromAddress(restaurant) { lat, lng ->
                     if (lat != null && lng != null) {
                         val marker = Marker().apply {
                             position = LatLng(lat, lng)
@@ -611,19 +654,8 @@ class MainActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
 
-        // 주변 검색 체크박스를 눌렀을 때
-        binding.chkNearby.setOnCheckedChangeListener { _, isChecked ->
-            isNearbySearchEnabled = isChecked
-            if (isNearbySearchEnabled) {
-                // 주변 검색이 활성화되면 가장 가까운 문을 계산하여 필터링
-                getUserLocationAndSearchRestaurants()
-            } else {
-                // 주변 검색이 비활성화되면 전체 식당 검색
-                loadAllRestaurants()
-            }
-        }
     }
-    // 사용자의 위치를 얻고, 가장 가까운 문을 계산하여 식당을 검색
+    // 사용자의 위치 가져오기 & 가장 가까운 문 계산
     private fun getUserLocationAndSearchRestaurants() {
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -631,21 +663,18 @@ class MainActivity : AppCompatActivity() {
                 this, Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            // 위치 권한이 있으면 위치를 가져옴
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
-                    // 사용자의 위치로 가장 가까운 문을 계산
                     val closestDoorType = getClosestDoorType(it.latitude, it.longitude)
-                    selectedDoorType = closestDoorType
-                    Log.d("CLOSEST_DOOR", "가장 가까운 문: $closestDoorType")
-
-                    // 해당 문을 기준으로 식당 검색
-                    loadRestaurantsByFilter(closestDoorType!!)
+                    if (!closestDoorType.isNullOrEmpty()) {
+                        selectedDoorType = closestDoorType
+                    } else {
+                        showToast(this, "가장 가까운 문을 찾을 수 없습니다.")
+                    }
                 }
             }
         } else {
-            // 위치 권한이 없으면 권한 요청
-            requestLocationPermission()
+            requestLocationPermission()  // 권한 요청
         }
     }
 
@@ -661,15 +690,26 @@ class MainActivity : AppCompatActivity() {
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val apiDoorType = if (!selectedDoorType.isNullOrEmpty()) {
+                    mapDoorTypeForApi(selectedDoorType!!)
+                }else {
+                    "DEFAULT"
+                }
                 val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
-                    doorType = selectedDoorType
+                    doorType = apiDoorType
                 )
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
-                        navigateToRestaurantList(response.body()!!)
+                        if (isNearbySearchEnabled && selectedDoorType != null) {
+                            // 체크박스 눌려 있을 때 검색 시 특정 문으로 이동
+                            navigateToSelectedDoorList(response.body()!!, selectedDoorType!!)
+                        } else {
+                            // 체크박스 해제 시 전체 목록 이동
+                            navigateToRestaurantList(response.body()!!)
+                        }
                     } else {
-
+                        showToast(this@MainActivity, "검색 결과가 없습니다.")
                     }
                 }
             } catch (e: Exception) {
@@ -692,25 +732,15 @@ class MainActivity : AppCompatActivity() {
      */
 
     // getLan 통해서 위도 경도 획득 -> 업데이트 시 필요 함수
-    private fun updateRestaurantCoordinates(restaurantId: Int, updatedRequest: RestaurantRequest) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // updatedRequest를 전달하도록 수정
-                val response = restaurantApi.editRestaurant(updatedRequest)
-
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        Toast.makeText(this@MainActivity, "좌표가 업데이트되었습니다.", Toast.LENGTH_SHORT)
-                            .show()
-                    } else {
-                        Log.e("API_ERROR", "업데이트 실패: ${response.errorBody()?.string()}")
+    private fun updateRestaurantCoordinates() {
+        restaurantList.forEach { restaurant ->
+            if (restaurant.longitude == 0.0 && restaurant.latitude == 0.0) {
+                AppUtils.getLatLngFromAddress(restaurant.address) { lat, lng ->
+                    if (lat != null && lng != null) {
+                        restaurant.latitude = lat
+                        restaurant.longitude = lng
                     }
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "업데이트 중 오류 발생", Toast.LENGTH_SHORT).show()
-                }
-                e.printStackTrace()
             }
         }
     }
