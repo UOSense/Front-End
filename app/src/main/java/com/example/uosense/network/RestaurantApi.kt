@@ -175,13 +175,15 @@ interface RestaurantApi {
     // 즐겨찾기 추가
     @POST("/api/v1/bookmark/create")
     suspend fun addBookmark(
-        @Query("restaurantId") restaurantId: Int
+        @Query("restaurantId") restaurantId: Int,
+        @Header("access") accessToken: String // access 헤더 추가
     ): Response<Unit>
 
     // 즐겨찾기 삭제
     @DELETE("/api/v1/bookmark/delete")
     suspend fun deleteBookmark(
-        @Query("bookMarkId") bookMarkId: Int
+        @Query("restaurantId") restaurantId: Int,
+        @Header("access") accessToken: String // access 헤더 추가
     ): Response<Unit>
 
 //    // 즐겨찾기 조회 (사용자 기준)
@@ -238,7 +240,7 @@ interface RestaurantApi {
     @PATCH("/api/v1/review/like")
     suspend fun likeReview(
         @Query("reviewId") reviewId: Int,
-        @Header("access") token: String // access 헤더 추가
+        @Header("access") accessToken: String // access 헤더 추가
     ): Response<Unit>
 
     // 리뷰 신고

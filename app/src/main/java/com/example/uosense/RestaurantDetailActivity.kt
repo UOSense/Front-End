@@ -1,6 +1,7 @@
 package com.example.uosense
 
 import BusinessDayAdapter
+import TokenManager
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -15,15 +16,22 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.adapters.MenuAdapter
 import com.example.uosense.models.BusinessDayInfo
 import com.example.uosense.models.MenuResponse
+import com.example.uosense.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class RestaurantDetailActivity : AppCompatActivity() {
+
+    // 식당 id 임의 선언
+    private var restaurantId: Int = 1
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var businessDaysBtn: Button
     private lateinit var menuBtn: Button
     private lateinit var reviewBtn: Button
     private lateinit var backBtn: Button
-    private lateinit var favoriteButton: ImageButton
+    private lateinit var favoriteBtn: ImageButton
     private lateinit var reviewOptionsLayout: LinearLayout
     private lateinit var reviewListBtn: Button
     private lateinit var reviewWriteBtn: Button
@@ -31,11 +39,18 @@ class RestaurantDetailActivity : AppCompatActivity() {
     private lateinit var businessDayAdapter: BusinessDayAdapter
     private lateinit var menuAdapter: MenuAdapter
 
+    private lateinit var tokenManager: TokenManager
+
     private var isFavorite = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_restaurant_detail)
+
+        tokenManager = TokenManager(this)
+
+        // 식당 ID 전달받기
+        restaurantId = intent.getIntExtra("restaurantId", 1)
 
         // UI 초기화
         recyclerView = findViewById(R.id.businessDaysRecyclerView)
@@ -43,7 +58,7 @@ class RestaurantDetailActivity : AppCompatActivity() {
         menuBtn = findViewById(R.id.menuBtn)
         reviewBtn = findViewById(R.id.reviewBtn)
         backBtn = findViewById(R.id.backBtn)
-        favoriteButton = findViewById(R.id.favoriteButton)
+        favoriteBtn = findViewById(R.id.favoriteBtn)
         reviewOptionsLayout = findViewById(R.id.reviewOptionsLayout)
         reviewListBtn = findViewById(R.id.reviewListBtn)
         reviewWriteBtn = findViewById(R.id.reviewWriteBtn)
@@ -80,8 +95,12 @@ class RestaurantDetailActivity : AppCompatActivity() {
         })
 
         // 즐겨찾기 버튼 클릭
-        favoriteButton.setOnClickListener { toggleFavorite() }
+        favoriteBtn.setOnClickListener {
+            toggleFavorite()
+        }
     }
+
+
 
     // 더미 데이터 - 영업일
     private fun showBusinessDays() {
@@ -121,15 +140,75 @@ class RestaurantDetailActivity : AppCompatActivity() {
 
     // 즐겨찾기 상태 토글
     private fun toggleFavorite() {
-        isFavorite = !isFavorite
-        val message = if (isFavorite) "즐겨찾기에 추가됨" else "즐겨찾기에서 제거됨"
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-        updateFavoriteIcon()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val accessToken = tokenManager.getAccessToken() ?: ""
+
+                // 토큰 확인 로그
+                android.util.Log.d("AccessToken", "토큰 값: $accessToken")
+
+                if (accessToken.isEmpty()) {
+                    Toast.makeText(
+                        this@RestaurantDetailActivity,
+                        "로그인이 필요합니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+
+                // API 호출
+                val response = if (isFavorite) {
+                    android.util.Log.d("API Request", "즐겨찾기 삭제 요청 시작")
+                    RetrofitInstance.restaurantApi.deleteBookmark(
+                        restaurantId,
+                        "Bearer $accessToken"
+                    )
+                } else {
+                    android.util.Log.d("API Request", "즐겨찾기 추가 요청 시작")
+                    RetrofitInstance.restaurantApi.addBookmark(
+                        restaurantId,
+                        "Bearer $accessToken"
+                    )
+                }
+
+                // 응답 확인 로그
+                android.util.Log.d("API Response", "응답 코드: ${response.code()}, 본문: ${response.errorBody()?.string()}")
+
+                when (response.code()) {
+                    200 -> {
+                        isFavorite = !isFavorite
+                        updateFavoriteIcon()
+                        val message = if (isFavorite) "즐겨찾기에 추가되었습니다." else "즐겨찾기에서 제거되었습니다."
+                        Toast.makeText(this@RestaurantDetailActivity, message, Toast.LENGTH_SHORT).show()
+                    }
+                    400 -> {
+                        val errorBody = response.errorBody()?.string()
+                        android.util.Log.e("API Error", "잘못된 요청: $errorBody")
+                        Toast.makeText(this@RestaurantDetailActivity, "잘못된 요청: $errorBody", Toast.LENGTH_LONG).show()
+                    }
+                    else -> {
+                        android.util.Log.e("API Error", "오류 발생: ${response.code()}")
+                        Toast.makeText(
+                            this@RestaurantDetailActivity,
+                            "오류 발생: ${response.code()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("Network Error", "네트워크 오류: ${e.message}")
+                Toast.makeText(
+                    this@RestaurantDetailActivity,
+                    "네트워크 오류: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     // 즐겨찾기 아이콘 업데이트
     private fun updateFavoriteIcon() {
-        favoriteButton.setImageResource(
+        favoriteBtn.setImageResource(
             if (isFavorite) R.drawable.favorite_icon else R.drawable.ic_bookmark
         )
     }
