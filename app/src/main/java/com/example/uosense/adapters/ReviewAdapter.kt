@@ -278,21 +278,10 @@ class ReviewAdapter(private val reviews: List<ReviewItem>,
                 .setPositiveButton("삭제") { _, _ ->
                     CoroutineScope(Dispatchers.Main).launch {
                         try {
-                            val accessToken = TokenManager(holder.itemView.context).getAccessToken()
-                            if (accessToken.isNullOrEmpty()) {
-                                Toast.makeText(
-                                    holder.itemView.context,
-                                    "로그인이 필요합니다.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@launch
-                            }
+                            Log.d("ReviewDelete", "Deleting reviewId=${review.id}")
 
-                            Log.d("ReviewDelete", "Deleting reviewId=${review.id}, accessToken=$accessToken")
-
-                            val response = RetrofitInstance.restaurantApi.deleteReview(
-                                review.id, "Bearer $accessToken"
-                            )
+                            // API 호출
+                            val response = RetrofitInstance.restaurantApi.deleteReview(review.id)
 
                             when (response.code()) {
                                 200 -> {
@@ -301,6 +290,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>,
                                         "리뷰가 삭제되었습니다.",
                                         Toast.LENGTH_SHORT
                                     ).show()
+                                    // 리뷰 목록에서 삭제 및 UI 업데이트
                                     reviews.toMutableList().removeAt(position)
                                     notifyItemRemoved(position)
                                 }
