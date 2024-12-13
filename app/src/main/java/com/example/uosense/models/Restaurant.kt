@@ -4,47 +4,6 @@ import android.os.Parcel
 import android.os.Parcelable
 import java.time.LocalDateTime
 
-// 카테고리 유형 - 식당 종류
-enum class CategoryType {
-    KOREAN,    // 한식
-    CHINESE,   // 중식
-    JAPANESE,  // 일식
-    WESTERN,   // 양식
-    OTHER      // 기타
-}
-
-// 세부 설명 유형 - 업종 세분화
-enum class SubDescriptionType {
-    BAR,        // 술집
-    CAFE,       // 카페
-    RESTAURANT  // 식당
-}
-
-// 출입구 유형 - 학교 출입구 구분
-enum class DoorType {
-    FRONT,   // 정문
-    SIDE,    // 쪽문
-    BACK,    // 후문
-    SOUTH    // 남문
-}
-
-// 필터 유형 - 식당 정렬 기준
-enum class FilterType {
-    DEFAULT,   // 기본 정렬
-    BOOKMARK,  // 즐겨찾기 많은 순
-    DISTANCE,  // 거리 가까운 순
-    RATING,    // 별점 순
-    REVIEW,    // 리뷰 순
-    PRICE      // 가격 순
-}
-
-// 신고 상세 유형 - 신고 사유 분류
-enum class ReportDetailType {
-    ABUSIVE,        // 욕설
-    DEROGATORY,     // 비방
-    ADVERTISEMENT   // 광고
-}
-
 // 메뉴 요청 모델
 data class MenuRequest(
     val id: Int?,
@@ -61,21 +20,21 @@ data class MenuResponse(
     val restaurantId: Int,
     val name: String,
     val price: Int,
-    val description: String?,
-    val imageUrl: String?
+    val description: String,
+    val imageUrl: String
 )
 
-// 데이터 모델 수정
+// 식당 요청 모델
 data class RestaurantRequest(
-    val id: Int,
+    val id: Int? = null,
     val name: String,
-    val doorType: String,
+    val doorType: String?,
     val latitude: Double,
     val longitude: Double,
     val address: String,
-    val phoneNumber: String,
+    val phoneNumber: String? = null,
     val category: String,
-    val subDescription: String,
+    val subDescription: String? = null,
     val description: String
 )
 
@@ -139,9 +98,9 @@ data class BusinessDayList(
 data class BusinessDayInfo(
     val id: Int?,
     val dayOfWeek: String,
-    val haveBreakTime: Boolean,
-    val startBreakTime: String? = null,
-    val stopBreakTime: String? = null,
+    val breakTime: Boolean,
+    val startBreakTime: String? ,
+    val stopBreakTime: String? ,
     val openingTime: String,
     val closingTime: String,
     val holiday: Boolean
@@ -160,14 +119,12 @@ data class LocalTime(
 data class RestaurantImagesResponse(
     val restaurantId: Int,
     val imageList: List<ImageInfo>
-) {
-
-}
+)
 
 // 이미지 정보 모델
 data class ImageInfo(
     val url: String,
-    val id: Int
+    val description: String? = null
 )
 
 // 새 메뉴 요청 모델
@@ -183,8 +140,8 @@ data class NewMenuRequest(
 data class RestaurantListResponse(
     val id: Int,
     val name: String,
-    var longitude: Double,
-    var latitude: Double,
+    val longitude: Double,
+    val latitude: Double,
     val address: String,
     val rating: Double,
     val category: String,
@@ -311,21 +268,6 @@ data class ReviewRequest(
     val tag: String?,
     val reviewEventCheck: Boolean
 )
-data class ReviewListResponse(
-    val reviews: List<ReviewResponse> // 리뷰 목록
-)
-
-data class ReviewCreateResponse(
-    val reviewId: Int  // 생성된 리뷰 ID
-)
-
-data class ReviewLikeResponse(
-    val likeCount: Int // 리뷰 좋아요 수 (증가된 후)
-)
-
-data class ReviewLikeRequest(
-    val reviewId: Int  // 좋아요를 누를 리뷰 ID
-)
 
 data class ReportRequest(
     val reviewId: Int,
@@ -333,8 +275,18 @@ data class ReportRequest(
     val createdAt: String
 )
 
-data class ReviewGetResponse(
-    val review: ReviewResponse  // 단일 리뷰 정보
+
+data class ReviewResponse(
+    val id: Int,
+    val restaurantId: Int,
+    val userId: Int,
+    val body: String,
+    val rating: Double,
+    val dateTime: String,
+    val tag: String?,
+    val likeCount: Int,
+    val imageUrls: List<String>?,
+    val reviewEventCheck: Boolean
 )
 
 data class ReviewItem(
@@ -350,20 +302,6 @@ data class ReviewItem(
     val tag: String?,
     val likeCount: Int,
     val imageUrls: List<String>?
-)
-
-
-data class ReviewResponse(
-    val id: Int,
-    val restaurantId: Int,
-    val userId: Int,
-    val body: String,
-    val rating: Double,
-    val dateTime: String,
-    val tag: String?,
-    val likeCount: Int,
-    val imageUrls: List<String>?,
-    val reviewEventCheck: Boolean
 )
 
 

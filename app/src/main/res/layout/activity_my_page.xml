@@ -6,16 +6,10 @@
     android:background="@color/white"
     android:padding="16dp">
 
-    <!-- 하나의 루트 LinearLayout으로 모든 뷰 감싸기 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-
-        <!-- 상단 여백 제거 또는 유지 -->
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="16dp" />
 
         <!-- 상단 타이틀 -->
         <LinearLayout
@@ -25,16 +19,13 @@
             android:gravity="center_vertical"
             android:paddingBottom="16dp">
 
-            <ImageButton
+            <Button
                 android:id="@+id/backBtn"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:adjustViewBounds="true"
-                android:scaleType="centerInside"
-                android:background="@android:color/transparent"
-                android:contentDescription="뒤로가기"
-                android:src="@drawable/ic_back" />
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_back"
+                android:contentDescription="뒤로가기" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -46,35 +37,34 @@
                 android:gravity="center" />
         </LinearLayout>
 
-        <!-- 프로필 수정 섹션 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
-
+            android:orientation="horizontal">
+        <!-- 프로필 수정 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="프로필 수정"
                 android:textColor="#000000"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"/>
 
             <Button
                 android:id="@+id/logOutBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="로그아웃"
-                android:backgroundTint="@color/green" />
+                android:backgroundTint="@color/green"
+                />
         </LinearLayout>
 
-        <!-- 프로필 이미지 섹션 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -94,8 +84,8 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_weight="1">
 
                 <TextView
                     android:id="@+id/userName"
@@ -117,7 +107,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 이미지 업로드 섹션 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -144,7 +133,7 @@
                 android:textColor="@color/white" />
         </LinearLayout>
 
-        <!-- 즐겨찾기 섹션 -->
+        <!-- 내 즐겨찾기 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -186,7 +175,7 @@
                 android:textColor="@color/blue" />
         </LinearLayout>
 
-        <!-- 리뷰 섹션 -->
+        <!-- 내 리뷰 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -218,6 +207,44 @@
                 android:text="전체보기"
                 android:textSize="14sp"
                 android:textColor="@color/blue" />
+        </LinearLayout>
+
+        <!-- 리뷰 항목 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <ImageView
+                android:id="@+id/reviewImage"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_star"
+                android:contentDescription="리뷰 이미지"
+                android:layout_marginEnd="16dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="실크로드"
+                    android:textSize="16sp"
+                    android:textColor="#000000" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="사장님이 항상 나갈 때 사탕 같은 것도 잘 챙겨주세요!"
+                    android:textSize="14sp"
+                    android:textColor="#999999" />
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

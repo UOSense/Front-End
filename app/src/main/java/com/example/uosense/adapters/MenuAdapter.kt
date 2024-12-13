@@ -1,6 +1,5 @@
 package com.example.uosense.adapters
 
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,5 +48,4 @@ class MenuAdapter : RecyclerView.Adapter<MenuAdapter.ViewHolder>() {
         menuItems = newMenuItems
         notifyDataSetChanged()
     }
-
 }
