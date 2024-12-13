@@ -259,7 +259,9 @@ interface RestaurantApi {
 
     // 모든 신고 내역 조회
     @GET("/api/v1/report/get/list")
-    suspend fun getReports(): List<ReportResponse>
+    suspend fun getReports(
+        @Header("access") accessToken: String
+    ): List<ReportResponse>
 
 
 }

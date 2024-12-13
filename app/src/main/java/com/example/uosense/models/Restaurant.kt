@@ -329,5 +329,5 @@ data class ReportResponse(
     val reviewId: Int,          // 신고된 리뷰 ID
     val userId: Int,            // 신고한 사용자 ID
     val detail: String,         // 신고 상세 내용 (예: ABUSIVE, DEROGATORY, ADVERTISEMENT)
-    val createdAt: LocalDateTime // 신고 생성 일시
+    val createdAt: List<Int> // 신고 생성 일시
 )
