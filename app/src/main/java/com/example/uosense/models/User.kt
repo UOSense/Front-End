@@ -26,3 +26,13 @@ data class UserResponse(
     val email: String,
     val nickname: String
 )
+
+data class UserProfileResponse(
+    val nickname: String,
+    val imageUrl: String
+)
+
+data class UpdateRequest(
+    val nickname: String? = null,
+    val image: String? = null
+)

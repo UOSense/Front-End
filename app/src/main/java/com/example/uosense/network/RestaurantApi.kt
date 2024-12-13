@@ -263,5 +263,16 @@ interface RestaurantApi {
         @Header("access") accessToken: String
     ): List<ReportResponse>
 
+    // 유저 프로필 조회
+    @PUT("/api/v1/user/get")
+    suspend fun getUserProfile(
+        @Header("access") accessToken: String // access 헤더 추가
+    ): UserProfileResponse
 
+    // 유저 마이페이지 정보 수정
+    @PUT("/api/v1/user/update")
+    suspend fun updateUserProfile(
+        @Header("access") accessToken: String,
+        @Body updateRequest: UpdateRequest
+    ): Response<Unit>
 }

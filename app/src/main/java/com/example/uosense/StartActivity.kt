@@ -153,7 +153,7 @@ class StartActivity : AppCompatActivity() {
     }
 
     private fun navigateToControlMainActivity() {
-        val intent = Intent(this, ReportActivity::class.java)
+        val intent = Intent(this, MyPageActivity::class.java)
         startActivity(intent)
         finish()
     }
