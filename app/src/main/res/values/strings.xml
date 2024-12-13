@@ -2,4 +2,32 @@
     <string name="app_name">UOSense</string>
     <string name="favorite_button_desc">즐겨찾기 버튼</string>
     <string name="restaurant_image">Restaurant Image</string>
+    <string-array name="restaurant_categories">
+        <item>한식</item>
+        <item>중식</item>
+        <item>일식</item>
+        <item>양식</item>
+        <item>기타</item>
+    </string-array>
+    <string-array name="restaurant_sub_descriptions">
+        <item>음식점</item>
+        <item>카페</item>
+        <item>술집</item>
+    </string-array>
+    <string-array name="restaurant_door_types">
+        <item>FRONT</item>
+        <item>SIDE</item>
+        <item>SOUTH</item>
+        <item>BACK</item>
+    </string-array>
+    <string-array name="days_of_week">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+        <item>Sunday</item>
+    </string-array>
+
 </resources>

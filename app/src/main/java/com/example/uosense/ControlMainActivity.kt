@@ -589,7 +589,7 @@ class ControlMainActivity : AppCompatActivity() {
     }
     // 식당 상세 화면으로 이동
     private fun navigateToRestaurantDetail(restaurantInfo: RestaurantInfo) {
-        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
+        val intent = Intent(this, ControlRestaurantDetail::class.java).apply {
             putExtra("restaurantId", restaurantInfo.id)
         }
         startActivity(intent)
@@ -832,7 +832,7 @@ class ControlMainActivity : AppCompatActivity() {
 
     // 전체 목록 보기로 이동 (정문 기본 선택)
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
-        val intent = Intent(this, RestaurantListActivity::class.java).apply {
+        val intent = Intent(this, ControlRestaurantListActivity::class.java).apply {
             putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
             putExtra("defaultDoorType", "FRONT") // 정문 기본 선택
         }

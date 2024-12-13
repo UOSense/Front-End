@@ -1,281 +1,173 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
-  <Space
-      android:layout_width="match_parent"
-      android:layout_height="16dp"/>
+    android:padding="16dp"
+    android:background="@color/gray">
+
   <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:orientation="horizontal"
-      android:layout_marginStart="0dp">
+      android:orientation="vertical">
 
+    <!-- 뒤로 가기 버튼 -->
     <Button
         android:id="@+id/backBtn"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:background="@drawable/ic_back"
-        android:clickable="true"
-        android:focusable="true"/>
+        android:contentDescription="뒤로 가기" />
 
-  </LinearLayout>
+    <!-- 식당 이미지 수정 가능 -->
+    <ImageView
+        android:id="@+id/restaurantImage"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="식당 이미지"
+        android:src="@drawable/ic_uos" />
 
-  <ImageView
-      android:id="@id/restaurantImage"
-      android:layout_width="match_parent"
-      android:layout_height="100dp"
-      android:src="@drawable/ic_uos"
-      />
-
-  <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      >
-    <!-- 식당 이름 -->
+    <!-- 사진 첨부 -->
     <TextView
-        android:id="@+id/restaurantName"
+        android:id="@+id/photoAttachmentTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="이름"
-        android:textColor="@color/orange"
+        android:layout_marginTop="16dp"
+        android:text="변경할 사진"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:textSize="18sp"/>
+        android:textColor="#000000" />
+
+    <LinearLayout
+        android:id="@+id/photoAttachmentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+      <View
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1" />
+
+      <Button
+          android:id="@+id/photoPlusBtn"
+          android:layout_width="80dp"
+          android:layout_height="80dp"
+          android:background="@drawable/ic_add"
+          android:contentDescription="사진 추가" />
+    </LinearLayout>
+
+    <!-- 식당 이름 -->
+    <EditText
+        android:id="@+id/editRestaurantName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="식당 이름"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- 도어 타입 -->
+    <Spinner
+        android:id="@+id/editDoorType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/restaurant_door_types" />
 
     <!-- 카테고리 -->
-    <TextView
-        android:id="@+id/restaurantCategory"
-        android:layout_width="wrap_content"
+    <Spinner
+        android:id="@+id/editRestaurantCategory"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="카테고리"
-        android:textSize="14sp"
-        android:layout_marginStart="10dp"/>
+        android:entries="@array/restaurant_categories" />
 
-    <!-- 즐겨찾기 버튼 -->
-    <ImageButton
-        android:id="@+id/favoriteButton"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:background="@drawable/ic_bookmark"
-        android:layout_marginStart="220dp"
-        android:contentDescription="@string/favorite_button_desc"
-        android:clickable="true"
-        android:focusable="true"
-        />
-
-
-  </LinearLayout>
-
-  <!-- 상세 설명 -->
-  <TextView
-      android:id="@+id/restaurantDescription"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:text="설명"
-      android:textSize="14sp"
-      android:layout_marginBottom="5dp"/>
-
-  <!-- 평점 -->
-  <LinearLayout
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:orientation="horizontal"
-      android:layout_marginBottom="5dp"
-      >
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- 부가 설명 -->
+    <Spinner
+        android:id="@+id/editSubDescription"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="★"
-        android:textColor="#FF0000"
-        android:gravity="center"
-        />
+        android:entries="@array/restaurant_sub_descriptions" />
+
+    <!-- 설명 -->
+    <EditText
+        android:id="@+id/editRestaurantDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="설명"
+        android:inputType="textMultiLine"
+        android:lines="3"
+        android:gravity="top" />
+
+    <!-- 평점과 리뷰 개수 -->
     <TextView
         android:id="@+id/restaurantRating"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="4.65"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_marginStart="5dp"
-        />
+        android:text="평점: 4.65"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
-    <!--    리뷰 출력   -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="리뷰"
-        android:layout_marginStart="25dp"/>
-    <!--    리뷰 수    -->
     <TextView
         android:id="@+id/restaurantReview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="35"
-        android:layout_marginStart="5dp"/>
-  </LinearLayout>
+        android:text="리뷰: 35" />
 
-  <LinearLayout
-      android:id="@+id/restaurantFilter"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content">
-
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- 영업 시간 -->
+    <EditText
+        android:id="@+id/editRestaurantOpeningTime"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="데이트 추천"
-        android:textColor="@color/pink"
-        android:background="@drawable/rounded_border_pink"/>
+        android:hint="오픈 시간 (HH:MM)" />
 
-    <TextView
-        android:layout_width="wrap_content"
+    <EditText
+        android:id="@+id/editRestaurantClosingTime"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:textColor="@color/green"
-        android:background="@drawable/rounded_border_green"
-        android:text="착한 가격"/>
+        android:hint="마감 시간 (HH:MM)" />
 
-
-  </LinearLayout>
-
-  <ImageView
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="10dp"
-      android:layout_marginBottom="10dp"
-      android:src="@drawable/line_1" />
-
-
-  <LinearLayout
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:orientation="vertical"
-      >
-
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <!-- 주소와 전화번호 -->
+    <EditText
+        android:id="@+id/editRestaurantAddress"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
-      <!--영업 여부-->
-      <TextView
-          android:id="@+id/restaurantIsOpened"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="영업 중"
-          android:textSize="16dp"
-          android:textStyle="bold"
-          />
+        android:hint="주소" />
 
-      <TextView
-          android:id="@+id/restaurantTime"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="( - )"
-          android:layout_marginStart="10dp"
-          />
-      <View
-          android:layout_width="0dp"
-          android:layout_height="0dp"
-          android:layout_weight="1"/>
-
-      <Button
-          android:id="@+id/restaurantUpdateBtn"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="수정 제안"
-          android:layout_marginStart="130dp"
-          android:clickable="true"
-          />
-
-    </LinearLayout>
-    <!-- 주소 -->
-    <TextView
-        android:id="@+id/restaurantAddress"
-        android:layout_width="wrap_content"
+    <EditText
+        android:id="@+id/editRestaurantPhoneNumber"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="주소"
-        android:textSize="14dp"
-        android:layout_marginBottom="8dp"/>
+        android:hint="전화번호" />
 
-    <!-- 전화번호 -->
-    <TextView
-        android:id="@+id/restaurantPhoneNumber"
-        android:layout_width="wrap_content"
+    <!-- 영업일 및 메뉴 관리 -->
+    <Button
+        android:id="@+id/btnEditBusinessDays"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="전화"
-        android:textSize="14dp"
-        android:layout_marginBottom="8dp"/>
+        android:text="영업일 추가" />
 
-
-  </LinearLayout>
-
-  <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="horizontal"
-      >
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/businessDaysRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <Button
-        android:id="@+id/businessDaysBtn"
-        android:layout_width="wrap_content"
+        android:id="@+id/btnEditMenu"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="영업일"
-        />
+        android:text="메뉴 추가" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/menuRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- 저장 버튼 -->
     <Button
-        android:id="@+id/menuBtn"
-        android:layout_width="wrap_content"
+        android:id="@+id/btnSaveRestaurant"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="메뉴"
-        />
-
-    <Button
-        android:id="@+id/reviewBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="리뷰"
-        />
-
-
+        android:text="저장"
+        android:backgroundTint="@color/black"
+        android:textColor="@android:color/white" />
   </LinearLayout>
-
-  <LinearLayout
-      android:id="@+id/reviewOptionsLayout"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="horizontal"
-      android:visibility="gone"
-      android:layout_marginTop="60dp">
-
-    <Button
-        android:id="@+id/reviewListBtn"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginEnd="50dp"
-        android:background="@drawable/rounded_border_green"
-        android:textColor="@color/white"
-        android:text="리뷰 목록" />
-
-    <Button
-        android:id="@+id/reviewWriteBtn"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:background="@drawable/rounded_border_green"
-        android:textColor="@color/white"
-        android:text="리뷰 쓰기" />
-  </LinearLayout>
-
-  <!-- BusinessDays RecyclerView -->
-  <androidx.recyclerview.widget.RecyclerView
-      android:id="@+id/businessDaysRecyclerView"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="8dp" />
-</LinearLayout>
+</ScrollView>

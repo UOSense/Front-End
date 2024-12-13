@@ -1,6 +1,8 @@
 package com.example.uosense
 
 import BusinessDayAdapter
+import MenuAdapter
+import MenuImagePicker
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -13,7 +15,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.uosense.adapters.MenuAdapter
+
 import com.example.uosense.databinding.ActivityControlMainBinding
 import com.example.uosense.databinding.ActivityRestaurantDetailBinding
 import com.example.uosense.databinding.ActivitySelectedDoorBinding
@@ -37,6 +39,7 @@ class RestaurantDetailActivity : AppCompatActivity() {
     private lateinit var reviewOptionsLayout: LinearLayout
     private lateinit var reviewListBtn: Button
     private lateinit var reviewWriteBtn: Button
+    private lateinit var imagePicker: MenuImagePicker
 
 
     private lateinit var businessDayAdapter: BusinessDayAdapter
@@ -63,8 +66,8 @@ class RestaurantDetailActivity : AppCompatActivity() {
 
         // 리사이클러 뷰 설정
         recyclerView.layoutManager = LinearLayoutManager(this)
-        businessDayAdapter = BusinessDayAdapter()
-        menuAdapter = MenuAdapter()
+        businessDayAdapter = BusinessDayAdapter(BusinessDayMode.DISPLAY)
+        menuAdapter = MenuAdapter(MenuMode.DISPLAY, imagePicker)
         recyclerView.adapter = businessDayAdapter
 
         // 버튼 클릭 리스너 설정
@@ -173,7 +176,6 @@ class RestaurantDetailActivity : AppCompatActivity() {
         }
     }
 
-    // 식당 이미지 로드
     private fun loadRestaurantImages() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -181,7 +183,7 @@ class RestaurantDetailActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
                         val images = response.body()!!.imageList.map { it.url }
-                        // 이미지 리사이클러뷰에 추가
+                        // 이미지를 보여주는 리사이클러뷰에 추가 로직 작성
                     }
                 }
             } catch (e: Exception) {
