@@ -4,6 +4,8 @@ import TokenManager
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +19,7 @@ class MyPageActivity : AppCompatActivity() {
 
     // 버튼 및 토큰 관리자 선언
     private lateinit var logOutBtn: Button
-    private lateinit var backBtn: Button
+    private lateinit var backBtn: ImageButton
     private lateinit var tokenManager: TokenManager
 
     override fun onCreate(savedInstanceState: Bundle?) {

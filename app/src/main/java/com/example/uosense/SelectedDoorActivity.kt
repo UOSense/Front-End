@@ -30,7 +30,7 @@ class SelectedDoorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySelectedDoorBinding.inflate(layoutInflater)
-        setContentView(R.layout.activity_selected_door)
+        setContentView(binding.root)
 
         binding.ivMap.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()  // 뒤로 가기 액션 실행

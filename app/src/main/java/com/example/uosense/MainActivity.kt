@@ -345,7 +345,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             try {
                 Log.d("API_CALL", "doorType: $doorType")  // 로그 추가
                 val response = restaurantApi.getRestaurantList(
-                    doorType = mapDoorTypeForApi(doorType),
+                    doorType = doorType,
                     filter = "DEFAULT"
                 )
                 withContext(Dispatchers.Main) {
