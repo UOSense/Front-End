@@ -169,21 +169,39 @@ class RestaurantListActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
     }
-
+    // doorType을 API에서 사용하는 값으로 매핑하는 함수
+    private fun mapDoorTypeForApi(doorType: String): String {
+        return when (doorType) {
+            "정문" -> "FRONT"
+            "남문" -> "SOUTH"
+            "쪽문" -> "SIDE"
+            "후문" -> "BACK"
+            else -> "NULL"  // 기본값 처리
+        }
+    }
     // 검색 메서드 수정
     // 검색 API 호출
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val apiDoorType = if (!selectedDoorType.isNullOrEmpty()) {
+                    mapDoorTypeForApi(selectedDoorType!!)
+                }else {
+                    null
+                }
                 val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
-                    doorType = selectedDoorType
+                    doorType = apiDoorType
                 )
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
-                        navigateToRestaurantList(response.body()!!)
+                        if (selectedDoorType != null) {
+                            navigateToSelectedDoorList(response.body()!!, mapDoorTypeForApi(selectedDoorType!!))
+                        } else {
+                            navigateToRestaurantList(response.body()!!)
+                        }
                     } else {
-
+                        showToast(this@RestaurantListActivity, "검색 결과가 없습니다.")
                     }
                 }
             } catch (e: Exception) {
@@ -193,6 +211,17 @@ class RestaurantListActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+    // 특정 DoorType 필터 식당 목록으로 이동하는 함수
+    private fun navigateToSelectedDoorList(
+        restaurantList: List<RestaurantListResponse>,
+        doorType: String
+    ) {
+        val intent = Intent(this, SelectedDoorActivity::class.java).apply {
+            putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            putExtra("doorType", doorType)
+        }
+        startActivity(intent)
     }
     // 전체 목록 보기로 이동 (정문 기본 선택)
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {

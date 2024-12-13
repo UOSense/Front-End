@@ -166,7 +166,7 @@ data class RestaurantImagesResponse(
 
 // 이미지 정보 모델
 data class ImageInfo(
-    val url: String,
+    val imageUrl: String,
     val id: Int
 )
 
@@ -254,7 +254,8 @@ data class RestaurantInfo(
     val reviewCount: Int?,
     val bookmarkCount: Int?,
     val bookmarkId: Int?, // 즐겨찾기 ID 추가
-    val businessDays: List<BusinessDay>? = null
+    val businessDays: List<BusinessDay>? = null,
+    val restaurantImageUrl: String? = null // 이미지 URL 필드 추가
 ) : Parcelable {
 
     // Parcel 생성자
@@ -273,7 +274,8 @@ data class RestaurantInfo(
         reviewCount = parcel.readValue(Int::class.java.classLoader) as? Int,
         bookmarkCount = parcel.readValue(Int::class.java.classLoader) as? Int,
         bookmarkId = parcel.readValue(Int::class.java.classLoader) as? Int,
-        businessDays = parcel.createTypedArrayList(BusinessDay.CREATOR)
+        businessDays = parcel.createTypedArrayList(BusinessDay.CREATOR),
+        restaurantImageUrl = parcel.readString()
     )
 
     // Parcel 데이터 쓰기
@@ -293,6 +295,7 @@ data class RestaurantInfo(
         parcel.writeValue(bookmarkCount)
         parcel.writeValue(bookmarkId)
         parcel.writeTypedList(businessDays)
+        parcel.writeString(restaurantImageUrl)
     }
 
     override fun describeContents(): Int = 0

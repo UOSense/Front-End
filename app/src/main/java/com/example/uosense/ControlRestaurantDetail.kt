@@ -374,7 +374,7 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
                 val response = RetrofitInstance.restaurantApi.getRestaurantImages(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
-                        val images = response.body()!!.imageList.map { it.url }
+                        val images = response.body()!!.imageList.map { it.imageUrl }
                         // 이미지 리사이클러뷰에 추가
                     }
                 }

@@ -48,7 +48,7 @@
             android:name=".SelectedDoorActivity"
             android:exported="true" />
         <activity
-            android:name=".ControlMainActivity"
+            android:name=".StartActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -75,7 +75,7 @@
             android:name=".RestaurantDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".StartActivity"
+            android:name=".ControlMainActivity"
             android:exported="true" />
         <activity
             android:name=".ReviewWriteActivity"

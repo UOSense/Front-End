@@ -17,7 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:src="@drawable/ic_launcher_foreground" />
+        android:src="@drawable/ic_uos" />
 
     <!-- 식당 이름 -->
     <TextView

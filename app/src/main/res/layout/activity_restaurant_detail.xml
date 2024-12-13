@@ -24,16 +24,16 @@ android:padding="16dp">
 </LinearLayout>
 
 <ImageView
-    android:id="@id/restaurantImage"
+    android:id="@+id/restaurantImage"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="300dp"
     android:src="@drawable/ic_uos"
     />
 
 <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    >
+    android:background="@drawa">
     <!-- 식당 이름 -->
     <TextView
         android:id="@+id/restaurantName"

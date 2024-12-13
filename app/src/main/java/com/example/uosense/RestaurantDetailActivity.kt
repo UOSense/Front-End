@@ -5,9 +5,12 @@ import MenuAdapter
 import MenuImagePicker
 import android.content.Intent
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -15,6 +18,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 
 import com.example.uosense.databinding.ActivityControlMainBinding
 import com.example.uosense.databinding.ActivityRestaurantDetailBinding
@@ -28,7 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class RestaurantDetailActivity : AppCompatActivity() {
+class RestaurantDetailActivity : AppCompatActivity(), MenuImagePicker {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var businessDaysBtn: Button
@@ -39,8 +43,10 @@ class RestaurantDetailActivity : AppCompatActivity() {
     private lateinit var reviewOptionsLayout: LinearLayout
     private lateinit var reviewListBtn: Button
     private lateinit var reviewWriteBtn: Button
-    private lateinit var imagePicker: MenuImagePicker
 
+    // 선택된 메뉴 위치를 저장하는 변수 추가
+    private var selectedMenuPosition: Int = -1
+    private lateinit var restaurantImage: ImageView
 
     private lateinit var businessDayAdapter: BusinessDayAdapter
     private lateinit var menuAdapter: MenuAdapter
@@ -51,7 +57,6 @@ class RestaurantDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_restaurant_detail)
-
 
         // UI 초기화
         recyclerView = findViewById(R.id.businessDaysRecyclerView)
@@ -64,10 +69,12 @@ class RestaurantDetailActivity : AppCompatActivity() {
         reviewListBtn = findViewById(R.id.reviewListBtn)
         reviewWriteBtn = findViewById(R.id.reviewWriteBtn)
 
+        restaurantImage = findViewById(R.id.restaurantImage)
+
         // 리사이클러 뷰 설정
         recyclerView.layoutManager = LinearLayoutManager(this)
         businessDayAdapter = BusinessDayAdapter(BusinessDayMode.DISPLAY)
-        menuAdapter = MenuAdapter(MenuMode.DISPLAY, imagePicker)
+        menuAdapter = MenuAdapter(MenuMode.DISPLAY, this)
         recyclerView.adapter = businessDayAdapter
 
         // 버튼 클릭 리스너 설정
@@ -113,6 +120,25 @@ class RestaurantDetailActivity : AppCompatActivity() {
         loadBusinessDays()
         loadRestaurantImages()
     }
+    // MenuImagePicker 인터페이스 구현
+    override fun openImagePicker(position: Int) {
+        selectedMenuPosition = position // 선택된 메뉴 위치 저장
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        startActivityForResult(intent, REQUEST_IMAGE_PICKER)
+    }
+
+    // onActivityResult에서 선택된 위치 사용
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMAGE_PICKER && resultCode == RESULT_OK && selectedMenuPosition != -1) {
+            val selectedImageUri = data?.data ?: return
+            menuAdapter.updateMenuImage(selectedMenuPosition, selectedImageUri)
+        }
+    }
+    companion object {
+        const val REQUEST_IMAGE_PICKER = 1001
+    }
+
 
     // 식당 데이터 로드
     private fun loadRestaurantData() {
@@ -175,22 +201,36 @@ class RestaurantDetailActivity : AppCompatActivity() {
             }
         }
     }
-
+    // 식당 이미지
     private fun loadRestaurantImages() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitInstance.restaurantApi.getRestaurantImages(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
-                        val images = response.body()!!.imageList.map { it.url }
-                        // 이미지를 보여주는 리사이클러뷰에 추가 로직 작성
+                        val imageUrl = response.body()?.imageList?.firstOrNull()?.imageUrl
+
+                        if (!imageUrl.isNullOrEmpty()) {
+                            Log.d("IMAGE_URL", "Loaded URL: $imageUrl")
+                            Glide.with(this@RestaurantDetailActivity)
+                                .load(imageUrl)
+                                .placeholder(R.drawable.placeholder_image)
+                                .error(R.drawable.ic_uos)
+                                .into(restaurantImage)
+                        } else {
+                            Log.e("IMAGE_ERROR", "Image URL is empty")
+                        }
+                    } else {
+                        Log.e("IMAGE_ERROR", "Response failed: ${response.errorBody()?.string()}")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                Log.e("IMAGE_EXCEPTION", "Exception: ${e.message}")
             }
         }
     }
+
     // 영업일 표시
     private fun showBusinessDays() {
         recyclerView.adapter = businessDayAdapter
@@ -221,7 +261,7 @@ class RestaurantDetailActivity : AppCompatActivity() {
         recyclerView.visibility = View.GONE
     }
 
-    // 리뷰 목록 표시
+    // 메뉴 목록 표시
     private fun showMenuItems() {
         recyclerView.adapter = menuAdapter
         reviewOptionsLayout.visibility = View.GONE
