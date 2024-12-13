@@ -309,7 +309,7 @@ data class ReviewRequest(
     val rating: Double,
     val dateTime: String,
     val tag: String?,
-    val reviewEventCheck: Boolean
+    val isReviewEventCheck: Boolean
 )
 data class ReviewListResponse(
     val reviews: List<ReviewResponse> // 리뷰 목록
