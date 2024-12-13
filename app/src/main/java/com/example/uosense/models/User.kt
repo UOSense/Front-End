@@ -33,6 +33,5 @@ data class UserProfileResponse(
 )
 
 data class UpdateRequest(
-    val nickname: String? = null,
     val image: String? = null
 )

@@ -2,7 +2,9 @@ package com.example.uosense
 
 import TokenManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Log
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
@@ -14,6 +16,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class MyPageActivity : AppCompatActivity() {
 
@@ -24,7 +30,7 @@ class MyPageActivity : AppCompatActivity() {
     private lateinit var removeImageBtn: Button
     private lateinit var favoriteDetailsBtn: Button
     private lateinit var reviewDetailsBtn: Button
-    private lateinit var nicknameText: TextView
+    private lateinit var nicknameText: EditText
     private lateinit var profileImage: ImageView
     private lateinit var tokenManager: TokenManager
 
@@ -90,7 +96,7 @@ class MyPageActivity : AppCompatActivity() {
                 }
 
                 val response = RetrofitInstance.restaurantApi.getUserProfile("Bearer $accessToken")
-                nicknameText.text = response.nickname
+                nicknameText.setText(response.nickname)
                 uploadedImageUrl = response.imageUrl
 
                 Glide.with(this@MyPageActivity)
@@ -99,7 +105,8 @@ class MyPageActivity : AppCompatActivity() {
                     .into(profileImage)
 
             } catch (e: Exception) {
-                Toast.makeText(this@MyPageActivity, "프로필 조회 실패: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MyPageActivity, "프로필 조회 실패: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -115,29 +122,44 @@ class MyPageActivity : AppCompatActivity() {
                     return@launch
                 }
 
+                // 닉네임을 비워서 전달하거나 수정하지 않으려면 null로 설정
                 val newNickname = nicknameText.text.toString().takeIf { it.isNotEmpty() }
-                val updateRequest = UpdateRequest(
-                    nickname = newNickname,
-                    image = uploadedImageUrl
-                )
+
+                // 이미지 수정하지 않을 경우 null
+                val imagePart = uploadedImageUrl?.let { createMultipartBodyFromUri(it) }
+
+                Log.d("UpdateRequestLog", "닉네임: $newNickname")
+                Log.d("UpdateRequestLog", "이미지 존재 여부: ${imagePart != null}")
 
                 val response = RetrofitInstance.restaurantApi.updateUserProfile(
-                    "Bearer $accessToken",
-                    updateRequest
+                    accessToken = "Bearer $accessToken",
+                    nickname = newNickname, // null 전달 가능
+                    image = imagePart // null 전달 가능
                 )
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@MyPageActivity, "프로필이 성공적으로 업데이트되었습니다.", Toast.LENGTH_SHORT).show()
-                    fetchUserProfile()  // 업데이트 후 새로고침
+                    Toast.makeText(this@MyPageActivity, "프로필이 성공적으로 업데이트되었습니다.", Toast.LENGTH_SHORT)
+                        .show()
+                    fetchUserProfile() // 업데이트 후 새로고침
                 } else {
-                    Toast.makeText(this@MyPageActivity, "업데이트 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    Log.e(
+                        "UpdateRequestError",
+                        "업데이트 실패: ${response.code()} - ${response.errorBody()?.string()}"
+                    )
+                    Toast.makeText(
+                        this@MyPageActivity,
+                        "업데이트 실패: ${response.code()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-
             } catch (e: Exception) {
-                Toast.makeText(this@MyPageActivity, "업데이트 실패: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("UpdateRequestException", "예외 발생: ${e.message}")
+                Toast.makeText(this@MyPageActivity, "업데이트 실패: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
+
 
     // 이미지 선택
     private fun pickImageFromGallery() {
@@ -202,14 +224,50 @@ class MyPageActivity : AppCompatActivity() {
                         tokenManager.clearTokens()
                         navigateToLoginActivity()
                     } else {
-                        Toast.makeText(this@MyPageActivity, "로그아웃 실패: ${response.code()}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MyPageActivity,
+                            "로그아웃 실패: ${response.code()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MyPageActivity, "서버 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@MyPageActivity,
+                        "서버 오류 발생: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
+        }
+    }
+
+    private fun createMultipartBodyFromUri(uri: String?): MultipartBody.Part? {
+        if (uri == null) return null
+
+        return try {
+            val contentResolver = contentResolver
+            val fileUri = Uri.parse(uri)
+
+            // 파일 이름 추출
+            val fileName = contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                cursor.moveToFirst()
+                cursor.getString(nameIndex)
+            } ?: "file.jpg"
+
+            // InputStream에서 데이터를 읽고 MultipartBody.Part로 변환
+            val inputStream = contentResolver.openInputStream(fileUri)
+            val tempFile = File.createTempFile("upload", fileName, cacheDir).apply {
+                outputStream().use { inputStream?.copyTo(it) }
+            }
+
+            val requestBody = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("image", fileName, requestBody)
+        } catch (e: Exception) {
+            Log.e("MultipartError", "파일 생성 실패: ${e.message}")
+            null
         }
     }
 }

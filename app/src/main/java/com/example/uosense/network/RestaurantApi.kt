@@ -270,9 +270,11 @@ interface RestaurantApi {
     ): UserProfileResponse
 
     // 유저 마이페이지 정보 수정
+    @Multipart
     @PUT("/api/v1/user/update")
     suspend fun updateUserProfile(
         @Header("access") accessToken: String,
-        @Body updateRequest: UpdateRequest
+        @Query("nickname") nickname: String?,
+        @Part image: MultipartBody.Part?
     ): Response<Unit>
 }
