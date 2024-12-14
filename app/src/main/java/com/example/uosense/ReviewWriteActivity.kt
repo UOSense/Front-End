@@ -252,7 +252,6 @@ private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part 
         val reviewBody = reviewInput.text.toString()
         val ratingValue = currentRating
         val dateTime = LocalDateTime.now().toString()
-        val accessToken = tokenManager.getAccessToken()
 
         // 입력 검증
         if (reviewBody.isBlank()) {
@@ -265,24 +264,34 @@ private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part 
             return
         }
 
-        if (accessToken.isNullOrEmpty()) {
-            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
-            return
-        }
 
-        val reviewRequest = ReviewRequest(
-            restaurantId = restaurantId,
-            body = reviewBody,
-            rating = ratingValue.toDouble(),
-            dateTime = dateTime,
-            reviewEventCheck = reviewEventCheck,
-            tag = selectedTag // 선택 사항
-        )
+
+
 
         // 로그 메시지 출력 (전송 데이터 확인)
 
         // API 호출
         CoroutineScope(Dispatchers.Main).launch {
+
+            // 액세스 토큰 유효성 확인 및 새로 고침
+            val accessToken = tokenManager.ensureValidAccessToken()
+
+            if (accessToken.isNullOrEmpty()) {
+                // 로그인 화면으로 이동
+                Toast.makeText(this@ReviewWriteActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val reviewRequest = ReviewRequest(
+                restaurantId = restaurantId,
+                body = reviewBody,
+                rating = ratingValue.toDouble(),
+                dateTime = dateTime,
+                reviewEventCheck = reviewEventCheck,
+                tag = selectedTag // 선택 사항
+            )
+
+
             try {
                 val response = RetrofitInstance.restaurantApi.createReview(
                     reviewRequest,

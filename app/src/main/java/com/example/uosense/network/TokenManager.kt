@@ -4,6 +4,8 @@ import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.util.Base64
+import android.content.Intent
+import com.example.uosense.StartActivity
 
 import org.json.JSONObject
 
@@ -62,6 +64,28 @@ class TokenManager(private val context: Context) {
             Log.e("TokenManager", "Error refreshing token: ${e.message}")
             false
         }
+    }
+
+    suspend fun ensureValidAccessToken(): String? {
+        val accessToken = getAccessToken()
+
+        return if (!accessToken.isNullOrEmpty()) {
+            if (refreshAccessToken()) {
+                getAccessToken()
+            } else {
+                navigateToLogin()
+                null
+            }
+        } else {
+            navigateToLogin()
+            null
+        }
+    }
+
+    private fun navigateToLogin() {
+        val intent = Intent(context, StartActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        context.startActivity(intent)
     }
 
     fun getUserRoleFromToken(token: String): String? {

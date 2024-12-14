@@ -48,8 +48,8 @@ class FavoriteListActivity : AppCompatActivity() {
     private fun fetchFavorites() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val accessToken = tokenManager.getAccessToken().orEmpty()
-                if (accessToken.isEmpty()) {
+                val accessToken = tokenManager.ensureValidAccessToken()
+                if (accessToken.isNullOrEmpty()) {
                     showToast("로그인이 필요합니다.")
                     return@launch
                 }

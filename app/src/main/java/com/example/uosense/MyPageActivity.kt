@@ -10,7 +10,6 @@ import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import com.example.uosense.models.UpdateRequest
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,25 +41,13 @@ class MyPageActivity : AppCompatActivity() {
 
         tokenManager = TokenManager(this)
 
-        // 리프레시 토큰 검증
-        val refreshToken = tokenManager.getRefreshToken()
-        if (refreshToken.isNullOrEmpty()) {
-            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+        if (tokenManager.getRefreshToken().isNullOrEmpty()) {
+            showToast("로그인이 필요합니다.")
             navigateToLoginActivity()
             return
         }
 
-        // UI 요소 초기화
-        logOutBtn = findViewById(R.id.logOutBtn)
-        backBtn = findViewById(R.id.backBtn)
-        updateBtn = findViewById(R.id.editProfile)
-        uploadImageBtn = findViewById(R.id.uploadImageBtn)
-        removeImageBtn = findViewById(R.id.removeImageBtn)
-        favoriteDetailsBtn = findViewById(R.id.favoriteDetailsBtn)
-        reviewDetailsBtn = findViewById(R.id.reviewDetailsBtn)
-        nicknameText = findViewById(R.id.userName)
-        profileImage = findViewById(R.id.profileImage)
-
+        initializeUIElements()
         fetchUserProfile()
 
         logOutBtn.setOnClickListener { logOutUser() }
@@ -84,13 +71,23 @@ class MyPageActivity : AppCompatActivity() {
         })
     }
 
-    // 프로필 조회
+    private fun initializeUIElements() {
+        logOutBtn = findViewById(R.id.logOutBtn)
+        backBtn = findViewById(R.id.backBtn)
+        updateBtn = findViewById(R.id.editProfile)
+        uploadImageBtn = findViewById(R.id.uploadImageBtn)
+        removeImageBtn = findViewById(R.id.removeImageBtn)
+        favoriteDetailsBtn = findViewById(R.id.favoriteDetailsBtn)
+        reviewDetailsBtn = findViewById(R.id.reviewDetailsBtn)
+        nicknameText = findViewById(R.id.userName)
+        profileImage = findViewById(R.id.profileImage)
+    }
+
     private fun fetchUserProfile() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val accessToken = tokenManager.getAccessToken().orEmpty()
-                if (accessToken.isEmpty()) {
-                    Toast.makeText(this@MyPageActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                val accessToken = tokenManager.ensureValidAccessToken() ?: run {
+                    showToast("로그인이 필요합니다.")
                     navigateToLoginActivity()
                     return@launch
                 }
@@ -105,66 +102,43 @@ class MyPageActivity : AppCompatActivity() {
                     .into(profileImage)
 
             } catch (e: Exception) {
-                Toast.makeText(this@MyPageActivity, "프로필 조회 실패: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                showToast("프로필 조회 실패: ${e.message}")
             }
         }
     }
 
-    // 프로필 업데이트
     private fun updateUserProfile() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val accessToken = tokenManager.getAccessToken().orEmpty()
-                if (accessToken.isEmpty()) {
-                    Toast.makeText(this@MyPageActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                val accessToken = tokenManager.ensureValidAccessToken() ?: run {
+                    showToast("로그인이 필요합니다.")
                     navigateToLoginActivity()
                     return@launch
                 }
 
-                // 닉네임을 비워서 전달하거나 수정하지 않으려면 null로 설정
                 val newNickname = nicknameText.text.toString().takeIf { it.isNotEmpty() }
-
-                // 이미지 수정하지 않을 경우 null
                 val imagePart = uploadedImageUrl?.let { createMultipartBodyFromUri(it) }
-
-                Log.d("UpdateRequestLog", "닉네임: $newNickname")
-                Log.d("UpdateRequestLog", "이미지 존재 여부: ${imagePart != null}")
 
                 val response = RetrofitInstance.restaurantApi.updateUserProfile(
                     accessToken = "Bearer $accessToken",
-                    nickname = newNickname, // null 전달 가능
-                    image = imagePart // null 전달 가능
+                    nickname = newNickname,
+                    image = imagePart
                 )
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@MyPageActivity, "프로필이 성공적으로 업데이트되었습니다.", Toast.LENGTH_SHORT)
-                        .show()
-                    fetchUserProfile() // 업데이트 후 새로고침
+                    showToast("프로필이 성공적으로 업데이트되었습니다.")
+                    fetchUserProfile()
                 } else {
-                    Log.e(
-                        "UpdateRequestError",
-                        "업데이트 실패: ${response.code()} - ${response.errorBody()?.string()}"
-                    )
-                    Toast.makeText(
-                        this@MyPageActivity,
-                        "업데이트 실패: ${response.code()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    showToast("업데이트 실패: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("UpdateRequestException", "예외 발생: ${e.message}")
-                Toast.makeText(this@MyPageActivity, "업데이트 실패: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                showToast("업데이트 실패: ${e.message}")
             }
         }
     }
 
-
-    // 이미지 선택
     private fun pickImageFromGallery() {
-        val intent = Intent(Intent.ACTION_PICK)
-        intent.type = "image/*"
+        val intent = Intent(Intent.ACTION_PICK).apply { type = "image/*" }
         startActivityForResult(intent, 1000)
     }
 
@@ -173,22 +147,16 @@ class MyPageActivity : AppCompatActivity() {
         if (requestCode == 1000 && resultCode == RESULT_OK) {
             val imageUri = data?.data
             uploadedImageUrl = imageUri.toString()
-
-            Glide.with(this)
-                .load(imageUri)
-                .placeholder(R.drawable.ic_profile_placeholder)
-                .into(profileImage)
+            Glide.with(this).load(imageUri).placeholder(R.drawable.ic_profile_placeholder).into(profileImage)
         }
     }
 
-    // 이미지 제거
     private fun removeProfileImage() {
         uploadedImageUrl = null
         profileImage.setImageResource(R.drawable.ic_profile_placeholder)
-        Toast.makeText(this, "이미지가 제거되었습니다.", Toast.LENGTH_SHORT).show()
+        showToast("이미지가 제거되었습니다.")
     }
 
-    // 네비게이션 메소드들
     private fun navigateToMainActivity() {
         val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -206,65 +174,45 @@ class MyPageActivity : AppCompatActivity() {
     }
 
     private fun logOutUser() {
-        val refreshToken = tokenManager.getRefreshToken()
-
-        if (refreshToken.isNullOrEmpty()) {
-            Toast.makeText(this, "로그인 정보가 없습니다.", Toast.LENGTH_SHORT).show()
-            navigateToLoginActivity()
-            return
-        }
-
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val refreshToken = tokenManager.getRefreshToken() ?: run {
+                    showToast("로그인 정보가 없습니다.")
+                    navigateToLoginActivity()
+                    return@launch
+                }
+
                 val response = RetrofitInstance.restaurantApi.logoutUser("refresh=$refreshToken")
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        Toast.makeText(this@MyPageActivity, "로그아웃 성공!", Toast.LENGTH_SHORT).show()
+                        showToast("로그아웃 성공!")
                         tokenManager.clearTokens()
                         navigateToLoginActivity()
                     } else {
-                        Toast.makeText(
-                            this@MyPageActivity,
-                            "로그아웃 실패: ${response.code()}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        showToast("로그아웃 실패: ${response.code()}")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@MyPageActivity,
-                        "서버 오류 발생: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    showToast("서버 오류 발생: ${e.message}")
                 }
             }
         }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun createMultipartBodyFromUri(uri: String?): MultipartBody.Part? {
         if (uri == null) return null
 
         return try {
-            val contentResolver = contentResolver
             val fileUri = Uri.parse(uri)
-
-            // 파일 이름 추출
-            val fileName = contentResolver.query(fileUri, null, null, null, null)?.use { cursor ->
-                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                cursor.moveToFirst()
-                cursor.getString(nameIndex)
-            } ?: "file.jpg"
-
-            // InputStream에서 데이터를 읽고 MultipartBody.Part로 변환
-            val inputStream = contentResolver.openInputStream(fileUri)
-            val tempFile = File.createTempFile("upload", fileName, cacheDir).apply {
-                outputStream().use { inputStream?.copyTo(it) }
-            }
-
-            val requestBody = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
-            MultipartBody.Part.createFormData("image", fileName, requestBody)
+            val file = File(fileUri.path!!)
+            val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("image", file.name, requestBody)
         } catch (e: Exception) {
             Log.e("MultipartError", "파일 생성 실패: ${e.message}")
             null

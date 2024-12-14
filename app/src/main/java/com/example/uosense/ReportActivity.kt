@@ -18,12 +18,15 @@ class ReportActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReportBinding
     private lateinit var reportAdapter: ReportAdapter
+    private lateinit var tokenManager: TokenManager
     private val reports = mutableListOf<ReportResponse>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReportBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        tokenManager = TokenManager(this)
 
         setupRecyclerView()
         fetchReports()
@@ -48,8 +51,8 @@ class ReportActivity : AppCompatActivity() {
                 Log.d("ReportActivity", "Fetching reports...")
 
                 // 액세스 토큰 가져오기
-                val accessToken = TokenManager(this@ReportActivity).getAccessToken().orEmpty()
-                if (accessToken.isEmpty()) {
+                val accessToken = tokenManager.ensureValidAccessToken()
+                if (accessToken.isNullOrEmpty()) {
                     showToast("로그인이 필요합니다.")
                     Log.e("ReportActivity", "Access token is empty")
                     return@launch
@@ -74,8 +77,6 @@ class ReportActivity : AppCompatActivity() {
             }
         }
     }
-
-
 
     // 메시지 출력 함수
     private fun showToast(message: String) {

@@ -86,23 +86,24 @@ class ControlRestaurantListActivity : AppCompatActivity() {
 
     // 식당 삭제 API 호출
     private fun deleteRestaurant(restaurantId: Int) {
-        val accessToken = tokenManager.getAccessToken() ?: ""
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.Main).launch {
+            val accessToken = tokenManager.ensureValidAccessToken()
+            if (accessToken.isNullOrEmpty()) {
+                showToast(this@ControlRestaurantListActivity, "로그인이 필요합니다.")
+                return@launch
+            }
+
             try {
-                val response = restaurantApi.deleteRestaurant("Bearer $accessToken", restaurantId)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        restaurantList.removeAll { it.id == restaurantId }
-                        adapter.updateList(restaurantList)
-                        showToast(this@ControlRestaurantListActivity, "삭제되었습니다.")
-                    } else {
-                        showToast(this@ControlRestaurantListActivity, "삭제 실패.")
-                    }
+                val response = RetrofitInstance.restaurantApi.deleteRestaurant("Bearer $accessToken", restaurantId)
+                if (response.isSuccessful) {
+                    restaurantList.removeAll { it.id == restaurantId }
+                    adapter.updateList(restaurantList)
+                    showToast(this@ControlRestaurantListActivity, "삭제되었습니다.")
+                } else {
+                    showToast(this@ControlRestaurantListActivity, "삭제 실패.")
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showToast(this@ControlRestaurantListActivity, "삭제 중 오류 발생.")
-                }
+                showToast(this@ControlRestaurantListActivity, "삭제 중 오류 발생.")
             }
         }
     }
