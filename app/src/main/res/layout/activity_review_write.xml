@@ -163,15 +163,6 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:layout_marginTop="8dp">
-            <Button
-                android:id="@+id/affordableBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="가성비가 좋아요"
-                android:layout_weight="1"
-                android:background="@drawable/rounded_border_blue"
-                android:textColor="@color/blue" />
-
 
             <Button
                 android:id="@+id/serviceBtn"

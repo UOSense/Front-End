@@ -1,7 +1,6 @@
 import android.content.Context
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
-import okhttp3.Request
 import okhttp3.Response
 
 class AuthInterceptor(private val context: Context) : Interceptor {
@@ -9,43 +8,37 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     private val tokenManager = TokenManager(context)
 
     override fun intercept(chain: Interceptor.Chain): Response {
-        var originalRequest = chain.request()
-
-        // 토큰이 없는 경우 예외 발생
+        val originalRequest = chain.request()
         val accessToken = tokenManager.getAccessToken()
+
         if (accessToken.isNullOrEmpty()) {
             throw IllegalStateException("Access token is missing")
         }
 
-        // 기존 요청에 토큰 추가
-        originalRequest = attachToken(originalRequest, accessToken)
-        var response = chain.proceed(originalRequest)
+        val modifiedRequest = originalRequest.newBuilder()
+            .addHeader("Authorization", "Bearer $accessToken")
+            .build()
 
-        // 401 Unauthorized 응답 시
+        val response = chain.proceed(modifiedRequest)
+
+        // Access Token이 만료되었을 경우
         if (response.code == 401) {
             response.close()
 
-            // 토큰 재발급 시도
+            // Suspend 함수 호출을 위한 runBlocking 사용
             val isTokenRefreshed = runBlocking {
                 tokenManager.refreshAccessToken()
             }
 
             if (isTokenRefreshed) {
                 val newAccessToken = tokenManager.getAccessToken()
-                if (!newAccessToken.isNullOrEmpty()) {
-                    val newRequest = attachToken(originalRequest, newAccessToken)
-                    response = chain.proceed(newRequest)
-                }
+                val newRequest = originalRequest.newBuilder()
+                    .addHeader("Authorization", "Bearer $newAccessToken")
+                    .build()
+                return chain.proceed(newRequest)
             }
         }
 
         return response
-    }
-
-    // Authorization 헤더 추가 함수
-    private fun attachToken(request: Request, token: String): Request {
-        return request.newBuilder()
-            .addHeader("Authorization", "Bearer $token")
-            .build()
     }
 }

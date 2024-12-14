@@ -38,7 +38,7 @@ class ReviewListActivity : AppCompatActivity() {
     }
 
     private fun fetchReviews() {
-        val restaurantId = intent.getIntExtra("restaurantId", -1)
+        val restaurantId = intent.getIntExtra("restaurantId", 2) // 기본값으로 임시 ID 설정
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 // 로딩 중 UI 표시 (예: ProgressBar를 보여줌)

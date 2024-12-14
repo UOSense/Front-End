@@ -1,137 +1,235 @@
 package com.example.uosense.fragments
 
-import TokenManager
-import android.app.Activity
-import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.util.TypedValue
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
+import androidx.gridlayout.widget.GridLayout
 import com.example.uosense.R
 import com.example.uosense.databinding.FragmentProductMenuBinding
-import com.example.uosense.models.MenuImageRequest
-import com.example.uosense.models.MenuRequest
-import com.example.uosense.network.RetrofitInstance
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class ProductMenuFragment : Fragment() {
 
     private var _binding: FragmentProductMenuBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var tokenManager: TokenManager
-    private var uploadedImageUrl: String? = null
+    // Activity Result Launcher for Image Picker
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { imageUri: Uri? ->
+        if (imageUri != null) {
+            addImageToContainer(imageUri)
+            Toast.makeText(requireContext(), "이미지가 업로드되었습니다!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentProductMenuBinding.inflate(inflater, container, false)
-        tokenManager = TokenManager(requireContext())
 
-        // 버튼 리스너 연결
-        binding.uploadImageBtn.setOnClickListener { pickImageFromGallery() }
-        binding.addCircleBtn.setOnClickListener { addPriceRow() }
+        // 이미지 권한 요청
+        checkStoragePermission()
 
+        // 이미지 업로드 버튼 클릭 리스너
+        binding.uploadImageBtn.setOnClickListener {
+            checkStoragePermissionAndPickImage()
+        }
+
+        // 가격 정보 추가 버튼 클릭 리스너
+        binding.addCircleBtn.setOnClickListener {
+            addPriceRow()
+        }
 
         return binding.root
     }
 
-    // 서버 전송 메서드
-    public fun sendProductMenuToServer() {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val accessToken = tokenManager.getAccessToken().orEmpty()
-                if (accessToken.isEmpty()) {
-                    Toast.makeText(requireContext(), "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
-                    return@launch
-                }
-
-                for (i in 0 until binding.priceContainer.childCount) {
-                    val row = binding.priceContainer.getChildAt(i) as LinearLayout
-                    val menuInput = row.findViewById<EditText>(R.id.menuName)
-                    val priceInput = row.findViewById<EditText>(R.id.menuPrice)
-
-                    val menuName = menuInput.text.toString()
-                    val menuPrice = priceInput.text.toString().toIntOrNull() ?: 0
-
-                    if (menuName.isNotEmpty() && menuPrice > 0) {
-                        // RequestBody 생성
-                        val menuImageRequest = if (uploadedImageUrl.isNullOrEmpty()) {
-                            null
-                        } else {
-                            MenuImageRequest(image = uploadedImageUrl)
-                        }
-
-                        // API 호출
-                        val response = RetrofitInstance.restaurantApi.createMenu(
-                            accessToken = "Bearer $accessToken",
-                            restaurantId = 1, // 예시: 임의
-                            name = menuName,
-                            price = menuPrice,
-                            image = menuImageRequest
-                        )
-
-                        // 응답 확인
-                        if (response.isSuccessful) {
-                            Toast.makeText(requireContext(), "메뉴가 등록되었습니다.", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Log.e("APIError", "등록 실패: ${response.code()} - ${response.errorBody()?.string()}")
-                            Toast.makeText(
-                                requireContext(),
-                                "등록 실패: ${response.code()}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    } else {
-                        Toast.makeText(requireContext(), "메뉴 정보를 입력하세요.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("APIError", "오류 발생: ${e.message}")
-                Toast.makeText(requireContext(), "오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+    // 권한 요청 메서드
+    private fun checkStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(
+                    arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
+                    READ_MEDIA_IMAGES_REQUEST_CODE
+                )
             }
         }
     }
 
-    // 이미지 선택 (URI 가져오기)
-    private fun pickImageFromGallery() {
-        val intent = Intent(Intent.ACTION_PICK)
-        intent.type = "image/*"
-        startActivityForResult(intent, IMAGE_PICK_REQUEST_CODE)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == IMAGE_PICK_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            val imageUri: Uri? = data?.data
-            uploadedImageUrl = imageUri.toString()
-
-            Glide.with(this)
-                .load(imageUri)
-                .placeholder(R.drawable.ic_profile_placeholder)
-                .into(binding.imagePreview)
-
-            binding.imagePreview.visibility = View.VISIBLE
+    // 권한 확인 및 이미지 선택
+    private fun checkStoragePermissionAndPickImage() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13 이상 권한 확인
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                pickImageLauncher.launch("image/*")
+            } else {
+                // 권한 요청
+                requestPermissions(
+                    arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
+                    READ_MEDIA_IMAGES_REQUEST_CODE
+                )
+            }
+        } else {
+            // Android 13 미만에서는 권한 요청 필요 없음
+            pickImageLauncher.launch("image/*")
         }
     }
 
-    // 가격 입력 필드 추가
+    // 권한 요청 결과 처리
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == READ_MEDIA_IMAGES_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                pickImageLauncher.launch("image/*")
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "이미지 접근 권한이 필요합니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    // 동적으로 이미지 추가
+    private fun addImageToContainer(imageUri: Uri) {
+        // 최대 이미지 개수 제한
+        val maxImages = 4
+        val currentImageCount = binding.imageContainer.childCount
+
+        if (currentImageCount > maxImages) {
+            Toast.makeText(requireContext(), "최대 $maxImages 장의 이미지만 추가할 수 있습니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // 이미지 뷰 생성 및 설정
+        val imageView = ImageView(requireContext()).apply {
+            setImageURI(imageUri)
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.CENTER_CROP
+
+            // 사진 개수에 따른 크기 조절
+            layoutParams = calculateGridLayoutParams()
+        }
+
+        // 이미지 추가
+        binding.imageContainer.addView(imageView)
+
+        // 이미지 힌트 가리기
+        binding.imageHint.visibility = View.GONE
+    }
+
+    // 사진 개수에 따른 이미지 크기 계산 메서드
+    private fun calculateGridLayoutParams(): GridLayout.LayoutParams {
+        val gridLayout = binding.imageContainer
+        val totalWidth = gridLayout.width
+        val itemWidth = totalWidth / 2
+        val itemHeight = gridLayout.height / 2
+
+        return GridLayout.LayoutParams().apply {
+            width = itemWidth
+            height = itemHeight
+            setMargins(8, 8, 8, 8)
+        }
+    }
+
+    // 가격 정보 행 추가 메서드
     private fun addPriceRow() {
         val context = requireContext()
-        val priceRow = layoutInflater.inflate(R.layout.item_price_row, binding.priceContainer, false)
+
+        // 동적 레이아웃 생성
+        val priceRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // 메뉴/상품명 입력 필드
+        val menuInput = EditText(context).apply {
+            hint = "메뉴, 상품명"
+            setPadding(16, 8, 16, 8)
+            background = ContextCompat.getDrawable(context, R.drawable.rounded_input_background)
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.7f)
+            setTextColor(ContextCompat.getColor(context, R.color.black))
+            setHintTextColor(ContextCompat.getColor(context, R.color.gray))
+        }
+
+        // 금액 입력 필드
+        val priceInput = EditText(context).apply {
+            hint = "금액"
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setPadding(16, 8, 16, 8)
+            background = ContextCompat.getDrawable(context, R.drawable.rounded_input_background)
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            setTextColor(ContextCompat.getColor(context, R.color.black))
+            setHintTextColor(ContextCompat.getColor(context, R.color.gray))
+        }
+
+        // 삭제 버튼
+        val deleteButton = Button(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                dpToPx(30), // 가로 30dp
+                dpToPx(30)  // 세로 30dp
+            ).apply {
+                setMargins(dpToPx(8), dpToPx(8), dpToPx(8), dpToPx(8))
+            }
+            background = ContextCompat.getDrawable(context, R.drawable.ic_delete)
+            contentDescription = "삭제 버튼"
+            setOnClickListener {
+                binding.priceContainer.removeView(priceRow)
+                Toast.makeText(context, "항목이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // 동적으로 생성된 뷰 추가
+        priceRow.addView(menuInput)
+        priceRow.addView(priceInput)
+        priceRow.addView(deleteButton)
+
+        // 컨테이너에 추가
         binding.priceContainer.addView(priceRow)
     }
 
+    // dp 값을 px 값으로 변환하는 함수
+    private fun dpToPx(dp: Int): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics
+        ).toInt()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     companion object {
-        private const val IMAGE_PICK_REQUEST_CODE = 1001
+        const val READ_MEDIA_IMAGES_REQUEST_CODE = 101
     }
 }

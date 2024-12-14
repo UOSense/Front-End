@@ -1,29 +1,27 @@
 package com.example.uosense.adapters
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.uosense.R
-import com.example.uosense.models.Report
+import com.example.uosense.models.ReportResponse
+import com.example.uosense.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ReportAdapter(
-    private val reportList: MutableList<Report>
+    private var reports: MutableList<ReportResponse>
 ) : RecyclerView.Adapter<ReportAdapter.ReportViewHolder>() {
 
-    class ReportViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val profileImage: ImageView = view.findViewById(R.id.userProfileImage)
-        val userName: TextView = view.findViewById(R.id.userName)
-        val userRating: TextView = view.findViewById(R.id.userRating)
-        val title: TextView = view.findViewById(R.id.reportTitle)
-        val content: TextView = view.findViewById(R.id.reportContent)
-        val deleteButton: Button = view.findViewById(R.id.deleteReportBtn)
+    inner class ReportViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val reportDetail: TextView = itemView.findViewById(R.id.reportDetail)
+        val createdAt: TextView = itemView.findViewById(R.id.createdAt)
+        val deleteReportBtn: Button = itemView.findViewById(R.id.deleteReportBtn)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReportViewHolder {
@@ -33,40 +31,56 @@ class ReportAdapter(
     }
 
     override fun onBindViewHolder(holder: ReportViewHolder, position: Int) {
-        val report = reportList[position]
+        val report = reports[position]
 
-        // 사용자 정보 설정
-        holder.userName.text = report.userName
-        holder.userRating.text = "별점: ${report.rating}"
-        holder.title.text = report.title
-        holder.content.text = report.content
+        // 날짜 포맷 변환
+        holder.createdAt.text = "신고 일시: ${formatDate(report.createdAt)}"
+        holder.reportDetail.text = "신고 사유: ${report.detail}"
 
-        // Glide로 프로필 이미지 로딩
-        Glide.with(holder.itemView.context)
-            .load(report.profileImageUri?.let { Uri.parse(it) })
-            .placeholder(R.drawable.ic_user)
-            .error(R.drawable.ic_user)
-            .into(holder.profileImage)
+        // 삭제 버튼 클릭 리스너
+        holder.deleteReportBtn.setOnClickListener {
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val response = RetrofitInstance.restaurantApi.deleteReview(report.reviewId)
 
-        // 삭제 버튼 클릭 이벤트
-        holder.deleteButton.setOnClickListener {
-            removeReport(position, holder.itemView)
+                    if (response.isSuccessful) {
+                        Toast.makeText(
+                            holder.itemView.context,
+                            "리뷰가 삭제되었습니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // 삭제된 항목 제거 및 UI 업데이트
+                        reports.removeAt(position)
+                        notifyItemRemoved(position)
+                    } else {
+                        Toast.makeText(
+                            holder.itemView.context,
+                            "삭제 실패: ${response.code()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        holder.itemView.context,
+                        "오류 발생: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
 
-    override fun getItemCount() = reportList.size
-
-    // 리뷰 삭제 로직
-    private fun removeReport(position: Int, view: View) {
-        val deletedReport = reportList[position]
-        reportList.removeAt(position)
-        notifyItemRemoved(position)
-
-        // 메시지 알림
-        Toast.makeText(
-            view.context,
-            "리뷰 '${deletedReport.title}'가 삭제되었습니다.",
-            Toast.LENGTH_SHORT
-        ).show()
+    // 날짜 포맷팅 함수 추가
+    private fun formatDate(dateTime: List<Int>): String {
+        return if (dateTime.size >= 6) {
+            "%04d-%02d-%02d %02d:%02d".format(
+                dateTime[0], dateTime[1], dateTime[2], dateTime[3], dateTime[4]
+            )
+        } else {
+            "날짜 정보 없음"
+        }
     }
+
+    override fun getItemCount(): Int = reports.size
 }

@@ -50,11 +50,10 @@ class ReviewWriteActivity : AppCompatActivity() {
     private lateinit var reviewEventCheckBox: CheckBox
     private var reviewEventCheck = false
 
-    // 선택된 이미지 URI 관리
+//    선택된 이미지 URI 관리
     private val selectedImageUris: MutableList<Uri> = mutableListOf()
 
-    // 사용자 ID 초기화
-    private var restaurantId: Int = -1
+
 
 
     // 등록 버튼
@@ -63,9 +62,6 @@ class ReviewWriteActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_review_write)
-
-        // 식당 ID 수신
-        restaurantId = intent.getIntExtra("restaurantId", -1)
 
         // TokenManager 초기화
         tokenManager = TokenManager(this)
@@ -177,23 +173,23 @@ class ReviewWriteActivity : AppCompatActivity() {
         }
     }
 
-    //    이미지 파일 변환
-    private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
-        val fileDescriptor = contentResolver.openFileDescriptor(fileUri, "r") ?: return MultipartBody.Part.createFormData(partName, "")
-        val inputStream = contentResolver.openInputStream(fileUri)
-        val file = File(cacheDir, contentResolver.getFileName(fileUri)) // 캐시에 저장
+//    이미지 파일 변환
+private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
+    val fileDescriptor = contentResolver.openFileDescriptor(fileUri, "r") ?: return MultipartBody.Part.createFormData(partName, "")
+    val inputStream = contentResolver.openInputStream(fileUri)
+    val file = File(cacheDir, contentResolver.getFileName(fileUri)) // 캐시에 저장
 
-        file.outputStream().use { output ->
-            inputStream?.copyTo(output)
-        }
-
-        // 로그: 파일 경로 및 크기 확인
-        Log.d("FilePart", "File Path: ${file.absolutePath}, File Size: ${file.length()} bytes")
-
-        val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-        Log.d("RequestFile", "Request File Size: ${requestFile.contentLength()} bytes")
-        return MultipartBody.Part.createFormData(partName, file.name, requestFile)
+    file.outputStream().use { output ->
+        inputStream?.copyTo(output)
     }
+
+    // 로그: 파일 경로 및 크기 확인
+    Log.d("FilePart", "File Path: ${file.absolutePath}, File Size: ${file.length()} bytes")
+
+    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+    Log.d("RequestFile", "Request File Size: ${requestFile.contentLength()} bytes")
+    return MultipartBody.Part.createFormData(partName, file.name, requestFile)
+}
 
     // 파일 이름 가져오기 함수 추가
     private fun ContentResolver.getFileName(uri: Uri): String {
@@ -278,6 +274,7 @@ class ReviewWriteActivity : AppCompatActivity() {
             tag = selectedTag // 선택 사항
         )
 
+        // 로그 메시지 출력 (전송 데이터 확인)
 
         // API 호출
         CoroutineScope(Dispatchers.Main).launch {
