@@ -8,14 +8,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.uosense.databinding.ActivityStartBinding
 import com.example.uosense.models.LoginRequest
-import com.example.uosense.network.CustomRetrofitProvider
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.util.Base64
-import androidx.core.content.ContextCompat.startActivity
 import org.json.JSONObject
 
 class StartActivity : AppCompatActivity() {
