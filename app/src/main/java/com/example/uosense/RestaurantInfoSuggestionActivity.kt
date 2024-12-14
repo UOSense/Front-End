@@ -1,10 +1,15 @@
 package com.example.uosense
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.example.uosense.adapters.InfoSuggestionPagerAdapter
 import com.example.uosense.databinding.ActivityRestaurantInfoSuggestionBinding
+import com.example.uosense.fragments.BasicInfoFragment
+import com.example.uosense.fragments.BusinessHoursFragment
+import com.example.uosense.fragments.ProductMenuFragment
 import com.google.android.material.tabs.TabLayoutMediator
 
 class RestaurantInfoSuggestionActivity : AppCompatActivity() {
@@ -35,7 +40,27 @@ class RestaurantInfoSuggestionActivity : AppCompatActivity() {
 
         // 저장 버튼
         binding.saveBtn.setOnClickListener {
-            Toast.makeText(this, "저장되었습니다!", Toast.LENGTH_SHORT).show()
+            val currentFragment = getCurrentFragment()
+
+            if (currentFragment is ProductMenuFragment) {
+                Log.d("ActiveFragment", "현재 프래그먼트: 상품/메뉴")
+                currentFragment.sendProductMenuToServer()
+            } else if (currentFragment is BusinessHoursFragment) {
+                Log.d("ActiveFragment", "현재 프래그먼트: 영업시간")
+                currentFragment.sendBusinessHoursToServer()
+            } else if (currentFragment is BasicInfoFragment) {
+                Log.d("ActiveFragment", "현재 프래그먼트: 기본정보")
+                currentFragment.sendBasicInfoToServer()
+            } else {
+                Log.e("ActiveFragment", "알 수 없는 프래그먼트")
+                Toast.makeText(this, "알 수 없는 프래그먼트입니다.", Toast.LENGTH_SHORT).show()
+            }
         }
+    }
+
+    // 현재 활성화된 프래그먼트를 가져오는 메서드
+    private fun getCurrentFragment(): Fragment? {
+        val currentPosition = binding.viewPager.currentItem
+        return supportFragmentManager.findFragmentByTag("f$currentPosition")
     }
 }

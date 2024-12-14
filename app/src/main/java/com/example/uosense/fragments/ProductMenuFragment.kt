@@ -41,16 +41,12 @@ class ProductMenuFragment : Fragment() {
         binding.uploadImageBtn.setOnClickListener { pickImageFromGallery() }
         binding.addCircleBtn.setOnClickListener { addPriceRow() }
 
-        // 부모 액티비티에서 저장 버튼 처리
-        activity?.findViewById<Button>(R.id.saveBtn)?.setOnClickListener {
-            sendProductMenuToServer()
-        }
 
         return binding.root
     }
 
     // 서버 전송 메서드
-    private fun sendProductMenuToServer() {
+    public fun sendProductMenuToServer() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val accessToken = tokenManager.getAccessToken().orEmpty()

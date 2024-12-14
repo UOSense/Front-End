@@ -32,11 +32,6 @@ class BasicInfoFragment : Fragment() {
         // 토큰 매니저 초기화
         tokenManager = TokenManager(requireContext())
 
-        // 저장 버튼 리스너 등록
-        activity?.findViewById<Button>(R.id.saveBtn)?.setOnClickListener {
-            sendBasicInfoToServer()
-        }
-
         return binding.root
     }
 
@@ -62,7 +57,7 @@ class BasicInfoFragment : Fragment() {
     }
 
     // 서버로 기본 정보 전송 메서드
-    private fun sendBasicInfoToServer() {
+    public fun sendBasicInfoToServer() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val accessToken = tokenManager.getAccessToken().orEmpty()

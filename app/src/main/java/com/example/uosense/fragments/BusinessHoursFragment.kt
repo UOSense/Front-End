@@ -43,14 +43,12 @@ class BusinessHoursFragment : Fragment() {
         // 브레이크 타임 입력 필드 추가 버튼 리스너
         binding.addInfoBtn.setOnClickListener { addCustomInfoRow() }
 
-        // 저장 버튼 리스너
-        activity?.findViewById<Button>(R.id.saveBtn)?.setOnClickListener { sendBusinessHoursToServer() }
 
         return binding.root
     }
 
     // 서버로 영업 시간 정보 전송 메서드
-    private fun sendBusinessHoursToServer() {
+    public fun sendBusinessHoursToServer() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val accessToken = tokenManager.getAccessToken().orEmpty()
