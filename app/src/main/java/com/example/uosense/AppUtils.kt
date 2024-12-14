@@ -169,5 +169,50 @@ object AppUtils {
             }
         }
     }
+    // doorType을 API에서 사용하는 값으로 매핑하는 함수
+    fun mapDoorTypeForApi(doorType: String): String {
+        return when (doorType) {
+            "정문" -> "FRONT"
+            "남문" -> "SOUTH"
+            "쪽문" -> "SIDE"
+            "후문" -> "BACK"
+            else -> "DEFAULT"  // 기본값 처리
+        }
+    }
+
+    // CategoryType 매핑 함수
+    fun mapCategoryForApi(category: String): String {
+        return when (category.uppercase()) {
+            "한식" -> "KOREAN"
+            "중식" -> "CHINESE"
+            "일식" -> "JAPANESE"
+            "양식" -> "WESTERN"
+            "기타" -> "OTHER"
+            else -> "NULL"
+        }
+    }
+
+    // SubDescriptionType 매핑 함수
+    fun mapSubDescription(subDescription: String): String {
+        return when (subDescription.uppercase()) {
+            "술집" -> "BAR"
+            "카페" -> "CAFE"
+            "식당" -> "RESTAURANT"
+            else -> "NULL"
+        }
+    }
+
+    // FilterType 매핑 함수
+    fun mapFilterType(filter: String): String {
+        return when (filter.uppercase()) {
+            "즐겨찾기 많은 순" -> "BOOKMARK"
+            "거리 가까운 순" -> "DISTANCE"
+            "평점 순" -> "RATING"
+            "리뷰 많은 순" -> "REVIEW"
+            "가격 낮은 순" -> "PRICE"
+            else -> "BOOKMARK"
+        }
+    }
+
 
 }

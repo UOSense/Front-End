@@ -9,8 +9,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -32,25 +32,31 @@ import com.example.uosense.models.BusinessDayList
 import com.example.uosense.models.MenuRequest
 import com.example.uosense.models.MenuResponse
 import com.example.uosense.models.RestaurantInfo
+import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.models.RestaurantRequest
 import com.example.uosense.network.RetrofitInstance
+import com.example.uosense.network.RetrofitInstance.restaurantApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.Address
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.json.JSONObject
 import java.io.File
 
-class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
+class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
     override fun openImagePicker(position: Int) {
         currentMenuPosition = position
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(intent, PICK_IMAGE_REQUEST)
     }
-    private var currentLatitude: Double = 0.0
-    private var currentLongitude: Double = 0.0
+    private var initialLatitude: Double = 0.0
+    private var initialLongitude: Double = 0.0
     // 버튼 및 리사이클러
     private lateinit var recyclerView: RecyclerView
     private lateinit var btnEditImage: Button
@@ -59,7 +65,6 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
     private lateinit var btnSaveRestaurant: Button
     private lateinit var backBtn: Button
     private lateinit var menuRecyclerView: RecyclerView
-
 
     // TokenManager 초기화
     private lateinit var tokenManager: TokenManager
@@ -81,43 +86,8 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_control_restaurant_detail)
-        tokenManager = TokenManager(this)
-        val doorTypeSpinner = findViewById<Spinner>(R.id.editDoorType)
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.restaurant_door_types,
-            R.layout.spinner_item
-        ).also { adapter ->
-            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-            doorTypeSpinner.adapter = adapter
-        }
 
-        val categorySpinner = findViewById<Spinner>(R.id.editRestaurantCategory)
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.restaurant_categories,
-            R.layout.spinner_item
-        ).also { adapter ->
-            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-            categorySpinner.adapter = adapter
-        }
-        val subDescriptionSpinner = findViewById<Spinner>(R.id.editSubDescription)
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.restaurant_sub_descriptions,
-            R.layout.spinner_item
-        ).also { adapter ->
-            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-            subDescriptionSpinner.adapter = adapter
-        }
 
-        // 식당 ID 수신
-        restaurantId = intent.getIntExtra("restaurantId", -1)
-        if (restaurantId == -1) {
-            showToast("식당 정보를 불러올 수 없습니다.")
-            finish()
-            return
-        }
         // UI 초기화
         recyclerView = findViewById(R.id.businessDaysRecyclerView)
         btnEditBusinessDays = findViewById(R.id.btnEditBusinessDays)
@@ -126,6 +96,7 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         backBtn = findViewById(R.id.backBtn)
         photoAttachmentLayout = findViewById(R.id.photoAttachmentLayout)
         menuRecyclerView = findViewById(R.id.menuRecyclerView)
+
 
 
         // 리사이클러 뷰 설정
@@ -200,17 +171,12 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         })
 
 
-
-        // 데이터 로드
-        loadRestaurantData()
-        loadBusinessDays()
-        loadMenuItems()
-        loadRestaurantImages()
     }
 
 
     //수정된 모든 데이터 저장
     private fun saveRestaurantData() {
+        val accessToken = tokenManager.getAccessToken() ?: ""
         val name = findViewById<EditText>(R.id.editRestaurantName).text.toString()
         val description = findViewById<EditText>(R.id.editRestaurantDescription).text.toString()
         val address = findViewById<EditText>(R.id.editRestaurantAddress).text.toString()
@@ -225,47 +191,72 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         val doorTypeIndex = findViewById<Spinner>(R.id.editDoorType).selectedItemPosition
         val doorType = resources.getStringArray(R.array.restaurant_door_types)[doorTypeIndex]
 
-        val accessToken = tokenManager.getAccessToken() ?: ""
-
         if (name.isBlank() || address.isBlank()) {
             showToast("이름과 주소는 필수 항목입니다.")
             return
         }
 
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val restaurantResponse = RetrofitInstance.restaurantApi.editRestaurant(
-                    "Bearer $accessToken",
-                    RestaurantRequest(
-                        id = restaurantId,
-                        name = name,
-                        doorType = doorType,
-                        latitude = currentLatitude,
-                        longitude = currentLongitude,
-                        address = address,
-                        phoneNumber = phoneNumber,
-                        category = category,
-                        subDescription = subDescription,
-                        description = description
+        // 사용자 권한 확인
+        val userRole = tokenManager.getUserRoleFromToken(accessToken)
+        if (userRole != "ADMIN") {
+            showToast("관리자 권한이 필요합니다.")
+            return
+        }
+
+        // 도로명 주소를 통해 위도/경도 가져오기
+        getLatLngFromAddress(address) { latitude, longitude ->
+            if (latitude == null || longitude == null) {
+                showToast("위치 검색 실패: 주소를 확인하세요.")
+                return@getLatLngFromAddress
+            }
+
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val restaurantResponse = RetrofitInstance.restaurantApi.createRestaurant(
+                        "Bearer $accessToken",
+                        RestaurantRequest(
+                            id = -1,
+                            name = name,
+                            doorType = doorType,
+                            latitude = latitude,
+                            longitude = longitude,
+                            address = address,
+                            phoneNumber = phoneNumber,
+                            category = category,
+                            subDescription = subDescription,
+                            description = description
+                        )
                     )
-                )
 
-                val businessDayResponse = updateBusinessDays(recyclerView)
-                val menuResponse = updateMenuItems()
+                    if (restaurantResponse.isSuccessful) {
+                        val createdRestaurantId = restaurantResponse.body()?.id ?: -1
+                        if (createdRestaurantId != -1) {
+                            val businessDayResponse = updateBusinessDays(recyclerView)
+                            val menuResponse = updateMenuItems()
+                            val imageResponse = uploadRestaurantImages(createdRestaurantId)
 
-                if (restaurantResponse.isSuccessful && businessDayResponse && menuResponse) {
-                    uploadRestaurantImages(restaurantId)
-                    showToast("식당 정보가 성공적으로 저장되었습니다!")
-                } else {
-                    showToast("저장 실패. 모든 항목을 확인하세요.")
+                            if (businessDayResponse && menuResponse && imageResponse) {
+                                showToast("식당이 성공적으로 등록되었습니다!")
+                                finish()
+                            } else {
+                                showToast("일부 항목 저장에 실패했습니다.")
+                            }
+                        } else {
+                            showToast("식당 생성 오류가 발생했습니다.")
+                        }
+                    } else {
+                        showToast("등록 실패: ${restaurantResponse.code()}")
+                    }
+                } catch (e: Exception) {
+                    showToast("저장 중 오류 발생: ${e.message}")
                 }
-            } catch (e: Exception) {
-                showToast("저장 중 오류 발생: ${e.message}")
             }
         }
     }
 
-    // 영업일 업데이트
+
+
+    // 영업일
     private suspend fun updateBusinessDays(parentRecyclerView: RecyclerView): Boolean {
         return try {
             val businessDayList = BusinessDayList(
@@ -273,7 +264,7 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
                 businessDayInfoList = businessDayAdapter.getUpdatedBusinessDays(parentRecyclerView)
             )
             val accessToken = tokenManager.getAccessToken() ?: ""
-            val response = RetrofitInstance.restaurantApi.editBusinessDay("Bearer $accessToken",businessDayList)
+            val response = RetrofitInstance.restaurantApi.createBusinessDay("Bearer $accessToken",businessDayList)
             response.isSuccessful
         } catch (e: Exception) {
             false
@@ -290,7 +281,8 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
                 val response = if (menu.menuId == -1) {
                     val imagePart = menu.imageUrl?.let { prepareFilePart("image", Uri.parse(it)) }
                     RetrofitInstance.restaurantApi.uploadMenu(
-                        "Bearer $accessToken",restaurantId, menu.name, menu.price, menu.description ?: "", imagePart
+                        "Bearer $accessToken",
+                        restaurantId, menu.name, menu.price, menu.description ?: "", imagePart
                     )
                 } else {
                     val request = MenuRequest(
@@ -312,109 +304,36 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
     }
 
 
-    // 식당 데이터 로드
-    private fun loadRestaurantData() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantById(restaurantId)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null) {
-                        bindRestaurantData(response.body()!!)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
 
-    // 식당 정보 바인딩
-    private fun bindRestaurantData(restaurant: RestaurantInfo) {
-        findViewById<EditText>(R.id.editRestaurantName).setText(restaurant.name)
-        findViewById<EditText>(R.id.editRestaurantDescription).setText(restaurant.description)
-        findViewById<EditText>(R.id.editRestaurantAddress).setText(restaurant.address)
-        findViewById<EditText>(R.id.editRestaurantPhoneNumber).setText(restaurant.phoneNumber ?: "")
-        findViewById<TextView>(R.id.restaurantRating).text = "평점: ${restaurant.rating ?: "정보 없음"}"
-        findViewById<TextView>(R.id.restaurantReview).text = "리뷰 수: ${restaurant.reviewCount ?: "0"}"
-        findViewById<Spinner>(R.id.editRestaurantCategory).setSelection(getCategoryIndex(restaurant.category))
-        // 위치 값 저장
-        currentLatitude = restaurant.latitude
-        currentLongitude = restaurant.longitude
-    }
-
-    private fun getCategoryIndex(category: String?): Int {
-        val categories = resources.getStringArray(R.array.restaurant_categories)
-        return categories.indexOf(category ?: "기타")
-    }
-
-    // 영업일 데이터 로드
-    private fun loadBusinessDays() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitInstance.restaurantApi.getBusinessDayList(restaurantId)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null) {
-                        businessDayAdapter.submitList(response.body()!!.businessDayInfoList)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    // 메뉴 데이터 로드
-    private fun loadMenuItems() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitInstance.restaurantApi.getMenu(restaurantId)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null) {
-                        menuAdapter.submitList(response.body()!!)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun uploadRestaurantImages(restaurantId: Int) {
-        CoroutineScope(Dispatchers.Main).launch {
+    private suspend fun uploadRestaurantImages(restaurantId: Int): Boolean {
+        return withContext(Dispatchers.IO) {
             try {
                 val imageParts = selectedImageUris.mapIndexed { index, uri ->
                     prepareFilePart("images[$index]", uri)
                 }
                 val accessToken = tokenManager.getAccessToken() ?: ""
-
-                val response = RetrofitInstance.restaurantApi.uploadRestaurantImages("Bearer $accessToken",restaurantId, imageParts)
+                val response = RetrofitInstance.restaurantApi.uploadRestaurantImages(
+                    "Bearer $accessToken", restaurantId, imageParts
+                )
                 if (response.isSuccessful) {
-                    showToast("이미지 업로드 성공!")
+                    withContext(Dispatchers.Main) { showToast("이미지 업로드 성공!") }
+                    true
                 } else {
-                    showToast("이미지 업로드 실패: ${response.code()}")
+                    withContext(Dispatchers.Main) {
+                        showToast("이미지 업로드 실패: ${response.code()}")
+                    }
+                    false
                 }
             } catch (e: Exception) {
-                showToast("이미지 업로드 중 오류 발생: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    showToast("이미지 업로드 중 오류 발생: ${e.message}")
+                }
+                false
             }
         }
     }
 
-    // 식당 이미지 로드
-    private fun loadRestaurantImages() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitInstance.restaurantApi.getRestaurantImages(restaurantId)
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && response.body() != null) {
-                        val images = response.body()!!.imageList.map { it.imageUrl }
-                        // 이미지 리사이클러뷰에 추가
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+
 
     // 사진 선택기 열기
     private fun openImagePicker() {
@@ -481,6 +400,51 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
     private fun showToast(message: String) {
         runOnUiThread {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
+
+
+    // 도로명 주소 -> 위도, 경도 변환
+    private fun getLatLngFromAddress(address: String, callback: (Double?, Double?) -> Unit) {
+        val client = OkHttpClient()
+        val url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${address}"
+
+        // ID, KEY 절대 수정 X , SECRET 사용 가능
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("X-NCP-APIGW-API-KEY-ID", "s78aa7asq0")
+            .addHeader("X-NCP-APIGW-API-KEY", "WGmu5zQXqTGWOy7Bj9PWwrD8HeQezlBvZ675Q24K")
+            .build()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string()
+                val json = JSONObject(responseBody ?: "")
+                val addresses = json.getJSONArray("addresses")
+
+                if (addresses.length() > 0) {
+                    val location = addresses.getJSONObject(0)
+                    val latitude = location.getDouble("y")
+                    val longitude = location.getDouble("x")
+
+                    withContext(Dispatchers.Main) {
+                        callback(latitude, longitude)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        callback(null, null)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    callback(null, null)
+                }
+            }
         }
     }
 }

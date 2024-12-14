@@ -33,7 +33,6 @@ import kotlinx.coroutines.withContext
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONObject
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -52,14 +51,16 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import java.net.URLDecoder
 import kotlin.math.log
-
+import android.util.Base64
+import com.example.uosense.databinding.ActivityControlMainBinding
+import org.json.JSONObject
 
 class ControlMainActivity : AppCompatActivity() {
     //위치 관련 변수
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     //지도 관련 변수
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityControlMainBinding
     private lateinit var naverMap: NaverMap
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
     private var userMarker: Marker? = null
@@ -114,7 +115,7 @@ class ControlMainActivity : AppCompatActivity() {
         tokenManager = TokenManager(this)
 
         // 뷰 바인딩 초기화
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityControlMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         // 네이버 지도 초기화
@@ -213,6 +214,12 @@ class ControlMainActivity : AppCompatActivity() {
             isLocationFixed = false
         }
 
+        // 식당 추가 버튼 클릭 리스너 설정
+        binding.btnNewRestaurant.setOnClickListener {
+            val intent = Intent(this, ControlCreateActivity::class.java)
+            startActivity(intent)
+        }
+
         setupSearch()
 
         setupFilterButtons()
@@ -270,6 +277,18 @@ class ControlMainActivity : AppCompatActivity() {
     }
 
 
+    // JWT 토큰에서 사용자 역할 추출 메서드 추가
+    private fun getUserRoleFromToken(token: String): String? {
+        return try {
+            val payloadBase64 = token.split(".")[1]
+            val payload = String(Base64.decode(payloadBase64, Base64.URL_SAFE))
+            val jsonObject = JSONObject(payload)
+            jsonObject.getString("role") // "ADMIN" 또는 "USER"
+        } catch (e: Exception) {
+            Log.e("TokenManager", "토큰 파싱 오류: ${e.message}")
+            null
+        }
+    }
 
 
     // 전체 식당 로딩 함수
@@ -691,29 +710,6 @@ class ControlMainActivity : AppCompatActivity() {
      * distanceBetween
      */
 
-    // getLan 통해서 위도 경도 획득 -> 업데이트 시 필요 함수
-    private fun updateRestaurantCoordinates(restaurantId: Int, updatedRequest: RestaurantRequest) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // updatedRequest를 전달하도록 수정
-                val response = restaurantApi.editRestaurant(updatedRequest)
-
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        Toast.makeText(this@ControlMainActivity, "좌표가 업데이트되었습니다.", Toast.LENGTH_SHORT)
-                            .show()
-                    } else {
-                        Log.e("API_ERROR", "업데이트 실패: ${response.errorBody()?.string()}")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ControlMainActivity, "업데이트 중 오류 발생", Toast.LENGTH_SHORT).show()
-                }
-                e.printStackTrace()
-            }
-        }
-    }
 
     // 모든 마커에 맞춰서 카메라 이동
     private fun moveCameraToFitAllMarkers() {

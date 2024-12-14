@@ -3,6 +3,7 @@ package com.example.uosense.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -12,7 +13,8 @@ import com.example.uosense.models.RestaurantListResponse
 
 class RestaurantListAdapter(
     private var restaurantList: MutableList<RestaurantListResponse>,
-    private val onItemClick: (RestaurantListResponse) -> Unit
+    private val onItemClick: (RestaurantListResponse) -> Unit,
+    private val onDeleteClick: (RestaurantListResponse) -> Unit
 ) : RecyclerView.Adapter<RestaurantListAdapter.ViewHolder>() {
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -21,6 +23,7 @@ class RestaurantListAdapter(
         private val restaurantAddress: TextView = itemView.findViewById(R.id.restaurantAddress)
         private val restaurantRating: TextView = itemView.findViewById(R.id.restaurantRating)
         private val restaurantImage: ImageView = itemView.findViewById(R.id.restaurantImage)
+        private val btnDelete: ImageButton = itemView.findViewById(R.id.btnDelete)
 
         fun bind(restaurant: RestaurantListResponse) {
             restaurantName.text = restaurant.name
@@ -37,6 +40,11 @@ class RestaurantListAdapter(
             // 클릭 리스너 설정
             itemView.setOnClickListener {
                 onItemClick(restaurant)
+            }
+
+            // 삭제 버튼 클릭 리스너
+            btnDelete.setOnClickListener {
+                onDeleteClick(restaurant)
             }
         }
     }

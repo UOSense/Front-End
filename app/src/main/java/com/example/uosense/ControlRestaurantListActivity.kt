@@ -1,14 +1,17 @@
 package com.example.uosense
 
+import TokenManager
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.AppUtils.showToast
 import com.example.uosense.adapters.RestaurantListAdapter
+import com.example.uosense.databinding.ActivityControlRestaurantListBinding
 import com.example.uosense.databinding.ActivityRestaurantListBinding
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.network.RetrofitInstance
@@ -23,16 +26,18 @@ class ControlRestaurantListActivity : AppCompatActivity() {
     private lateinit var originalRestaurantList: MutableList<RestaurantListResponse>
     private lateinit var restaurantList: MutableList<RestaurantListResponse>
     private lateinit var adapter: RestaurantListAdapter
-    private lateinit var binding: ActivityRestaurantListBinding
+    private lateinit var binding: ActivityControlRestaurantListBinding
     private var selectedFilter = "DEFAULT"
     //검색을 위해서 새로운 변수
     private var selectedDoorType: String? = null
+
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // 바인딩 초기화
-        binding = ActivityRestaurantListBinding.inflate(layoutInflater)
+        binding = ActivityControlRestaurantListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         originalRestaurantList = intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
@@ -60,9 +65,48 @@ class ControlRestaurantListActivity : AppCompatActivity() {
     // RecyclerView 설정 함수
     private fun setupRecyclerView() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = RestaurantListAdapter(restaurantList) { navigateToDetailActivity(it) }
+        adapter = RestaurantListAdapter(
+            restaurantList,
+            onItemClick = { navigateToDetailActivity(it) },
+            onDeleteClick = { restaurant -> confirmDeleteRestaurant(restaurant) }
+        )
         binding.recyclerView.adapter = adapter
     }
+
+
+    // 삭제 확인 다이얼로그 생성
+    private fun confirmDeleteRestaurant(restaurant: RestaurantListResponse) {
+        AlertDialog.Builder(this)
+            .setTitle("삭제 확인")
+            .setMessage("정말로 ${restaurant.name} 식당을 정말로 식당 삭제? (주의)")
+            .setPositiveButton("삭제") { _, _ -> deleteRestaurant(restaurant.id) }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    // 식당 삭제 API 호출
+    private fun deleteRestaurant(restaurantId: Int) {
+        val accessToken = tokenManager.getAccessToken() ?: ""
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = restaurantApi.deleteRestaurant("Bearer $accessToken", restaurantId)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        restaurantList.removeAll { it.id == restaurantId }
+                        adapter.updateList(restaurantList)
+                        showToast(this@ControlRestaurantListActivity, "삭제되었습니다.")
+                    } else {
+                        showToast(this@ControlRestaurantListActivity, "삭제 실패.")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showToast(this@ControlRestaurantListActivity, "삭제 중 오류 발생.")
+                }
+            }
+        }
+    }
+
     // 리스트가 비어있는지 체크하고, 빈 경우에는 "결과 없음" 텍스트를 보여줌
     private fun checkIfListIsEmpty() {
         if (restaurantList.isEmpty()) {
@@ -169,21 +213,39 @@ class ControlRestaurantListActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
     }
-
+    // doorType을 API에서 사용하는 값으로 매핑하는 함수
+    private fun mapDoorTypeForApi(doorType: String): String {
+        return when (doorType) {
+            "정문" -> "FRONT"
+            "남문" -> "SOUTH"
+            "쪽문" -> "SIDE"
+            "후문" -> "BACK"
+            else -> "NULL"  // 기본값 처리
+        }
+    }
     // 검색 메서드 수정
     // 검색 API 호출
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val apiDoorType = if (!selectedDoorType.isNullOrEmpty()) {
+                    mapDoorTypeForApi(selectedDoorType!!)
+                }else {
+                    null
+                }
                 val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
-                    doorType = selectedDoorType
+                    doorType = apiDoorType
                 )
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
-                        navigateToRestaurantList(response.body()!!)
+                        if (selectedDoorType != null) {
+                            navigateToSelectedDoorList(response.body()!!, mapDoorTypeForApi(selectedDoorType!!))
+                        } else {
+                            navigateToRestaurantList(response.body()!!)
+                        }
                     } else {
-
+                        showToast(this@ControlRestaurantListActivity, "검색 결과가 없습니다.")
                     }
                 }
             } catch (e: Exception) {
@@ -193,6 +255,17 @@ class ControlRestaurantListActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+    // 특정 DoorType 필터 식당 목록으로 이동하는 함수
+    private fun navigateToSelectedDoorList(
+        restaurantList: List<RestaurantListResponse>,
+        doorType: String
+    ) {
+        val intent = Intent(this, SelectedDoorActivity::class.java).apply {
+            putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            putExtra("doorType", doorType)
+        }
+        startActivity(intent)
     }
     // 전체 목록 보기로 이동 (정문 기본 선택)
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {

@@ -1,4 +1,5 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,6 +7,7 @@
     android:background="@android:color/white"
     android:elevation="4dp"
     >
+
     <!-- 식당 이미지 -->
     <ImageView
         android:id="@+id/restaurantImage"
@@ -17,19 +19,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:src="@drawable/ic_uos" />
+    <!-- 삭제 버튼 -->
     <ImageButton
         android:id="@+id/btnDelete"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
         android:layout_marginEnd="8dp"
         android:background="@android:color/transparent"
+        android:contentDescription="삭제"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
         android:src="@drawable/ic_delete"
-        android:contentDescription="삭제 버튼"
-        android:visibility="gone"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent" />
-
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
     <!-- 식당 이름 -->
     <TextView
         android:id="@+id/restaurantName"
@@ -41,7 +44,7 @@
         android:textColor="@android:color/black"
         app:layout_constraintStart_toEndOf="@id/restaurantImage"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toStartOf="@+id/btnDelete" />
 
     <!-- 식당 카테고리 -->
     <TextView
@@ -53,7 +56,8 @@
         android:textColor="@android:color/darker_gray"
         app:layout_constraintStart_toEndOf="@id/restaurantImage"
         app:layout_constraintTop_toBottomOf="@id/restaurantName"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnDelete"/>
 
     <!-- 식당 주소 -->
     <TextView
@@ -65,7 +69,8 @@
         android:textColor="@android:color/darker_gray"
         app:layout_constraintStart_toEndOf="@id/restaurantImage"
         app:layout_constraintTop_toBottomOf="@id/restaurantCategory"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnDelete"/>
 
     <!-- 식당 평점 -->
 
@@ -87,5 +92,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/restaurantRating"/>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

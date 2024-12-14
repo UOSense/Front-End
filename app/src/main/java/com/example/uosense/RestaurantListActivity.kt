@@ -60,7 +60,14 @@ class RestaurantListActivity : AppCompatActivity() {
     // RecyclerView 설정 함수
     private fun setupRecyclerView() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = RestaurantListAdapter(restaurantList) { navigateToDetailActivity(it) }
+
+        // 어댑터 초기화 시 삭제 버튼 콜백 추가
+        adapter = RestaurantListAdapter(
+            restaurantList,
+            onItemClick = { navigateToDetailActivity(it) },
+            onDeleteClick = { /* 삭제 버튼은 RestaurantListActivity에서는 사용하지 않음 */ }
+        )
+
         binding.recyclerView.adapter = adapter
     }
     // 리스트가 비어있는지 체크하고, 빈 경우에는 "결과 없음" 텍스트를 보여줌

@@ -42,66 +42,78 @@ interface RestaurantApi {
         @Body authCodeRequest: AuthCodeRequest
     ): Response<Boolean>
 
-    // 식당 관리
+    // 식당 생성
     @POST("/api/v1/restaurant/create")
     suspend fun createRestaurant(
+        @Header("Authorization") token: String,
         @Body restaurantRequest: RestaurantRequest
-    ): Response<Unit>
-
+    ): Response<RestaurantInfo>
+    //이미지 생성
     @Multipart
     @POST("/api/v1/restaurant/create/images")
     suspend fun uploadRestaurantImages(
+        @Header("Authorization") token: String,
         @Query("restaurantId") restaurantId: Int,
         @Part images: List<MultipartBody.Part>
     ): Response<RestaurantImagesResponse>
 
+    //영업일 생성
     @POST("/api/v1/restaurant/create/businessday")
     suspend fun createBusinessDay(
+        @Header("Authorization") token: String,
         @Body businessDayList: BusinessDayList
     ): Response<Unit>
-
+    //메뉴 생성
     @Multipart
     @POST("/api/v1/restaurant/create/menu")
     suspend fun uploadMenu(
+        @Header("Authorization") token: String,
         @Query("restaurantId") restaurantId: Int,
         @Query("name") name: String,
         @Query("price") price: Int,
         @Query("description") description: String,
         @Part image: MultipartBody.Part?
     ): Response<Unit>
-
+    // 식당 수정
     @PUT("/api/v1/restaurant/update")
     suspend fun editRestaurant(
+        @Header("Authorization") token: String,
         @Body updatedRequest: RestaurantRequest
     ): Response<Unit>
-
+    // 메뉴 수정
     @PUT("/api/v1/restaurant/update/menu")
     suspend fun updateMenu(
+        @Header("Authorization") token: String,
         @Body menuRequest: MenuRequest
     ): Response<Unit>
-
+    // 위치 수정
     @PUT("/api/v1/restaurant/update")
     suspend fun updateRestaurantLocation(
+        @Header("Authorization") token: String,
         @Body updatedRequest: RestaurantRequest
     ): Response<Unit>
-
+    // 영업일 수정
     @PUT("/api/v1/restaurant/update/businessday")
     suspend fun editBusinessDay(
+        @Header("Authorization") token: String,
         @Body businessDayList: BusinessDayList
     ): Response<Unit>
 
     @DELETE("/api/v1/restaurant/delete")
     suspend fun deleteRestaurant(
+        @Header("Authorization") token: String,
         @Query("restaurantId") restaurantId: Int
     ): Response<Unit>
 
     @DELETE("/api/v1/restaurant/delete/menu")
     suspend fun deleteMenu(
+        @Header("Authorization") token: String,
         @Query("menuId") menuId: Int
     ): Response<Unit>
 
     @DELETE("/api/v1/restaurant/delete/businessday")
     suspend fun deleteBusinessDay(
+        @Header("Authorization") token: String,
         @Query("businessDayId") businessDayId: Int
     ): Response<Unit>
 

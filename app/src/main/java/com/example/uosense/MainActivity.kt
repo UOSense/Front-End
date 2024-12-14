@@ -417,64 +417,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.d("USER_MARKER", "사용자 마커 업데이트됨: ($latitude, $longitude)")
         moveCameraToLocation(latitude, longitude)
     }
-
-
-    private fun updateRestaurantCoordinatesToServer(
-        restaurantId: Int, latitude: Double, longitude: Double
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // 기존 레스토랑 정보 가져오기
-                val existingResponse = restaurantApi.getRestaurantById(restaurantId)
-
-                if (!existingResponse.isSuccessful || existingResponse.body() == null) {
-                    Log.e("SERVER_FETCH_ERROR", "기존 정보 가져오기 실패: ${existingResponse.errorBody()?.string()}")
-                    return@launch
-                }
-
-                val existingRestaurant = existingResponse.body()!!
-
-                // 위치 업데이트 요청 생성 (기존 데이터 유지)
-                val updateRequest = RestaurantRequest(
-                    id = restaurantId,
-                    name = existingRestaurant.name.ifBlank { "Unknown" },
-                    doorType = mapDoorTypeForApi(existingRestaurant.doorType ?: "NULL"),
-                    latitude = latitude,
-                    longitude = longitude,
-                    address = existingRestaurant.address ?: "",
-                    phoneNumber = existingRestaurant.phoneNumber ?: "",
-                    category = mapCategoryForApi(existingRestaurant.category ?:"음식점") ,
-                    subDescription = mapSubDescription(existingRestaurant.subDescription ?:"기타") ,
-                    description = existingRestaurant.description ?: ""
-                )
-
-                // 위치 업데이트 요청 전송
-                val updateResponse = restaurantApi.updateRestaurantLocation(updateRequest)
-
-                withContext(Dispatchers.Main) {
-                    if (updateResponse.isSuccessful) {
-                        Log.d("SERVER_UPDATE", "레스토랑 위치 업데이트 성공: ($latitude, $longitude)")
-                        showToast(this@MainActivity, "위치 업데이트 성공!")
-                    } else {
-                        val errorMessage = updateResponse.errorBody()?.string()
-                        Log.e("SERVER_UPDATE_ERROR", "업데이트 실패: $errorMessage")
-                        showToast(this@MainActivity, "업데이트 실패: $errorMessage")
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showToast(this@MainActivity, "위치 업데이트 중 오류 발생: ${e.message}")
-                }
-                Log.e("SERVER_ERROR", "위치 업데이트 중 예외 발생", e)
-            }
-        }
-    }
-
-
-
-
-
-
+    
     // 도로명 주소 -> 위도, 경도 변환
     private fun getLatLngFromAddress(restaurant: RestaurantListResponse, callback: (Double?, Double?) -> Unit) {
         val client = OkHttpClient()
@@ -499,8 +442,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     val latitude = location.getDouble("y")
                     val longitude = location.getDouble("x")
 
-                    // 서버 업데이트 호출
-                    updateRestaurantCoordinatesToServer(restaurant.id, latitude, longitude)
+
 
 
                     withContext(Dispatchers.Main) {

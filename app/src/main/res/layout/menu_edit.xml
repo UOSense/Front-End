@@ -15,7 +15,8 @@
         android:id="@+id/btnEditMenuImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="이미지 추가" />
+        android:text="이미지 추가"
+        android:textColor="@color/black"/>
 
     <!-- 메뉴 이름 수정 -->
     <EditText
@@ -24,7 +25,9 @@
         android:layout_height="wrap_content"
         android:hint="메뉴 이름"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:textColorHint="@color/black"/>
 
     <!-- 메뉴 가격 수정 -->
     <EditText
@@ -32,7 +35,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="₩ 가격"
-        android:inputType="numberDecimal" />
+        android:inputType="numberDecimal"
+        android:textColor="@color/black"
+        android:textColorHint="@color/black"/>
 
     <!-- 메뉴 설명 수정 -->
     <EditText
@@ -41,5 +46,7 @@
         android:layout_height="wrap_content"
         android:hint="메뉴 설명"
         android:inputType="textMultiLine"
+        android:textColorHint="@color/black"
+        android:textColor="@color/black"
         android:lines="3" />
 </LinearLayout>

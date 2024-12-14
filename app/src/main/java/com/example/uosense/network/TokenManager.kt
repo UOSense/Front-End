@@ -3,6 +3,9 @@ import android.util.Log
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.util.Base64
+
+import org.json.JSONObject
 
 class TokenManager(private val context: Context) {
 
@@ -58,6 +61,18 @@ class TokenManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e("TokenManager", "Error refreshing token: ${e.message}")
             false
+        }
+    }
+
+    fun getUserRoleFromToken(token: String): String? {
+        return try {
+            val payloadBase64 = token.split(".")[1]
+            val payload = String(Base64.decode(payloadBase64, Base64.URL_SAFE))
+            val jsonObject = JSONObject(payload)
+            jsonObject.getString("role")  // "ADMIN" 또는 "USER"
+        } catch (e: Exception) {
+            Log.e("TokenManager", "토큰 파싱 오류: ${e.message}")
+            null
         }
     }
 }
