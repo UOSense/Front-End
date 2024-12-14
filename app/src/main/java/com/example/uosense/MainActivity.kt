@@ -58,33 +58,40 @@ import java.net.URLDecoder
 import java.sql.Types.NULL
 import kotlin.math.log
 
-
+/**
+ * 메인 액티비티 - 네이버 지도를 사용해 식당 정보를 관리하는 메인 화면
+ * 지도 초기화, 사용자 위치 추적, 식당 목록 표시 등의 기능을 수행합니다.
+ */
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
-    //위치 관련 변수
+    /**
+     * 위치 관련 변수 초기화
+     */
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
-    //지도 관련 변수
+    /**
+     * 지도 관련 변수 초기화
+     */
     private lateinit var binding: ActivityMainBinding
     private lateinit var naverMap: NaverMap
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
     private var userMarker: Marker? = null
     private val restaurantMarkers = mutableListOf<Marker>()
     private lateinit var locationSource: FusedLocationSource
-    // 위치 추적 모드 관리 변수
+    /**
+     * 사용자 위치 고정 여부
+     */
     private var isLocationFixed = false
 
     private lateinit var tokenManager: TokenManager
 
+    /**
+     * 식당 목록 데이터
+     */
     private lateinit var restaurantList: MutableList<RestaurantListResponse>
 
-    private var currentPage = 1
-    private val pageSize = 10
-
-
-
-
-
-    //검색을 위해서 새로운 변수
+    /**
+     * 검색을 위해서 새로운 변수
+     */
     private var selectedDoorType: String? = null
     private var isNearbySearchEnabled = false
 
@@ -95,7 +102,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     /**
-     * 다시 돌아왔을 때 마커 재생성 -> 곧 위도 경도 저장해서 로딩 시간 줄일 것
+     * 앱이 다시 활성화되었을 때 호출되는 메서드
+     * 모든 마커를 초기화하고 식당 목록을 새로 로드합니다.
      */
     override fun onResume() {
         super.onResume()
@@ -104,11 +112,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             loadRestaurants()  // 식당 목록 다시 로딩
         }
     }
-
-    /**
-     * onResume()을 위한 함수, 로그 확인 완료
-     */
-    private fun clearMarkers() {
+    fun clearMarkers() {
         restaurantMarkers.forEach { it.map = null }
         restaurantMarkers.clear()
         Log.d("MARKERS_RESET", "모든 마커 초기화")
@@ -135,7 +139,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Log.d("NAVER_MAP_INIT", "초기 카메라 위치 설정 완료: $defaultPosition")
     }
 
-
+    /**
+     * 초기화 시 호출되는 메서드
+     * 지도 설정, 위치 권한 요청 및 사용자 위치 추적 등을 초기화합니다.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -263,7 +270,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
-    // doorType을 API에서 사용하는 값으로 매핑하는 함수
+    /**
+     * DoorType을 API에서 사용하는 값으로 변환합니다.
+     * @param doorType 사용자 인터페이스에서 선택한 문 유형
+     * @return API와 호환되는 DoorType 문자열
+     */
     private fun mapDoorTypeForApi(doorType: String): String {
         return when (doorType) {
             "정문" -> "FRONT"
@@ -273,30 +284,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             else -> "NULL"  // 기본값 처리
         }
     }
-    // CategoryType 매핑 함수
-    private fun mapCategoryForApi(category: String): String {
-        return when (category.uppercase()) {
-            "한식" -> "KOREAN"
-            "중식" -> "CHINESE"
-            "일식" -> "JAPANESE"
-            "양식" -> "WESTERN"
-            "기타" -> "OTHER"
-            else -> "NULL"
-        }
-    }
-
-    // SubDescriptionType 매핑 함수
-    private fun mapSubDescription(subDescription: String): String {
-        return when (subDescription.uppercase()) {
-            "술집" -> "BAR"
-            "카페" -> "CAFE"
-            "식당" -> "RESTAURANT"
-            else -> "NULL"
-        }
-    }
 
 
-    // 위치 권한 요청 초기화
+
+
+    /**
+     * 위치 권한 요청 초기화 및 권한 확인 후 지도 초기화 또는 사용자 위치 활성화
+     */
     private fun setupLocationPermissionLauncher() {
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -314,7 +308,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
 
-    // 전체 식당 로딩 함수
+    /**
+     * 전체 식당 목록을 로딩합니다.
+     * API를 호출해 결과가 있으면 목록 화면으로 이동합니다.
+     */
     private fun loadAllRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -339,7 +336,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // 필터 누름에 따라 식당 리스트 반환 1. 검색 2. 목록 보기
+    /**
+     * 특정 문 유형(DoorType)에 따라 식당 목록을 불러옵니다.
+     * API를 호출해 식당 목록을 필터링한 후 결과를 표시합니다.
+     * @param doorType 필터링할 문 유형
+     */
     private fun loadRestaurantsByFilter(doorType: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -376,7 +377,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    // 위치 권한 접근 요청
+    /**
+     * 사용자의 위치 권한을 요청합니다.
+     * 권한이 부여되지 않으면 기본 위치로 초기화합니다.
+     */
     private fun requestLocationPermission() {
         locationPermissionLauncher.launch(
             arrayOf(
@@ -385,7 +389,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             )
         )
     }
-    // 현재 위치 추적 활성화 -> 연결해서 확인해보기
+    /**
+     * 사용자의 현재 위치 추적을 활성화합니다.
+     * 위치 권한이 부여된 경우 현재 위치로 카메라를 이동합니다.
+     */
     private fun enableUserLocation() {
         if (::naverMap.isInitialized && !isLocationFixed) {
             naverMap.locationTrackingMode = LocationTrackingMode.Follow
@@ -402,7 +409,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
 
-    //위치 권한 없을 때 초기 위치 설정
+    /**
+     * 위치 권한이 없는 경우 기본 위치로 지도를 초기화합니다.
+     * 기본 위치는 서울시립대 정문으로 설정됩니다.
+     */
     private fun initializeMapWithoutPermission() {
         val defaultPosition = LatLng(37.5834643, 127.0536246) // 서울시립대 정문
         val cameraPosition = CameraPosition(defaultPosition, 16.0)
@@ -411,14 +421,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         loadRestaurants()
     }
 
-    // 사용자 위치 마커 업데이트
+    /**
+     * 현재 사용자 위치에 마커를 표시하고 카메라를 해당 위치로 이동합니다.
+     * @param latitude 사용자 위치 위도
+     * @param longitude 사용자 위치 경도
+     */
     private fun updateUserLocationMarker(latitude: Double, longitude: Double) {
         userMarker?.position = LatLng(latitude, longitude)
         Log.d("USER_MARKER", "사용자 마커 업데이트됨: ($latitude, $longitude)")
         moveCameraToLocation(latitude, longitude)
     }
-    
-    // 도로명 주소 -> 위도, 경도 변환
+
+    /**
+     * 도로명 주소를 위도와 경도로 변환합니다.
+     * @param restaurant 변환할 식당 정보 객체
+     * @param callback 변환된 위도 및 경도를 반환하는 콜백 함수
+     */
     private fun getLatLngFromAddress(restaurant: RestaurantListResponse, callback: (Double?, Double?) -> Unit) {
         val client = OkHttpClient()
         val url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${restaurant.address}"
@@ -463,7 +481,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    // DoorType 버튼 클릭 설정
+    /**
+     * 정문, 후문, 쪽문, 남문 (doortype) 필터 버튼 기준으로 doortype 저장
+     */
     private fun setupFilterButtons() {
         binding.doorTypeButton1.setOnClickListener {
             filterMarkersByDoorType("정문", 37.5834643, 127.0536246, binding.doorTypeButton1)
@@ -482,7 +502,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // DoorType에 해당하는 마커 필터링 및 카메라 이동
+    /**
+     * 사용자가 선택한 필터 버튼을 기준으로 마커를 필터링하고 카메라를 이동합니다.
+     * @param doorType 사용자가 선택한 문 종류
+     * @param lat 이동할 위도
+     * @param lon 이동할 경도
+     * @param button 사용자가 클릭한 버튼 뷰
+     */
     private fun filterMarkersByDoorType(doorType: String, lat: Double, lon: Double, button: View) {
         // 선택된 버튼이 이미 눌렸을 경우 전체 마커를 보여주는 로직
         if (selectedButton == button) {
@@ -510,7 +536,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // 모든 마커 다시 표시
+    /**
+     * 모든 마커 다시 표시
+     */
     private fun showAllMarkers() {
         restaurantMarkers.forEach { marker ->
             marker.isVisible = true  // 모든 마커를 지도에 다시 표시
@@ -518,7 +546,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    // 위치 추적 중지
+    /**
+     * 위치 추적을 중지하고 카메라 이동을 수동으로 전환합니다.
+     */
     private fun stopLocationTracking() {
         if (::naverMap.isInitialized) {
             naverMap.locationTrackingMode = LocationTrackingMode.NoFollow
@@ -526,7 +556,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             Log.d("LOCATION_TRACKING", "위치 추적 중지됨")
         }
     }
-
+    /**
+     * 식당 목록을 API에서 불러옵니다.
+     * 성공 시 지도에 마커를 추가하고, 실패 시 오류 메시지를 표시합니다.
+     */
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -570,7 +603,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
 
-    // 마커 추가(MAP)
+    /**
+     * 식당 목록을 기반으로 지도에 마커를 추가합니다.
+     * @param restaurantList 식당 정보 목록
+     */
     private fun addMarkersToMap(restaurantList: List<RestaurantListResponse>) {
         restaurantMarkers.clear()
         restaurantList.forEach { restaurant ->
@@ -613,7 +649,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         moveCameraToFitAllMarkers()
     }
 
-    // 마커 클릭 -> fetchRestaurantDetails -> 특정 식당 정보 조회
+    /**
+     * 특정 식당 ID를 사용해 API 호출을 통해 식당 세부 정보를 가져옵니다.
+     * @param restaurantId 조회할 식당의 고유 ID
+     */
     private fun fetchRestaurantDetails(restaurantId: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -630,14 +669,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    // 식당 상세 화면으로 이동
+    /**
+     * 특정 식당 정보를 기반으로 세부 정보 화면으로 이동합니다.
+     * @param restaurantInfo 식당의 세부 정보 객체
+     */
     private fun navigateToRestaurantDetail(restaurantInfo: RestaurantInfo) {
         val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
             putExtra("restaurantId", restaurantInfo.id)
         }
         startActivity(intent)
     }
-    // 검색 설정 (로직 X)
+    /**
+     * 검색 입력란에 사용자 입력을 감지하고 검색어가 제출되었을 때 API 호출을 수행합니다.
+     */
     private fun setupSearch() {
         binding.svSearch.setOnQueryTextListener(object :
             androidx.appcompat.widget.SearchView.OnQueryTextListener {
@@ -655,7 +699,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         })
 
     }
-    // 사용자의 위치 가져오기 & 가장 가까운 문 계산
+    /**
+     * 사용자의 현재 위치와 가장 가까운 문을 계산하여 식당을 검색합니다.
+     * 위치 권한이 부여되지 않았을 경우 권한을 요청합니다.
+     */
     private fun getUserLocationAndSearchRestaurants() {
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -679,14 +726,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    // 카메라 위치에 맞게 조정
+    /**
+     * 카메라를 지정된 위도와 경도로 이동합니다.
+     * @param latitude 이동할 위치의 위도
+     * @param longitude 이동할 위치의 경도
+     */
     private fun moveCameraToLocation(latitude: Double, longitude: Double) {
         val cameraUpdate = CameraUpdate.scrollTo(LatLng(latitude, longitude))
         naverMap.moveCamera(cameraUpdate)
         Log.d("CAMERA_MOVE", "카메라 이동됨: ($latitude, $longitude)")
     }
 
-    // 검색 API 호출 
+    /**
+     * 사용자의 검색어를 기준으로 식당을 검색하고 결과를 표시합니다.
+     * @param keyword 사용자가 입력한 검색어
+     */
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -731,21 +785,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
      * distanceBetween
      */
 
-    // getLan 통해서 위도 경도 획득 -> 업데이트 시 필요 함수
-    private fun updateRestaurantCoordinates() {
-        restaurantList.forEach { restaurant ->
-            if (restaurant.longitude == 0.0 && restaurant.latitude == 0.0) {
-                AppUtils.getLatLngFromAddress(restaurant.address) { lat, lng ->
-                    if (lat != null && lng != null) {
-                        restaurant.latitude = lat
-                        restaurant.longitude = lng
-                    }
-                }
-            }
-        }
-    }
 
-    // 모든 마커에 맞춰서 카메라 이동
+    /**
+     * 모든 마커의 위치를 기준으로 카메라를 이동시킵니다.
+     * 마커가 하나라도 있는 경우 카메라 범위를 마커의 경계로 조정합니다.
+     */
     private fun moveCameraToFitAllMarkers() {
         if (restaurantMarkers.isNotEmpty()) {
             val bounds = LatLngBounds.Builder().apply {
@@ -759,7 +803,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-// 위치 권한 확인 및 카메라 이동
+    /**
+     * 위치 권한을 확인하고, 권한이 있으면 카메라를 현재 위치로 이동합니다.
+     * 권한이 없으면 권한 요청을 수행합니다.
+     */
     private fun checkLocationPermissionAndMoveCamera() {
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -784,9 +831,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     companion object {
+        /**
+         * 위치 권한 요청 코드 상수
+         */
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
     }
-    // 초기 맵 위치 설정
+
+    /**
+     * 초기 상태로 지도 및 위치 설정을 리셋합니다.
+     * 선택된 버튼 및 필터를 초기화하고, 권한이 있으면 현재 위치로 이동합니다.
+     */
     private fun resetToInitialState() {
         selectedButton?.isSelected = false
         selectedButton = null
@@ -833,7 +887,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     /**
-     * (iv_search) 검색 버튼 눌러질 떄 이벤트 처리
+     * 검색창 입력값을 기준으로 검색 버튼 클릭 시 이벤트를 처리합니다.
      */
     private fun setupClickListeners() {
         binding.ivSearch.setOnClickListener {
@@ -847,7 +901,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    // 특정 DoorType 필터 식당 목록으로 이동하는 함수
+    /**
+     * 특정 DoorType을 기준으로 필터링된 식당 목록 화면으로 이동합니다.
+     * @param restaurantList 식당 목록
+     * @param doorType 선택된 문 종류
+     */
     private fun navigateToSelectedDoorList(
         restaurantList: List<RestaurantListResponse>,
         doorType: String
@@ -860,7 +918,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
 
-    // 전체 목록 보기로 이동 (정문 기본 선택)
+    /**
+     * 전체 식당 목록 화면으로 이동합니다. 정문이 기본 선택으로 설정됩니다.
+     * @param restaurantList 식당 목록
+     */
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
         val intent = Intent(this, RestaurantListActivity::class.java).apply {
             putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
@@ -869,7 +930,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         startActivity(intent)
     }
 
-    // 로그인 화면으로 이동
+    /**
+     * 로그인 화면으로 이동하고 현재 액티비티를 종료합니다.
+     */
     private fun navigateToLoginActivity() {
         val intent = Intent(this, StartActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

@@ -82,7 +82,7 @@ class StartActivity : AppCompatActivity() {
                             if (userRole == "USER") {
                                 Toast.makeText(
                                     this@StartActivity,
-                                    "로그인 성공! 사용자 역할: USER",
+                                    "로그인 성공!" ,
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 navigateToMainActivity()
@@ -107,14 +107,14 @@ class StartActivity : AppCompatActivity() {
                     } else {
                         Toast.makeText(
                             this@StartActivity,
-                            "로그인 실패: ${response.code()}",
+                            "로그인 실패",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@StartActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT)
+                    Toast.makeText(this@StartActivity, "네트워크 오류", Toast.LENGTH_SHORT)
                         .show()
                 }
             }

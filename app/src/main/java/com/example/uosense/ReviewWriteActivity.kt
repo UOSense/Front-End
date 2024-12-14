@@ -50,10 +50,11 @@ class ReviewWriteActivity : AppCompatActivity() {
     private lateinit var reviewEventCheckBox: CheckBox
     private var reviewEventCheck = false
 
-    //    선택된 이미지 URI 관리
+    // 선택된 이미지 URI 관리
     private val selectedImageUris: MutableList<Uri> = mutableListOf()
 
-
+    // 사용자 ID 초기화
+    private var restaurantId: Int = -1
 
 
     // 등록 버튼
@@ -62,6 +63,9 @@ class ReviewWriteActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_review_write)
+
+        // 식당 ID 수신
+        restaurantId = intent.getIntExtra("restaurantId", -1)
 
         // TokenManager 초기화
         tokenManager = TokenManager(this)
@@ -106,8 +110,6 @@ class ReviewWriteActivity : AppCompatActivity() {
         setupFeatureButton(R.id.soloEatBtn, "SOLO_POSSIBLE", R.color.teal_700)
         setupFeatureButton(R.id.kindOwnerBtn, "KIND_BOSS", R.color.purple_200)
         setupFeatureButton(R.id.interiorBtn, "NICE_INTERIOR", R.color.orange)
-        setupFeatureButton(R.id.affordableBtn, "GOOD_VALUE", R.color.blue)
-
 
         // 등록 버튼 클릭 리스너 설정
         registerReviewBtn.setOnClickListener { submitReview() }
@@ -122,8 +124,9 @@ class ReviewWriteActivity : AppCompatActivity() {
     // 이미지 추가 기능
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
-            val imageUri: Uri? = data.data
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data?.data != null) {
+            val imageUri = data.data
             if (imageUri != null) {
                 selectedImageUris.add(imageUri)
                 addImageToLayout(imageUri)
@@ -131,17 +134,9 @@ class ReviewWriteActivity : AppCompatActivity() {
         }
     }
 
-    private fun addImageToLayout(imageUri: Uri?) {
+    private fun addImageToLayout(imageUri: Uri) {
         val imageView = ImageView(this)
-        val layoutParams = LinearLayout.LayoutParams(200, 200).apply {
-            setMargins(8, 8, 8, 8)
-        }
-        imageView.layoutParams = layoutParams
-
         imageView.setImageURI(imageUri)
-        photoAttachmentLayout.addView(imageView, 0)
-        Toast.makeText(this, "이미지가 추가되었습니다.", Toast.LENGTH_SHORT).show()
-
         photoAttachmentLayout.addView(imageView)
     }
 
@@ -153,17 +148,15 @@ class ReviewWriteActivity : AppCompatActivity() {
 
         button.setOnClickListener {
             // 이전에 선택된 버튼 초기화
-            selectedTag = if (selectedTag == tag) {
+            if (selectedTag == tag) {
                 selectedTag = null
                 button.background = defaultBackground
-                null
             } else {
                 // 모든 버튼 초기화
                 resetFeatureButtons()
                 // 새로운 버튼 활성화
                 selectedTag = tag
                 button.setBackgroundColor(ContextCompat.getColor(this, colorId))
-                tag
             }
         }
     }
@@ -186,11 +179,9 @@ class ReviewWriteActivity : AppCompatActivity() {
 
     //    이미지 파일 변환
     private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
-        val file = File(fileUri.path ?: "")
-
         val fileDescriptor = contentResolver.openFileDescriptor(fileUri, "r") ?: return MultipartBody.Part.createFormData(partName, "")
         val inputStream = contentResolver.openInputStream(fileUri)
-
+        val file = File(cacheDir, contentResolver.getFileName(fileUri)) // 캐시에 저장
 
         file.outputStream().use { output ->
             inputStream?.copyTo(output)
@@ -225,8 +216,8 @@ class ReviewWriteActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 // 선택된 이미지 URI를 MultipartBody.Part로 변환
-                val imageParts = selectedImageUris.mapIndexed { index, uri ->
-                    prepareFilePart("images[$index]", uri)
+                val imageParts = selectedImageUris.map { uri ->
+                    prepareFilePart("images", uri)
                 }
 
                 // 로그: 변환된 이미지 데이터와 리뷰 ID 확인
@@ -287,7 +278,6 @@ class ReviewWriteActivity : AppCompatActivity() {
             tag = selectedTag // 선택 사항
         )
 
-        // 로그 메시지 출력 (전송 데이터 확인)
 
         // API 호출
         CoroutineScope(Dispatchers.Main).launch {

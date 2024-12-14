@@ -3,7 +3,19 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    id("org.jetbrains.dokka") version "1.8.10" apply false
 }
+tasks {
+    register("generateDocs", org.jetbrains.dokka.gradle.DokkaTask::class) {
+        outputDirectory.set(buildDir.resolve("docs"))
+        dokkaSourceSets {
+            named("main") {
+                includes.from("README.md") // 선택 사항
+            }
+        }
+    }
+}
+
 buildscript {
     repositories {
         google() // Google 라이브러리 저장소 추가

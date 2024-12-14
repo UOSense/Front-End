@@ -86,6 +86,8 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        tokenManager = TokenManager(this)
         setContentView(R.layout.activity_control_create)
         val doorTypeSpinner = findViewById<Spinner>(R.id.editDoorType)
         ArrayAdapter.createFromResource(

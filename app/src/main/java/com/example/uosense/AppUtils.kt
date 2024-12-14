@@ -205,14 +205,14 @@ object AppUtils {
     // DayOfWeek 매핑 함수
     fun mapDayOfWeek(day: String): String {
         return when (day) {
-            "월요일" -> "MONDAY"
-            "화요일" -> "TUESDAY"
-            "수요일" -> "WEDNESDAY"
-            "목요일" -> "THURSDAY"
-            "금요일" -> "FRIDAY"
-            "토요일" -> "SATURDAY"
-            "일요일" -> "SUNDAY"
-            else -> "MONDAY"
+            "월요일" -> "Monday"
+            "화요일" -> "Tuesday"
+            "수요일" -> "Wednesday"
+            "목요일" -> "Thursday"
+            "금요일" -> "Friday"
+            "토요일" -> "Saturday"
+            "일요일" -> "Sunday"
+            else -> throw IllegalArgumentException("알 수 없는 요일: $day")
         }
     }
 

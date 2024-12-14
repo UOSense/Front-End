@@ -51,9 +51,11 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(intent, PICK_IMAGE_REQUEST)
     }
+    //위치, 경도 초기화
     private var currentLatitude: Double = 0.0
     private var currentLongitude: Double = 0.0
-    // 버튼 및 리사이클러
+
+    // 버튼 및 리사이클러 초기화
     private lateinit var recyclerView: RecyclerView
     private lateinit var btnEditImage: Button
     private lateinit var btnEditBusinessDays: Button
@@ -83,7 +85,12 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_control_restaurant_detail)
+
+        // TokenManager 초기화
         tokenManager = TokenManager(this)
+
+        // 각 spinner UI 변경 시 사용
+        // DoorType 스피너
         val doorTypeSpinner = findViewById<Spinner>(R.id.editDoorType)
         ArrayAdapter.createFromResource(
             this,
@@ -93,7 +100,7 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
             adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
             doorTypeSpinner.adapter = adapter
         }
-
+        // Category 스피너
         val categorySpinner = findViewById<Spinner>(R.id.editRestaurantCategory)
         ArrayAdapter.createFromResource(
             this,
@@ -103,6 +110,8 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
             adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
             categorySpinner.adapter = adapter
         }
+
+        // 간단 업종 스피너
         val subDescriptionSpinner = findViewById<Spinner>(R.id.editSubDescription)
         ArrayAdapter.createFromResource(
             this,
@@ -151,7 +160,7 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
             businessDayAdapter.addBusinessDay(
                 BusinessDayInfo(
                     id = -1,
-                    dayOfWeek = "",
+                    dayOfWeek = AppUtils.mapDayOfWeek(""),
                     openingTime = "",
                     closingTime = "",
                     haveBreakTime = false,
@@ -226,11 +235,7 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         val doorTypeIndex = findViewById<Spinner>(R.id.editDoorType).selectedItemPosition
         val doorType = resources.getStringArray(R.array.restaurant_door_types)[doorTypeIndex]
 
-        val accessToken = tokenManager.getAccessToken() ?: ""
 
-
-        Log.d("DEBUG", "선택된 SubDescription: $subDescription")
-        Log.d("DEBUG", "변환된 SubDescription: ${AppUtils.mapSubDescription(subDescription)}")
 
         if (name.isBlank() || address.isBlank()) {
             showToast("이름과 주소는 필수 항목입니다.")
@@ -239,35 +244,61 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val restaurantResponse = RetrofitInstance.restaurantApi.editRestaurant(
-                    "Bearer $accessToken",
-                    RestaurantRequest(
-                        id = restaurantId,
-                        name = name,
-                        doorType = AppUtils.mapDoorTypeForApi(doorType),
-                        latitude = currentLatitude,
-                        longitude = currentLongitude,
-                        address = address,
-                        phoneNumber = phoneNumber,
-                        category = AppUtils.mapCategoryForApi(category),
-                        subDescription = AppUtils.mapSubDescription(subDescription),
-                        description = description
-                    )
+                var accessToken = tokenManager.getAccessToken()
+
+                // 토큰 만료 시 재발급 시도
+                if (accessToken.isNullOrEmpty()) {
+                    val isRefreshed = tokenManager.refreshAccessToken()  // Boolean 반환
+                    if (isRefreshed) {
+                        accessToken = tokenManager.getAccessToken()  // 새 토큰 가져오기
+                    }
+                }
+
+                if (accessToken.isNullOrEmpty()) {
+                    showToast("로그인이 필요합니다.")
+                    Log.e("TOKEN_ERROR", "토큰이 비어 있음")
+                    return@launch
+                }
+
+                val restaurantRequest = RestaurantRequest(
+                    id = restaurantId,
+                    name = name,
+                    doorType = AppUtils.mapDoorTypeForApi(doorType),
+                    latitude = currentLatitude,
+                    longitude = currentLongitude,
+                    address = address,
+                    phoneNumber = phoneNumber,
+                    category = AppUtils.mapCategoryForApi(category),
+                    subDescription = AppUtils.mapSubDescription(subDescription),
+                    description = description
                 )
 
-                val businessDayResponse = updateBusinessDays(recyclerView)
-                val menuResponse = updateMenuItems()
+                val restaurantResponse = RetrofitInstance.restaurantApi.editRestaurant(
+                    "Bearer $accessToken",
+                    restaurantRequest
+                )
 
-                if (restaurantResponse.isSuccessful && businessDayResponse && menuResponse) {
+                if (!restaurantResponse.isSuccessful) {
+                    showToast("식당 정보 저장 실패: ${restaurantResponse.errorBody()?.string()}")
+                    return@launch
+                }
+
+                val businessDaySuccess = updateBusinessDays(recyclerView)
+                val menuSuccess = updateMenuItems()
+
+                if (businessDaySuccess && menuSuccess) {
                     uploadRestaurantImages(restaurantId)
                     showToast("식당 정보가 성공적으로 저장되었습니다!")
                 } else {
-                    showToast("저장 실패. 모든 항목을 확인하세요.")
+                    showToast("일부 항목 저장 실패. 다시 시도하세요.")
                 }
+
             } catch (e: Exception) {
-                showToast("저장 중 오류 발생: ${e.message}")
+                Log.e("SAVE_ERROR", "저장 중 오류 발생", e)
+                showToast("저장 중 오류 발생: ${e.localizedMessage}")
             }
         }
+
     }
 
 
@@ -503,4 +534,6 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
     }
+
+
 }

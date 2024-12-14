@@ -1,6 +1,8 @@
 package com.example.uosense
 
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,58 +26,72 @@ class ReviewListActivity : AppCompatActivity() {
 
         reviewRecyclerView = findViewById(R.id.reviewRecyclerView)
         reviewRecyclerView.layoutManager = LinearLayoutManager(this)
-        reviewAdapter = ReviewAdapter(reviews)
+        reviewAdapter = ReviewAdapter(reviews) { holder ->
+            holder.reportBtn.visibility = View.VISIBLE
+            holder.deleteBtn.visibility = View.GONE
+        }
+
+
         reviewRecyclerView.adapter = reviewAdapter
 
         fetchReviews()
     }
 
     private fun fetchReviews() {
-        val restaurantId = intent.getIntExtra("restaurantId", 1) // 임시 restaurantId
+        val restaurantId = intent.getIntExtra("restaurantId", -1)
         CoroutineScope(Dispatchers.Main).launch {
             try {
+                // 로딩 중 UI 표시 (예: ProgressBar를 보여줌)
+                showLoading()
+
                 val response = RetrofitInstance.restaurantApi.getRestaurantReviews(restaurantId)
                 if (response.isSuccessful) {
                     val reviewList = response.body() ?: emptyList()
 
-                    // ReviewResponse -> ReviewItem 변환
-                    val reviewItems = reviewList.map { reviewResponse ->
-                        ReviewItem(
-                            id = reviewResponse.id,
-                            restaurantId = reviewResponse.restaurantId,
-                            userId = reviewResponse.userId,
-                            nickname = "익명", // nickname이 없으므로 기본값 설정
-                            userImage = "", // userImage가 없으므로 기본값 설정
-                            body = reviewResponse.body,
-                            rating = reviewResponse.rating,
-                            dateTime = reviewResponse.dateTime,
-                            reviewEventCheck = reviewResponse.reviewEventCheck,
-                            tag = reviewResponse.tag,
-                            likeCount = reviewResponse.likeCount,
-                            imageUrls = reviewResponse.imageUrls ?: emptyList() // 이미지 URL이 없을 경우 빈 리스트
-                        )
-                    }
+                    // 데이터 확인 로그
+                    reviewList.forEach { Log.d("ReviewItem", it.toString()) }
 
-                    reviews.clear()
-                    reviews.addAll(reviewItems)
-                    reviewAdapter.notifyDataSetChanged()
+
+
+                    if (reviewList.isEmpty()) {
+                        Toast.makeText(
+                            this@ReviewListActivity,
+                            "리뷰가 없습니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        reviews.clear()
+                        reviews.addAll(reviewList)
+                        reviewAdapter.notifyDataSetChanged()
+                        Log.d("ReviewList", "Fetched ${reviews.size} reviews successfully")
+                    }
                 } else {
                     Toast.makeText(
                         this@ReviewListActivity,
-                        "Failed to fetch reviews: ${response.code()}",
+                        "리뷰를 가져오는 데 실패했습니다: ${response.code()}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(
                     this@ReviewListActivity,
-                    "Error occurred: ${e.message}",
+                    "오류 발생: ${e.message}",
                     Toast.LENGTH_SHORT
                 ).show()
+            } finally {
+                // 로딩 UI 숨기기
+                hideLoading()
             }
         }
     }
 
+    private fun showLoading() {
+        // 로딩 ProgressBar 또는 다른 로딩 상태 UI 표시
+    }
+
+    private fun hideLoading() {
+        // 로딩 ProgressBar 숨기기
+    }
 
 }
 

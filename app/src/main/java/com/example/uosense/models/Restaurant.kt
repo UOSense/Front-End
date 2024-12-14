@@ -2,6 +2,7 @@ package com.example.uosense.models
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 import java.time.LocalDateTime
 
 // 카테고리 유형 - 식당 종류
@@ -78,6 +79,7 @@ data class RestaurantRequest(
     val subDescription: String,
     val description: String
 )
+
 
 // 영업일 정보 모델
 data class BusinessDay(
@@ -169,6 +171,14 @@ data class ImageInfo(
     val imageUrl: String,
     val id: Int
 )
+
+// 이미지 정보 모델
+/*
+data class ImageInfo(
+    val url: String,
+    val description: String? = null
+)
+*/
 
 // 새 메뉴 요청 모델
 data class NewMenuRequest(
@@ -314,21 +324,6 @@ data class ReviewRequest(
     val tag: String?,
     val reviewEventCheck: Boolean
 )
-data class ReviewListResponse(
-    val reviews: List<ReviewResponse> // 리뷰 목록
-)
-
-data class ReviewCreateResponse(
-    val reviewId: Int  // 생성된 리뷰 ID
-)
-
-data class ReviewLikeResponse(
-    val likeCount: Int // 리뷰 좋아요 수 (증가된 후)
-)
-
-data class ReviewLikeRequest(
-    val reviewId: Int  // 좋아요를 누를 리뷰 ID
-)
 
 data class ReportRequest(
     val reviewId: Int,
@@ -336,10 +331,8 @@ data class ReportRequest(
     val createdAt: String
 )
 
-data class ReviewGetResponse(
-    val review: ReviewResponse  // 단일 리뷰 정보
-)
 
+//리뷰 목록 조회 시 날라오는 것들
 data class ReviewItem(
     val id: Int,
     val restaurantId: Int,
@@ -348,12 +341,22 @@ data class ReviewItem(
     val userImage: String,
     val body: String,
     val rating: Double,
-    val dateTime: String,
+    val dateTime: List<Int>, // 배열 형태로 정의
     val reviewEventCheck: Boolean,
     val tag: String?,
-    val likeCount: Int,
+    var likeCount: Int,
     val imageUrls: List<String>?
-)
+){
+    // 날짜 포맷 변환 함수
+    fun getFormattedDate(): String {
+        return if (dateTime.size >= 3) {
+            "${dateTime[0]}-${"%02d".format(dateTime[1])}-${"%02d".format(dateTime[2])}" +
+                    " ${"%02d".format(dateTime[3])}:${"%02d".format(dateTime[4])}:${"%02d".format(dateTime[5])}"
+        } else {
+            "Invalid Date"
+        }
+    }
+}
 
 
 data class ReviewResponse(
@@ -383,5 +386,34 @@ data class ReportResponse(
     val reviewId: Int,          // 신고된 리뷰 ID
     val userId: Int,            // 신고한 사용자 ID
     val detail: String,         // 신고 상세 내용 (예: ABUSIVE, DEROGATORY, ADVERTISEMENT)
-    val createdAt: LocalDateTime // 신고 생성 일시
+    val createdAt: List<Int> // 신고 생성 일시
+)
+// 식당 상품 메뉴 모델
+data class MenuImageRequest(
+    val image: String? = null
+)
+// 식당 영업 시간 모델
+data class BusinessDayRequest(
+    val restaurantId: Int,
+    val purposeDayInfoList: List<PurposeDayInfo>
+)
+
+// = BusinessDayInfo
+data class PurposeDayInfo(
+    val id: Int = 0, // 의미 X
+    val dayOfWeek: String,
+    val breakTime: Boolean,
+    val startBreakTime: String? = "00:00:00",
+    val stopBreakTime: String? = "00:00:00",
+    val openingTime: String = "00:00:00",
+    val closingTime: String = "00:00:00",
+    val holiday: Boolean
+)
+// = RestaurantInfo
+data class RestaurantBasicInfo(
+    val restaurantId: Int, // Intent해서 받아오기
+    val name: String,
+    val address: String,
+    val phoneNumber: String,
+    val subDescription: String = "BAR"
 )

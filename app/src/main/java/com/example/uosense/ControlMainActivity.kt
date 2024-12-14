@@ -677,7 +677,7 @@ class ControlMainActivity : AppCompatActivity() {
             try {
                 val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
-                    doorType = selectedDoorType
+                    doorType = AppUtils.mapDoorTypeForApi(selectedDoorType!!)
                 )
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
@@ -695,15 +695,6 @@ class ControlMainActivity : AppCompatActivity() {
         }
     }
 
-
-    /** 가장 가까운 문 계산 -> AppUtils
-     * getClosestDoorType
-     */
-
-
-    /** 거리 계산 유틸리티 함수 -> AppUtils
-     * distanceBetween
-     */
 
 
     // 모든 마커에 맞춰서 카메라 이동

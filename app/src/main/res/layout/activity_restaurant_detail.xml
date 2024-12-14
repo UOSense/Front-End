@@ -3,6 +3,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 android:layout_width="match_parent"
 android:layout_height="match_parent"
 android:orientation="vertical"
+    android:background="@drawable/rounded_border_black"
 android:padding="16dp">
     <Space
         android:layout_width="match_parent"
@@ -49,6 +50,7 @@ android:padding="16dp">
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="카테고리"
+        android:textColor="@color/black"
         android:textSize="14sp"
         android:layout_marginStart="10dp"/>
 
@@ -83,6 +85,7 @@ android:padding="16dp">
     android:layout_height="wrap_content"
     android:text="설명"
     android:textSize="14sp"
+    android:textColor="@color/black"
     android:layout_marginBottom="5dp"/>
 
 <!-- 평점 -->
@@ -106,6 +109,7 @@ android:padding="16dp">
         android:text="4.65"
         android:textSize="14sp"
         android:textStyle="bold"
+        android:textColor="@color/black"
         android:layout_marginStart="5dp"
         />
 
@@ -114,6 +118,7 @@ android:padding="16dp">
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="리뷰"
+        android:textColor="@color/gray"
         android:layout_marginStart="25dp"/>
     <!--    리뷰 수    -->
     <TextView
@@ -121,6 +126,7 @@ android:padding="16dp">
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="35"
+        android:textColor="@color/gray"
         android:layout_marginStart="5dp"/>
 </LinearLayout>
 
@@ -172,6 +178,7 @@ android:padding="16dp">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="영업 중"
+            android:textColor="@color/black"
             android:textSize="16dp"
             android:textStyle="bold"
             />
@@ -181,6 +188,7 @@ android:padding="16dp">
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="( - )"
+            android:textColor="@color/gray"
             android:layout_marginStart="10dp"
             />
         <View
@@ -195,6 +203,8 @@ android:padding="16dp">
             android:text="수정 제안"
             android:layout_marginStart="130dp"
             android:clickable="true"
+            android:textColor="@color/black"
+            android:background="@drawable/rounded_border_tealed_700"
             />
 
     </LinearLayout>
@@ -205,6 +215,7 @@ android:padding="16dp">
         android:layout_height="wrap_content"
         android:text="주소"
         android:textSize="14dp"
+        android:textColor="@color/black"
         android:layout_marginBottom="8dp"/>
 
     <!-- 전화번호 -->
@@ -213,6 +224,7 @@ android:padding="16dp">
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="전화"
+        android:textColor="@color/black"
         android:textSize="14dp"
         android:layout_marginBottom="8dp"/>
 
@@ -231,6 +243,9 @@ android:padding="16dp">
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="영업일"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:background="@drawable/rounded_border_blue"
         />
 
     <Button
@@ -239,6 +254,9 @@ android:padding="16dp">
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="메뉴"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:background="@drawable/rounded_border_blue"
         />
 
     <Button
@@ -247,6 +265,9 @@ android:padding="16dp">
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="리뷰"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:background="@drawable/rounded_border_blue"
         />
 
 
@@ -272,7 +293,7 @@ android:padding="16dp">
         android:layout_weight="1"
         android:layout_marginEnd="50dp"
         android:background="@drawable/rounded_border_green"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:text="리뷰 목록" />
 
     <Button
@@ -281,7 +302,7 @@ android:padding="16dp">
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:background="@drawable/rounded_border_green"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:text="리뷰 쓰기" />
 </LinearLayout>
 
