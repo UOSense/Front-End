@@ -19,6 +19,9 @@ class ReportAdapter(
 ) : RecyclerView.Adapter<ReportAdapter.ReportViewHolder>() {
 
     inner class ReportViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val reportId: TextView = itemView.findViewById(R.id.reportId)
+        val reviewId: TextView = itemView.findViewById(R.id.reviewId)
+        val userId: TextView = itemView.findViewById(R.id.userId)
         val reportDetail: TextView = itemView.findViewById(R.id.reportDetail)
         val createdAt: TextView = itemView.findViewById(R.id.createdAt)
         val deleteReportBtn: Button = itemView.findViewById(R.id.deleteReportBtn)
@@ -33,6 +36,9 @@ class ReportAdapter(
     override fun onBindViewHolder(holder: ReportViewHolder, position: Int) {
         val report = reports[position]
 
+        holder.reportId.text = "신고 ID: ${report.reportId}"
+        holder.reviewId.text = "리뷰 ID: ${report.reviewId}"
+        holder.userId.text = "사용자 ID: ${report.userId}"
         // 날짜 포맷 변환
         holder.createdAt.text = "신고 일시: ${formatDate(report.createdAt)}"
         holder.reportDetail.text = "신고 사유: ${report.detail}"

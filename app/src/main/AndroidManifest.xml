@@ -87,6 +87,21 @@
         </activity>
 
         <activity
+            android:name=".FavoriteListActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".ReviewListActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
+            android:name=".MyReviewListActivity"
+            android:exported="false">
+        </activity>
+
+        <activity
             android:name=".ControlMainActivity"
             android:exported="false">
         </activity>

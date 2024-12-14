@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.util.Base64
 import androidx.core.content.ContextCompat.startActivity
+import com.example.uosense.models.RestaurantBasicInfo
 import org.json.JSONObject
 
 class StartActivity : AppCompatActivity() {
@@ -153,7 +154,7 @@ class StartActivity : AppCompatActivity() {
     }
 
     private fun navigateToControlMainActivity() {
-        val intent = Intent(this, RestaurantInfoSuggestionActivity::class.java)
+        val intent = Intent(this, ReportActivity::class.java)
         startActivity(intent)
         finish()
     }

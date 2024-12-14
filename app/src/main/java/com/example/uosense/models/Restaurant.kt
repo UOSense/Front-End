@@ -325,7 +325,7 @@ data class BookMarkResponse(
 )
 // 신고 응답 모델
 data class ReportResponse(
-    val id: Int,                // 신고 고유 ID
+    val reportId: Int,                // 신고 고유 ID
     val reviewId: Int,          // 신고된 리뷰 ID
     val userId: Int,            // 신고한 사용자 ID
     val detail: String,         // 신고 상세 내용 (예: ABUSIVE, DEROGATORY, ADVERTISEMENT)
