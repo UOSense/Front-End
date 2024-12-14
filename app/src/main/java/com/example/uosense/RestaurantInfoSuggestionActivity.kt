@@ -24,7 +24,6 @@ class RestaurantInfoSuggestionActivity : AppCompatActivity() {
             tab.text = when (position) {
                 0 -> "상품/메뉴"
                 1 -> "영업시간"
-                2 -> "전화번호"
                 else -> "기본정보"
             }
         }.attach()

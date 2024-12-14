@@ -3,16 +3,16 @@ package com.example.uosense.models
 import android.os.Parcel
 import android.os.Parcelable
 import java.time.LocalDateTime
+import com.google.gson.annotations.SerializedName
 
 // 메뉴 요청 모델
 data class MenuRequest(
-    val id: Int?,
-    val restaurantId: Int,
-    val name: String,
-    val price: Int,
-    val description: String,
-    val image: String? = null
+    val menuId: Int? = null,  // 메뉴 ID, 새 항목은 null
+    val name: String,         // 메뉴 이름
+    val price: Int,           // 가격
+    val image: String? = null // 이미지 URL
 )
+
 
 // 메뉴 응답 모델
 data class MenuResponse(
@@ -330,4 +330,35 @@ data class ReportResponse(
     val userId: Int,            // 신고한 사용자 ID
     val detail: String,         // 신고 상세 내용 (예: ABUSIVE, DEROGATORY, ADVERTISEMENT)
     val createdAt: List<Int> // 신고 생성 일시
+)
+
+// 식당 상품 메뉴 모델
+data class MenuImageRequest(
+    val image: String? = null
+)
+
+// 식당 영업 시간 모델
+data class BusinessDayRequest(
+    val restaurantId: Int,
+    val purposeDayInfoList: List<PurposeDayInfo>
+)
+
+
+data class PurposeDayInfo(
+    val id: Int = 0,
+    val dayOfWeek: String,
+    val breakTime: Boolean,
+    val startBreakTime: String? = "00:00:00",
+    val stopBreakTime: String? = "00:00:00",
+    val openingTime: String = "00:00:00",
+    val closingTime: String = "00:00:00",
+    val holiday: Boolean
+)
+
+data class RestaurantBasicInfo(
+    val restaurantId: Int = 1,
+    val name: String,
+    val address: String,
+    val phoneNumber: String,
+    val subDescription: String = "BAR"
 )

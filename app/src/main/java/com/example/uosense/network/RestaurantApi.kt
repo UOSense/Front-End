@@ -91,11 +91,6 @@ interface RestaurantApi {
         @Body restaurantRequest: RestaurantRequest
     ): Response<Unit>
 
-    // 특정 식당 영업 정보 등록
-    @POST("/api/v1/restaurant/create/businessday")
-    suspend fun createBusinessDay(
-        @Body businessDayList: BusinessDayList
-    ): Response<Unit>
 
     // 특정 식당 메뉴 등록
     @Multipart
@@ -277,4 +272,32 @@ interface RestaurantApi {
         @Query("nickname") nickname: String?,
         @Part image: MultipartBody.Part?
     ): Response<Unit>
+
+    // 식당 상품 메뉴 정보 제안
+    @POST("/api/v1/purpose/create/menu")
+    suspend fun createMenu(
+        @Header("access") accessToken: String,
+        @Query("restaurantId") restaurantId: Int,
+        @Query("name") name: String,
+        @Query("price") price: Int,
+        @Body image : MenuImageRequest?
+    ): Response<Unit>
+
+    // 식당 영업 시간 정보 제안
+    @POST("/api/v1/purpose/create/businessday")
+    suspend fun createBusinessDay(
+        @Header("access") accessToken: String,
+        @Body businessDayRequest: BusinessDayRequest
+    ): Response<Unit>
+
+    // 식당 기본 수정 제안 통합
+    @POST("/api/v1/purpose/create/restaurant")
+    suspend fun createBasicInfo(
+        @Header("access") accessToken: String,
+        @Body restaurantBasicInfo: RestaurantBasicInfo
+    ): Response<Unit>
+
+
+
+
 }
