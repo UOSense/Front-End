@@ -1,5 +1,6 @@
 package com.example.uosense.adapters
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -8,7 +9,7 @@ import com.example.uosense.fragments.BusinessHoursFragment
 import com.example.uosense.fragments.PhoneNumberFragment
 import com.example.uosense.fragments.BasicInfoFragment
 
-class InfoSuggestionPagerAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
+class InfoSuggestionPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
 
     override fun getItemCount(): Int = 4
 

@@ -62,6 +62,7 @@ class ReportActivity : AppCompatActivity() {
                     reports.clear()
                     reports.addAll(response)
                     reportAdapter.notifyDataSetChanged()
+                    showToast("리뷰가 신고되었습니다.")
 
                     Log.d("ReportActivity", "Fetched ${response.size} reports successfully")
                 } else {

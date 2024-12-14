@@ -1,36 +1,27 @@
 package com.example.uosense.fragments
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
+import TokenManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
+import android.widget.EditText
+import android.widget.Button
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.gridlayout.widget.GridLayout
 import com.example.uosense.R
 import com.example.uosense.databinding.FragmentBasicInfoBinding
+import com.example.uosense.models.RestaurantBasicInfo
+import com.example.uosense.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class BasicInfoFragment : Fragment() {
 
     private var _binding: FragmentBasicInfoBinding? = null
     private val binding get() = _binding!!
-
-    // 이미지 선택 런처
-    private val pickImageLauncher = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { imageUri: Uri? ->
-        if (imageUri != null) {
-            addImageToGridLayout(imageUri)
-            Toast.makeText(requireContext(), "이미지가 업로드되었습니다!", Toast.LENGTH_SHORT).show()
-        }
-    }
+    private lateinit var tokenManager: TokenManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,92 +29,10 @@ class BasicInfoFragment : Fragment() {
     ): View {
         _binding = FragmentBasicInfoBinding.inflate(inflater, container, false)
 
-        // 업로드 버튼 클릭 리스너
-        binding.uploadImageBtn.setOnClickListener {
-            checkStoragePermissionAndPickImage()
-        }
+        // 토큰 매니저 초기화
+        tokenManager = TokenManager(requireContext())
 
         return binding.root
-    }
-
-    // 권한 확인 및 이미지 선택
-    private fun checkStoragePermissionAndPickImage() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.READ_MEDIA_IMAGES
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                pickImageLauncher.launch("image/*")
-            } else {
-                requestPermissions(
-                    arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
-                    READ_MEDIA_IMAGES_REQUEST_CODE
-                )
-            }
-        } else {
-            pickImageLauncher.launch("image/*")
-        }
-    }
-
-    // 권한 요청 결과 처리
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == READ_MEDIA_IMAGES_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pickImageLauncher.launch("image/*")
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "이미지 접근 권한이 필요합니다.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-
-    // 동적으로 이미지 추가
-    private fun addImageToGridLayout(imageUri: Uri) {
-        // 최대 이미지 개수 제한
-        val maxImages = 4
-        val currentImageCount = binding.imageContainer.childCount
-
-        if (currentImageCount > maxImages) {
-            Toast.makeText(requireContext(), "최대 $maxImages 장의 이미지만 추가할 수 있습니다.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // 이미지 뷰 생성 및 설정
-        val imageView = ImageView(requireContext()).apply {
-            setImageURI(imageUri)
-            adjustViewBounds = true
-            scaleType = ImageView.ScaleType.CENTER_CROP
-
-            // 사진 개수에 따른 크기 조절
-            layoutParams = calculateGridLayoutParams()
-        }
-
-        // 이미지 추가
-        binding.imageContainer.addView(imageView)
-
-        // 이미지 힌트 가리기
-        binding.imageHint.visibility = View.GONE
-    }
-
-    // 사진 개수에 따른 이미지 크기 계산 메서드
-    private fun calculateGridLayoutParams(): GridLayout.LayoutParams {
-        val gridLayout = binding.imageContainer
-        val totalWidth = gridLayout.width
-        val itemWidth = totalWidth / 2
-        val itemHeight = gridLayout.height / 2
-
-        return GridLayout.LayoutParams().apply {
-            width = itemWidth
-            height = itemHeight
-            setMargins(8, 8, 8, 8)
-        }
     }
 
     override fun onDestroyView() {
@@ -131,7 +40,52 @@ class BasicInfoFragment : Fragment() {
         _binding = null
     }
 
-    companion object {
-        const val READ_MEDIA_IMAGES_REQUEST_CODE = 101
+    // 기본 정보 수집 메서드
+    private fun collectBasicInfo(): RestaurantBasicInfo {
+        val restaurantName = binding.root.findViewById<EditText>(R.id.editTextRestaurantName).text.toString().trim()
+        val restaurantAddress = binding.root.findViewById<EditText>(R.id.editTextRestaurantAddress).text.toString().trim()
+        val phoneNumber = binding.root.findViewById<EditText>(R.id.editTextPhoneNumber).text.toString().trim()
+        val subDescription = binding.root.findViewById<EditText>(R.id.editTextCategory).text.toString().trim()
+
+        return RestaurantBasicInfo(
+            restaurantId = 1, // 기본값 설정
+            name = restaurantName,
+            address = restaurantAddress,
+            phoneNumber = phoneNumber,
+            subDescription = subDescription.ifEmpty { "BAR" }
+        )
+    }
+
+    // 서버로 기본 정보 전송 메서드
+    public fun sendBasicInfoToServer() {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val accessToken = tokenManager.getAccessToken().orEmpty()
+                if (accessToken.isEmpty()) {
+                    showToast("로그인이 필요합니다.")
+                    return@launch
+                }
+
+                val basicInfo = collectBasicInfo()
+
+                val response = RetrofitInstance.restaurantApi.createBasicInfo(
+                    accessToken = "Bearer $accessToken",
+                    restaurantBasicInfo = basicInfo
+                )
+
+                if (response.isSuccessful) {
+                    showToast("기본 정보가 등록되었습니다.")
+                } else {
+                    showToast("등록 실패: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                showToast("오류 발생: ${e.message}")
+            }
+        }
+    }
+
+    // 표준 토스트 메시지 표시 메서드
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 }
