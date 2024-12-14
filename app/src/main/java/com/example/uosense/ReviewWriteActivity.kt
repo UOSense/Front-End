@@ -53,6 +53,8 @@ class ReviewWriteActivity : AppCompatActivity() {
 //    선택된 이미지 URI 관리
     private val selectedImageUris: MutableList<Uri> = mutableListOf()
 
+    private var restaurantId: Int = -1
+
 
 
 
@@ -62,6 +64,9 @@ class ReviewWriteActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_review_write)
+
+        // 식당 ID 수신
+        restaurantId = intent.getIntExtra("restaurantId", -1)
 
         // TokenManager 초기화
         tokenManager = TokenManager(this)
@@ -266,7 +271,7 @@ private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part 
         }
 
         val reviewRequest = ReviewRequest(
-            restaurantId = 1,
+            restaurantId = restaurantId,
             body = reviewBody,
             rating = ratingValue.toDouble(),
             dateTime = dateTime,

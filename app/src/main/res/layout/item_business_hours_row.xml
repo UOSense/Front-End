@@ -32,7 +32,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:hint="시작 시간 (HH:mm:ss)"
+        android:hint="마감 시간 (HH:mm:ss)"
         android:inputType="time"
         android:maxLength="8"
         android:textColorHint="@color/gray"

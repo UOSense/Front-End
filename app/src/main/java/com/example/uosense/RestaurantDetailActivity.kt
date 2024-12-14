@@ -109,8 +109,9 @@ class RestaurantDetailActivity : AppCompatActivity(), MenuImagePicker {
 
         // 식당 ID 수신
         restaurantId = intent.getIntExtra("restaurantId", -1)
+
+        // 식당 정보 없을 시 ! (절대 발생하면 안됨)
         if (restaurantId == -1) {
-            showToast("식당 정보를 불러올 수 없습니다.")
             finish()
             return
         }
@@ -218,7 +219,7 @@ class RestaurantDetailActivity : AppCompatActivity(), MenuImagePicker {
                                 .error(R.drawable.ic_uos)
                                 .into(restaurantImage)
                         } else {
-                            Log.e("IMAGE_ERROR", "Image URL is empty")
+                            Log.e("IMAGE_ERROR", "이미지가 비었습니다.")
                         }
                     } else {
                         Log.e("IMAGE_ERROR", "Response failed: ${response.errorBody()?.string()}")

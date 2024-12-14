@@ -36,7 +36,7 @@ class FavoriteAdapter(
             try {
                 val response = RetrofitInstance.restaurantApi.getRestaurantById(favorite.restaurantId)
                 if (response != null) {
-                    holder.restaurantName.text = response.name
+                    holder.restaurantName.text = response.body()!!.name
                 } else {
                     holder.restaurantName.text = "정보 없음"
                 }

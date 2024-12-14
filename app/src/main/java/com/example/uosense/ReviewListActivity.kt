@@ -19,10 +19,13 @@ class ReviewListActivity : AppCompatActivity() {
     private lateinit var reviewRecyclerView: RecyclerView
     private lateinit var reviewAdapter: ReviewAdapter
     private val reviews = mutableListOf<ReviewItem>()
+    private var restaurantId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_review_list)
+        // 식당 ID 수신
+        restaurantId = intent.getIntExtra("restaurantId", -1)
 
         reviewRecyclerView = findViewById(R.id.reviewRecyclerView)
         reviewRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -38,7 +41,7 @@ class ReviewListActivity : AppCompatActivity() {
     }
 
     private fun fetchReviews() {
-        val restaurantId = intent.getIntExtra("restaurantId", 2) // 기본값으로 임시 ID 설정
+        val restaurantId = restaurantId
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 // 로딩 중 UI 표시 (예: ProgressBar를 보여줌)
