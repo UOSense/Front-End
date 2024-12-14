@@ -15,19 +15,19 @@
         <item>술집</item>
     </string-array>
     <string-array name="restaurant_door_types">
-        <item>FRONT</item>
-        <item>SIDE</item>
-        <item>SOUTH</item>
-        <item>BACK</item>
+        <item>정문</item>
+        <item>쪽문</item>
+        <item>남문</item>
+        <item>후문</item>
     </string-array>
     <string-array name="days_of_week">
-        <item>Monday</item>
-        <item>Tuesday</item>
-        <item>Wednesday</item>
-        <item>Thursday</item>
-        <item>Friday</item>
-        <item>Saturday</item>
-        <item>Sunday</item>
+        <item>월요일</item>
+        <item>화요일</item>
+        <item>수요일</item>
+        <item>목요일</item>
+        <item>금요일</item>
+        <item>토요일</item>
+        <item>일요일</item>
     </string-array>
 
 </resources>

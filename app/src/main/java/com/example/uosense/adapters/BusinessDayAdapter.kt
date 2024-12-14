@@ -3,6 +3,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
+import com.example.uosense.AppUtils
 import com.example.uosense.R
 import com.example.uosense.models.BusinessDayInfo
 
@@ -89,7 +90,7 @@ class BusinessDayAdapter(private val mode: BusinessDayMode) :
             (parentRecyclerView.findViewHolderForAdapterPosition(index) as? ViewHolderEdit)?.let {
                 BusinessDayInfo(
                     id = businessDays[index].id,
-                    dayOfWeek = it.dayOfWeek.selectedItem.toString(),
+                    dayOfWeek = AppUtils.mapDayOfWeek(it.dayOfWeek.selectedItem.toString()),
                     openingTime = it.openingTime.text.toString(),
                     closingTime = it.closingTime.text.toString(),
                     startBreakTime = it.startBreakTime.text.toString().ifBlank { null },

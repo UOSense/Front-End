@@ -182,29 +182,44 @@ object AppUtils {
 
     // CategoryType 매핑 함수
     fun mapCategoryForApi(category: String): String {
-        return when (category.uppercase()) {
+        return when (category) {
             "한식" -> "KOREAN"
             "중식" -> "CHINESE"
             "일식" -> "JAPANESE"
             "양식" -> "WESTERN"
             "기타" -> "OTHER"
-            else -> "NULL"
+            else -> "OTHER"
         }
     }
 
     // SubDescriptionType 매핑 함수
     fun mapSubDescription(subDescription: String): String {
-        return when (subDescription.uppercase()) {
+        return when (subDescription) {
             "술집" -> "BAR"
             "카페" -> "CAFE"
-            "식당" -> "RESTAURANT"
-            else -> "NULL"
+            "음식점" -> "RESTAURANT"
+            else -> "RESTAURANT"
         }
     }
 
+    // DayOfWeek 매핑 함수
+    fun mapDayOfWeek(day: String): String {
+        return when (day) {
+            "월요일" -> "MONDAY"
+            "화요일" -> "TUESDAY"
+            "수요일" -> "WEDNESDAY"
+            "목요일" -> "THURSDAY"
+            "금요일" -> "FRIDAY"
+            "토요일" -> "SATURDAY"
+            "일요일" -> "SUNDAY"
+            else -> "MONDAY"
+        }
+    }
+
+
     // FilterType 매핑 함수
     fun mapFilterType(filter: String): String {
-        return when (filter.uppercase()) {
+        return when (filter) {
             "즐겨찾기 많은 순" -> "BOOKMARK"
             "거리 가까운 순" -> "DISTANCE"
             "평점 순" -> "RATING"

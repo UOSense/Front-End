@@ -9,6 +9,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -23,6 +24,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.uosense.databinding.ActivityControlMainBinding
 import com.example.uosense.databinding.ActivityControlRestaurantDetailBinding
 import com.example.uosense.databinding.ActivityRestaurantDetailBinding
@@ -209,7 +211,6 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
     }
 
 
-    //수정된 모든 데이터 저장
     private fun saveRestaurantData() {
         val name = findViewById<EditText>(R.id.editRestaurantName).text.toString()
         val description = findViewById<EditText>(R.id.editRestaurantDescription).text.toString()
@@ -227,6 +228,10 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
 
         val accessToken = tokenManager.getAccessToken() ?: ""
 
+
+        Log.d("DEBUG", "선택된 SubDescription: $subDescription")
+        Log.d("DEBUG", "변환된 SubDescription: ${AppUtils.mapSubDescription(subDescription)}")
+
         if (name.isBlank() || address.isBlank()) {
             showToast("이름과 주소는 필수 항목입니다.")
             return
@@ -239,13 +244,13 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
                     RestaurantRequest(
                         id = restaurantId,
                         name = name,
-                        doorType = doorType,
+                        doorType = AppUtils.mapDoorTypeForApi(doorType),
                         latitude = currentLatitude,
                         longitude = currentLongitude,
                         address = address,
                         phoneNumber = phoneNumber,
-                        category = category,
-                        subDescription = subDescription,
+                        category = AppUtils.mapCategoryForApi(category),
+                        subDescription = AppUtils.mapSubDescription(subDescription),
                         description = description
                     )
                 )
@@ -264,6 +269,7 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
             }
         }
     }
+
 
     // 영업일 업데이트
     private suspend fun updateBusinessDays(parentRecyclerView: RecyclerView): Boolean {
@@ -406,12 +412,26 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
                 val response = RetrofitInstance.restaurantApi.getRestaurantImages(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
-                        val images = response.body()!!.imageList.map { it.imageUrl }
-                        // 이미지 리사이클러뷰에 추가
+                        val images = response.body()?.imageList?.map { it.imageUrl }
+                        if (!images.isNullOrEmpty()) {
+                            // 첫 번째 이미지를 restaurantImage에 로드
+                            Glide.with(this@ControlRestaurantDetail)
+                                .load(images.first())
+                                .placeholder(R.drawable.placeholder_image) // 로딩 중 이미지
+                                .error(R.drawable.ic_uos) // 오류 시 기본 이미지
+                                .into(findViewById(R.id.restaurantImage))
+                        } else {
+                            showToast("이미지가 없습니다.")
+                        }
+                    } else {
+                        showToast("이미지 로딩 실패: ${response.errorBody()?.string()}")
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    showToast("이미지 로딩 중 오류 발생: ${e.message}")
+                }
             }
         }
     }

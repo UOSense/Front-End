@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -85,7 +86,36 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_control_restaurant_detail)
+        setContentView(R.layout.activity_control_create)
+        val doorTypeSpinner = findViewById<Spinner>(R.id.editDoorType)
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.restaurant_door_types,
+            R.layout.spinner_item
+        ).also { adapter ->
+            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+            doorTypeSpinner.adapter = adapter
+        }
+
+        val categorySpinner = findViewById<Spinner>(R.id.editRestaurantCategory)
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.restaurant_categories,
+            R.layout.spinner_item
+        ).also { adapter ->
+            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+            categorySpinner.adapter = adapter
+        }
+        val subDescriptionSpinner = findViewById<Spinner>(R.id.editSubDescription)
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.restaurant_sub_descriptions,
+            R.layout.spinner_item
+        ).also { adapter ->
+            adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+            subDescriptionSpinner.adapter = adapter
+        }
+
 
 
         // UI 초기화

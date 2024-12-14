@@ -9,12 +9,11 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.example.uosense.databinding.ActivityMainBinding
+
 import com.example.uosense.models.RestaurantInfo
 import com.naver.maps.map.util.FusedLocationSource
 
 import com.example.uosense.models.RestaurantListResponse
-import com.example.uosense.models.RestaurantRequest
 import com.example.uosense.network.RetrofitInstance
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.geometry.LatLngBounds
@@ -36,21 +35,19 @@ import okhttp3.Request
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.location.Location.distanceBetween
+
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import com.example.uosense.AppUtils.getClosestDoorType
 import com.example.uosense.AppUtils.showToast
 import com.example.uosense.network.RetrofitInstance.restaurantApi
-import com.naver.maps.map.overlay.OverlayImage
+
 
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
+
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import java.net.URLDecoder
-import kotlin.math.log
 import android.util.Base64
 import com.example.uosense.databinding.ActivityControlMainBinding
 import org.json.JSONObject
@@ -71,8 +68,6 @@ class ControlMainActivity : AppCompatActivity() {
 
     private lateinit var tokenManager: TokenManager
 
-    private var currentPage = 1
-    private val pageSize = 10
 
 
 
@@ -214,8 +209,8 @@ class ControlMainActivity : AppCompatActivity() {
             isLocationFixed = false
         }
 
-        // 식당 추가 버튼 클릭 리스너 설정
         binding.btnNewRestaurant.setOnClickListener {
+            Log.d("DEBUG", "btnNewRestaurant 클릭됨")
             val intent = Intent(this, ControlCreateActivity::class.java)
             startActivity(intent)
         }

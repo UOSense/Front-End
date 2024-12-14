@@ -63,6 +63,15 @@ android:padding="16dp">
         android:clickable="true"
         android:focusable="true"
         />
+    <ImageButton
+        android:id="@+id/linkShareButton"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/ic_share"
+        android:contentDescription="공유 버튼"
+        android:clickable="true"
+        android:focusable="true"/>
 
 
 </LinearLayout>
@@ -242,6 +251,11 @@ android:padding="16dp">
 
 
 </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+         />
 
 <LinearLayout
     android:id="@+id/reviewOptionsLayout"
