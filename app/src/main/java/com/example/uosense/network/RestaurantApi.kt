@@ -177,12 +177,14 @@ interface RestaurantApi {
     // 즐겨찾기 관리
     @POST("/api/v1/bookmark/create")
     suspend fun addBookmark(
+        @Header("access") accessToken: String,
         @Query("restaurantId") restaurantId: Int
     ): Response<Unit>
 
     @DELETE("/api/v1/bookmark/delete")
     suspend fun deleteBookmark(
-        @Query("bookMarkId") bookMarkId: Int
+        @Header("access") accessToken: String,
+        @Query("restaurantId") restaurantId: Int
     ): Response<Unit>
 
     @GET("/api/v1/bookmark/get/user")

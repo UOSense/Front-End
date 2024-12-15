@@ -305,13 +305,83 @@ class RestaurantDetailActivity : AppCompatActivity(), MenuImagePicker {
 
 
     /**
-     * 즐겨찾기 상태를 토글합니다.
+     * 즐겨찾기 상태를 토글하고 API 호출을 수행합니다.
      */
     private fun toggleFavorite() {
-        isFavorite = !isFavorite
-        val message = if (isFavorite) "즐겨찾기에 추가됨" else "즐겨찾기에서 제거됨"
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-        updateFavoriteIcon()
+        if (!isFavorite) {
+            addBookmark() // 즐겨찾기 추가
+        } else {
+            deleteBookmark() // 즐겨찾기 제거 (예시로 추가)
+        }
+    }
+    /**
+     * 즐겨찾기 추가 API 호출
+     */
+    private fun addBookmark() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@RestaurantDetailActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val response = RetrofitInstance.restaurantApi.addBookmark("Bearer $accessToken", restaurantId)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        isFavorite = true
+                        updateFavoriteIcon()
+                        Toast.makeText(this@RestaurantDetailActivity, "즐겨찾기에 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@RestaurantDetailActivity, "즐겨찾기 추가 실패", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@RestaurantDetailActivity, "API 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    /**
+     * 즐겨찾기 제거 API 호출
+     */
+    private fun deleteBookmark() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@RestaurantDetailActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                // 삭제 API 호출
+                val response = RetrofitInstance.restaurantApi.deleteBookmark("Bearer $accessToken", restaurantId)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        isFavorite = false
+                        updateFavoriteIcon()
+                        Toast.makeText(this@RestaurantDetailActivity, "즐겨찾기에서 제거되었습니다.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@RestaurantDetailActivity, "즐겨찾기 제거 실패", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@RestaurantDetailActivity, "API 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     /**

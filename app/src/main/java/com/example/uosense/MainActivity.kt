@@ -334,7 +334,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 withContext(Dispatchers.Main) {
                     response.body()?.let {
                         if (it.isNotEmpty()) {
-                            navigateToRestaurantList(it)
+                            navigateToRestaurantList(it, "")
                         } else {
                             showToast(this@MainActivity, "식당 정보가 없습니다.", Toast.LENGTH_SHORT)
                         }
@@ -805,7 +805,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             navigateToSelectedDoorList(response.body()!!, mapDoorTypeForApi(selectedDoorType!!))
                         } else {
                             // 체크박스 해제 시 전체 목록 이동
-                            navigateToRestaurantList(response.body()!!, isSearchResult = true)
+                            navigateToRestaurantList(response.body()!!, keyword, isSearchResult = true)
                         }
                     } else {
                         showToast(this@MainActivity, "검색 결과가 없습니다.")
@@ -967,9 +967,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
      * 전체 식당 목록 화면으로 이동합니다. 정문이 기본 선택으로 설정됩니다.
      * @param restaurantList 식당 목록
      */
-    private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>,isSearchResult: Boolean = false) {
+    private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>,keyword: String,isSearchResult: Boolean = false) {
         val intent = Intent(this, RestaurantListActivity::class.java).apply {
             putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            putExtra("keyword", keyword)  // 검색 키워드 전달
             putExtra("defaultDoorType", "FRONT") // 정문 기본 선택
             putExtra("isSearchResult", isSearchResult)
         }

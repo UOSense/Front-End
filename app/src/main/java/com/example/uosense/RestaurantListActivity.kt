@@ -32,13 +32,17 @@ class RestaurantListActivity : AppCompatActivity() {
     private lateinit var adapter: RestaurantListAdapter
     private lateinit var binding: ActivityRestaurantListBinding
     private var selectedFilter = "DEFAULT"
+    private lateinit var tokenManager: TokenManager
     //검색을 위해서 새로운 변수
     private var selectedDoorType: String? = null
+    private var keyword : String? = null
 
-    private lateinit var tokenManager: TokenManager
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        tokenManager = TokenManager(this)
 
         // 바인딩 초기화
         binding = ActivityRestaurantListBinding.inflate(layoutInflater)
@@ -47,7 +51,9 @@ class RestaurantListActivity : AppCompatActivity() {
         // 의도(Intent)에서 값 가져오기
         val isSearchResult = intent.getBooleanExtra("isSearchResult", false)
 
+        val skeyword = intent.getStringExtra("keyword")
 
+        keyword = skeyword
         // sortBox 가시성 설정
         binding.sortBox.visibility = if (isSearchResult) View.VISIBLE else View.GONE
 
@@ -167,24 +173,30 @@ class RestaurantListActivity : AppCompatActivity() {
     private fun fetchSortedRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 액세스 토큰 유효성 확인 및 새로 고침
                 val accessToken = tokenManager.ensureValidAccessToken()
-
                 if (accessToken.isNullOrEmpty()) {
-                    // 로그인 화면으로 이동
-                    Toast.makeText(this@RestaurantListActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@RestaurantListActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    }
                     return@launch
                 }
-                val response = RetrofitInstance.restaurantApi.sortRestaurants("", selectedFilter)
+
+                val response = RetrofitInstance.restaurantApi.sortRestaurants(
+                    keyword.orEmpty(),
+                    selectedFilter
+                )
+
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && !response.body().isNullOrEmpty()) {
                         adapter.updateList(response.body()!!)
                     } else {
                         adapter.updateList(emptyList())
+                        showToast(this@RestaurantListActivity, "결과가 없습니다.")
                     }
                     checkIfListIsEmpty()
                 }
             } catch (e: Exception) {
+                e.printStackTrace()
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@RestaurantListActivity, "정렬 중 오류 발생", Toast.LENGTH_SHORT).show()
                 }
