@@ -9,7 +9,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_marginVertical="10dp">
 
             <!-- 상단 타이틀 -->
             <LinearLayout
@@ -174,8 +175,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="전체보기"
-                    android:textSize="14sp"
-                    android:textColor="@color/blue" />
+                    android:backgroundTint="@color/green"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
             </LinearLayout>
 
             <!-- 내 리뷰 -->
@@ -208,8 +210,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="전체보기"
-                    android:textSize="14sp"
-                    android:textColor="@color/blue" />
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/green"
+                    android:textSize="14sp" />
             </LinearLayout>
 
             <!-- 리뷰 항목 -->

@@ -57,7 +57,7 @@ class MyPageActivity : AppCompatActivity() {
 
         // 버튼 클릭 리스너 설정
         logOutBtn.setOnClickListener { logOutUser() }
-        backBtn.setOnClickListener { navigateToMainActivity() }
+        backBtn.setOnClickListener { finish() }
         updateBtn.setOnClickListener { updateUserProfile() }
         uploadImageBtn.setOnClickListener { pickImageFromGallery() }
         removeImageBtn.setOnClickListener { removeProfileImage() }
@@ -70,12 +70,6 @@ class MyPageActivity : AppCompatActivity() {
             startActivity(Intent(this, MyReviewListActivity::class.java)) // 리뷰 목록 화면으로 이동
         }
 
-        // 뒤로 가기 버튼 동작 설정
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                navigateToMainActivity() // 메인 화면으로 이동
-            }
-        })
     }
 
     // UI 요소 초기화 메서드
@@ -173,14 +167,6 @@ class MyPageActivity : AppCompatActivity() {
         showToast("이미지가 제거되었습니다.") // 메시지 출력
     }
 
-    // 메인 화면으로 이동
-    private fun navigateToMainActivity() {
-        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent)
-        finish()
-    }
 
     // 로그인 화면으로 이동
     private fun navigateToLoginActivity() {

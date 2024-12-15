@@ -44,8 +44,17 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
-
+/**
+ * **ControlRestaurantDetail**
+ *
+ * 식당 정보를 관리할 수 있는 관리자 전용 액티비티입니다.
+ * 식당 세부 정보 수정, 영업일, 메뉴 관리 및 이미지 업로드 기능을 제공합니다.
+ */
 class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
+    /**
+     * 이미지를 선택하는 메서드입니다.
+     * @param position 선택된 메뉴의 위치
+     */
     override fun openImagePicker(position: Int) {
         currentMenuPosition = position
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -219,7 +228,9 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         loadRestaurantImages()
     }
 
-
+    /**
+     * 저장 버튼이 눌러지면 식당 데이터들을 저장합니다.
+     */
     private fun saveRestaurantData() {
         val name = findViewById<EditText>(R.id.editRestaurantName).text.toString()
         val description = findViewById<EditText>(R.id.editRestaurantDescription).text.toString()
@@ -244,19 +255,12 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                var accessToken = tokenManager.getAccessToken()
-
-                // 토큰 만료 시 재발급 시도
-                if (accessToken.isNullOrEmpty()) {
-                    val isRefreshed = tokenManager.refreshAccessToken()  // Boolean 반환
-                    if (isRefreshed) {
-                        accessToken = tokenManager.getAccessToken()  // 새 토큰 가져오기
-                    }
-                }
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
 
                 if (accessToken.isNullOrEmpty()) {
-                    showToast("로그인이 필요합니다.")
-                    Log.e("TOKEN_ERROR", "토큰이 비어 있음")
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlRestaurantDetail, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
 
@@ -301,8 +305,9 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
 
     }
 
-
-    // 영업일 업데이트
+    /**
+     * 영업일을 업데이트합니다.
+     */
     private suspend fun updateBusinessDays(parentRecyclerView: RecyclerView): Boolean {
         return try {
             val businessDayList = BusinessDayList(
@@ -316,7 +321,9 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
             false
         }
     }
-
+    /**
+     * 메뉴를 업데이트합니다.
+     */
     private suspend fun updateMenuItems(): Boolean {
         return try {
             val menuItems = menuAdapter.getUpdatedMenuItems()
@@ -349,10 +356,20 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
     }
 
 
-    // 식당 데이터 로드
+    /**
+     * 식당 데이터를 서버에서 로드하고 UI에 바인딩합니다.
+     */
     private fun loadRestaurantData() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlRestaurantDetail, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = RetrofitInstance.restaurantApi.getRestaurantById(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
@@ -365,7 +382,10 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         }
     }
 
-    // 식당 정보 바인딩
+    /**
+     * 식당 데이터를 UI 요소에 바인딩합니다.
+     * @param restaurant 불러온 식당 정보
+     */
     private fun bindRestaurantData(restaurant: RestaurantInfo) {
         findViewById<EditText>(R.id.editRestaurantName).setText(restaurant.name)
         findViewById<EditText>(R.id.editRestaurantDescription).setText(restaurant.description)
@@ -378,16 +398,28 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         currentLatitude = restaurant.latitude
         currentLongitude = restaurant.longitude
     }
-
+    /**
+     * 카테고리를 가져옵니다.
+     */
     private fun getCategoryIndex(category: String?): Int {
         val categories = resources.getStringArray(R.array.restaurant_categories)
         return categories.indexOf(category ?: "기타")
     }
 
-    // 영업일 데이터 로드
+    /**
+     * 영업일 데이터를 서버에서 로드하고 RecyclerView에 바인딩합니다.
+     */
     private fun loadBusinessDays() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlRestaurantDetail, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = RetrofitInstance.restaurantApi.getBusinessDayList(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
@@ -400,10 +432,20 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         }
     }
 
-    // 메뉴 데이터 로드
+    /**
+     * 메뉴 항목 데이터를 서버에서 로드하고 RecyclerView에 바인딩합니다.
+     */
     private fun loadMenuItems() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlRestaurantDetail, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = RetrofitInstance.restaurantApi.getMenu(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
@@ -415,14 +457,23 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
             }
         }
     }
-
+    /**
+     * 식당 이미지를 업로드합니다.
+     */
     private fun uploadRestaurantImages(restaurantId: Int) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val imageParts = selectedImageUris.mapIndexed { index, uri ->
                     prepareFilePart("images[$index]", uri)
                 }
-                val accessToken = tokenManager.getAccessToken() ?: ""
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlRestaurantDetail, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
 
                 val response = RetrofitInstance.restaurantApi.uploadRestaurantImages("Bearer $accessToken",restaurantId, imageParts)
                 if (response.isSuccessful) {
@@ -436,10 +487,20 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         }
     }
 
-    // 식당 이미지 로드
+    /**
+     * 식당 이미지를 서버에서 로드하고 UI에 표시합니다.
+     */
     private fun loadRestaurantImages() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlRestaurantDetail, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = RetrofitInstance.restaurantApi.getRestaurantImages(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
@@ -467,13 +528,17 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         }
     }
 
-    // 사진 선택기 열기
+    /**
+     * 사진 선택기 열기
+     */
     private fun openImagePicker() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(intent, PICK_IMAGE_REQUEST)
     }
 
-    // 이미지 추가 기능
+    /**
+     * 선택된 이미지를 처리하는 메서드
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
@@ -485,7 +550,9 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         }
     }
 
-    // 이미지 추가 레이아웃에 이미지 표시
+    /**
+     * 이미지 추가 레이아웃에 이미지 표시합니다.
+     */
     private fun addImageToLayout(imageUri: Uri?) {
         val imageView = ImageView(this).apply {
             layoutParams = LinearLayout.LayoutParams(200, 200).apply {
@@ -497,7 +564,9 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         Toast.makeText(this, "이미지가 추가되었습니다.", Toast.LENGTH_SHORT).show()
     }
 
-    // 이미지 파일 준비
+    /**
+     * 이미지 파일을 준비합니다.
+     */
     private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
         val fileDescriptor = contentResolver.openFileDescriptor(fileUri, "r") ?: return MultipartBody.Part.createFormData(partName, "")
         val inputStream = contentResolver.openInputStream(fileUri)
@@ -511,7 +580,9 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
         return MultipartBody.Part.createFormData(partName, file.name, requestFile)
     }
 
-    // 파일 이름 가져오기
+    /**
+     * 파일 이름 가져옵니다.
+     */
     private fun ContentResolver.getFileName(uri: Uri): String {
         var name = "temp_file"
         val cursor = query(uri, null, null, null, null)
@@ -528,7 +599,10 @@ class ControlRestaurantDetail : AppCompatActivity(), MenuImagePicker {
 
 
 
-    // 토스트 메시지
+    /**
+     * 토스트 메시지를 UI에 표시합니다.
+     * @param message 표시할 메시지
+     */
     private fun showToast(message: String) {
         runOnUiThread {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

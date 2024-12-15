@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.adapters.RestaurantListAdapter
+import com.example.uosense.adapters.RestaurantViewType
 import com.example.uosense.databinding.ActivitySelectedDoorBinding
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.network.RetrofitInstance
@@ -18,6 +19,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * **SelectedDoorActivity**
+ *
+ * 사용자가 특정 문(DoorType)을 선택했을 때 해당 문 주변 식당 목록을 보여주는 액티비티
+ */
 class SelectedDoorActivity : AppCompatActivity() {
 
     private lateinit var restaurantList: MutableList<RestaurantListResponse>
@@ -50,17 +56,24 @@ class SelectedDoorActivity : AppCompatActivity() {
         setupRecyclerView()
         fetchRestaurantsByDoorType(doorType)
     }
-
+    /**
+     * RecyclerView 초기 설정
+     */
     private fun setupRecyclerView() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+
+        // 어댑터 초기화 시 CONTROL_VIEW 모드 설정
         adapter = RestaurantListAdapter(
             restaurantList,
             onItemClick = { navigateToDetailActivity(it) },
-            onDeleteClick = { restaurant -> confirmDeleteRestaurant(restaurant) }
+            onDeleteClick = {  },
+            viewType = RestaurantViewType.CONTROL_VIEW // CONTROL_VIEW 사용
         )
         binding.recyclerView.adapter = adapter
     }
-
+    /**
+     * 식당 삭제 확인 다이얼로그 표시
+     */
     private fun confirmDeleteRestaurant(restaurant: RestaurantListResponse) {
         AlertDialog.Builder(this)
             .setTitle("삭제 확인")
@@ -69,7 +82,9 @@ class SelectedDoorActivity : AppCompatActivity() {
             .setNegativeButton("취소", null)
             .show()
     }
-
+    /**
+     * 식당 삭제 요청 API 호출
+     */
     private fun deleteRestaurant(restaurantId: Int) {
         CoroutineScope(Dispatchers.Main).launch {
             val accessToken = tokenManager.ensureValidAccessToken()
@@ -92,7 +107,9 @@ class SelectedDoorActivity : AppCompatActivity() {
             }
         }
     }
-
+    /**
+     * 특정 문 주변의 식당 목록을 가져오는 API 호출
+     */
     private fun fetchRestaurantsByDoorType(doorType: String?) {
         CoroutineScope(Dispatchers.Main).launch {
             val accessToken = tokenManager.ensureValidAccessToken()
@@ -115,7 +132,9 @@ class SelectedDoorActivity : AppCompatActivity() {
             }
         }
     }
-
+    /**
+     * 식당 목록이 비어 있는지 확인하고 UI 업데이트
+     */
     private fun checkIfListIsEmpty() {
         if (restaurantList.isEmpty()) {
             recyclerView.visibility = RecyclerView.GONE
@@ -125,20 +144,26 @@ class SelectedDoorActivity : AppCompatActivity() {
             noResultsTextView.visibility = TextView.GONE
         }
     }
-
+    /**
+     * 특정 식당 상세 정보를 표시하는 액티비티로 이동
+     */
     private fun navigateToDetailActivity(restaurant: RestaurantListResponse) {
         val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
             putExtra("restaurantId", restaurant.id)
         }
         startActivity(intent)
     }
-
+    /**
+     * 어댑터 업데이트 확장 함수
+     */
     private fun RestaurantListAdapter.updateList(newList: List<RestaurantListResponse>) {
         restaurantList.clear()
         restaurantList.addAll(newList)
         notifyDataSetChanged()
     }
-
+    /**
+     * 짧은 메시지 토스트 표시
+     */
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
