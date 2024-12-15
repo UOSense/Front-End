@@ -19,12 +19,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * **SignupActivity**
+ *
+ * 회원가입 액티비티입니다.
+ * 회원가입 기능을 제공합니다.
+ */
 
 class SignupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignupBinding
 
-    // 상태 플래그
+    /** 상태 플래그 */
     private var isEmailVerified = false
     private var isVerificationCodeValid = false
     private var isNicknameVerified = false
@@ -35,19 +41,19 @@ class SignupActivity : AppCompatActivity() {
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 뒤로가기 버튼
+        /** 뒤로가기 버튼 */
         binding.backBtn.setOnClickListener {
             finish()
         }
 
-        // 물리적 뒤로 가기 활성화
+        /** 물리적 뒤로 가기 활성화 */
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 finish()
             }
         })
 
-        // 웹메일 중복 확인
+        /** 웹메일 중복 확인 */
         binding.verifyEmailButton.setOnClickListener {
             val email = binding.emailInput.text.toString().trim()
 
@@ -84,7 +90,7 @@ class SignupActivity : AppCompatActivity() {
             }
         }
 
-        // 인증 번호 발송 처리
+        /** 인증 번호 발송 처리 */
         binding.sendVerificationCodeBtn.setOnClickListener {
             val email = binding.emailInput.text.toString().trim()
 
@@ -115,7 +121,7 @@ class SignupActivity : AppCompatActivity() {
             }
         }
 
-        // 인증 번호 제출 버튼 클릭 이벤트
+        /** 인증 번호 제출 버튼 클릭 이벤트 */
         binding.submitVerificationCodeBtn.setOnClickListener {
             val email = binding.emailInput.text.toString().trim()
             val code = binding.verificationCodeInput.text.toString().trim()
@@ -148,7 +154,7 @@ class SignupActivity : AppCompatActivity() {
             }
         }
 
-        // 닉네임 중복 확인 버튼 클릭
+        /** 닉네임 중복 확인 버튼 클릭 */
         binding.checkNicknameBtn.setOnClickListener {
             val nickname = binding.nicknameInput.text.toString().trim()
             if (nickname.isNotEmpty()) {
@@ -186,32 +192,32 @@ class SignupActivity : AppCompatActivity() {
             }
         }
 
-        // 회원가입 완료 버튼 클릭 이벤트
+        /** 회원가입 완료 버튼 클릭 이벤트 */
         binding.registerBtn.setOnClickListener {
             val email = binding.emailInput.text.toString().trim()
             val password = binding.passwordInput.text.toString().trim()
             val confirmPassword = binding.passwordConfirmInput.text.toString().trim()
             val nickname = binding.nicknameInput.text.toString().trim()
 
-            // 비밀번호 유효성 검사
+            /** 비밀번호 유효성 검사 */
             if (!validatePassword(password, confirmPassword)) {
                 return@setOnClickListener
             }
 
-            // 회원가입 처리
+            /** 회원가입 처리 */
             registerUser(email, password, nickname)
         }
     }
 
-    // 회원가입 버튼 활성화 업데이트
+    /** 회원가입 버튼 활성화 업데이트 */
     private fun updateRegisterButtonState() {
         binding.registerBtn.isEnabled =
             isEmailVerified && isVerificationCodeValid && isNicknameVerified
     }
 
-    // 비밀번호 검증
+    /** 비밀번호 검증 */
     private fun validatePassword(password: String, confirmPassword: String): Boolean {
-        val passwordPattern = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@\$!%*?&#])[A-Za-z\\d@\$!%*?&#]{8,20}$"
+        val passwordPattern = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@\\$!%*?&#])[A-Za-z\\d@\\$!%*?&#]{8,20}$"
 
         return if (password.isEmpty() || password.length < 8 || password.length > 20) {
             binding.passwordErrorMessage.visibility = View.VISIBLE
@@ -245,21 +251,21 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 
-//    이메일 중복 버튼 에러 처리
-private fun handleEmailCheckError(code: Int, errorBody: String?) {
-    when (code) {
-        400 -> {
-            binding.emailErrorMessage.visibility = View.VISIBLE
-            binding.emailErrorMessage.text = "중복된 이메일입니다. 다른 이메일을 사용하세요."
-            Log.e("SignupActivity", "400 Error: $errorBody")
-        }
-        else -> {
-            Toast.makeText(this, "알 수 없는 오류가 발생했습니다. ($code)", Toast.LENGTH_SHORT).show()
-            Log.e("SignupActivity", "Error: $code, $errorBody")
+    /** 이메일 중복 버튼 에러 처리 */
+    private fun handleEmailCheckError(code: Int, errorBody: String?) {
+        when (code) {
+            400 -> {
+                binding.emailErrorMessage.visibility = View.VISIBLE
+                binding.emailErrorMessage.text = "중복된 이메일입니다. 다른 이메일을 사용하세요."
+                Log.e("SignupActivity", "400 Error: $errorBody")
+            }
+            else -> {
+                Toast.makeText(this, "알 수 없는 오류가 발생했습니다. ($code)", Toast.LENGTH_SHORT).show()
+                Log.e("SignupActivity", "Error: $code, $errorBody")
+            }
         }
     }
-}
-//    인증 번호 발송 에러 처라
+    /** 인증 번호 발송 에러 처리 */
     private fun handleSendCodeError(code: Int, errorBody: String?) {
         when (code) {
             400 -> {
@@ -277,7 +283,7 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
         }
     }
 
-//    인증 번호 제출 에러 처리
+    /** 인증 번호 제출 에러 처리 */
     private fun handleValidateCodeError(code: Int, errorBody: String?) {
         when (code) {
             400 -> {
@@ -298,37 +304,37 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
 
 
 
-    // 회원가입 처리
+    /** 회원가입 처리 */
     private fun registerUser(email: String, password: String, nickname: String) {
         val newUserRequest = NewUserRequest(email, password, nickname)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // API 호출
+                /** API 호출 */
                 val response = RetrofitInstance.restaurantApi.signupUser(newUserRequest)
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        // 회원가입 성공 시 처리
+                        /** 회원가입 성공 시 처리 */
                         val isSuccess = response.body() ?: false
                         if (isSuccess) {
-                            // Access Token과 Refresh Token 추출
+                            /** Access Token과 Refresh Token 추출 */
                             val accessToken = response.headers()["access"]?.removePrefix("Bearer ") ?: ""
                             val refreshToken = response.headers()["Set-Cookie"]?.split(";")
                                 ?.find { it.startsWith("refresh=") }
                                 ?.substringAfter("refresh=") ?: ""
 
                             if (accessToken.isNotEmpty() && refreshToken.isNotEmpty()) {
-                                // 토큰 저장
+                                /** 토큰 저장 */
                                 saveTokensToLocal(accessToken, refreshToken)
 
-                                // 디버깅용 로그 출력
+                                /** 디버깅용 로그 출력 */
                                 Log.d("SignupActivity", "Access Token: $accessToken")
                                 Log.d("SignupActivity", "Refresh Token: $refreshToken")
 
                                 Toast.makeText(this@SignupActivity, "회원가입 성공!", Toast.LENGTH_SHORT).show()
 
-                                // 회원가입 완료 화면으로 이동
+                                /** 회원가입 완료 화면으로 이동 */
                                 val intent = Intent(this@SignupActivity, SignupCompleteActivity::class.java)
                                 startActivity(intent)
                                 finish()
@@ -350,7 +356,7 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
         }
     }
 
-//    사용자 로컬 스토리지에 토큰 저장
+/**    사용자 로컬 스토리지에 토큰 저장 */
     private fun saveTokensToLocal(accessToken: String, refreshToken: String) {
         val sharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
@@ -360,7 +366,7 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
     }
 
 
-    //    사용자 로컬 스토리지에서 토큰 가져오기
+    /**    사용자 로컬 스토리지에서 토큰 가져오기 */
     private fun getTokensFromLocal(): Pair<String?, String?> {
         val sharedPreferences = getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
         val accessToken = sharedPreferences.getString("access_token", null)
@@ -371,7 +377,7 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
 
 
 
-    //    웹메일 인증 코드 카운트 처리
+    /**    웹메일 인증 코드 카운트 처리 */
     private lateinit var countDownTimer: CountDownTimer
 
     private fun startTimer() {
@@ -379,7 +385,7 @@ private fun handleEmailCheckError(code: Int, errorBody: String?) {
             countDownTimer.cancel()
         }
 
-        countDownTimer = object : CountDownTimer(180000, 1000) { // 3분 (180,000ms)
+        countDownTimer = object : CountDownTimer(180000, 1000) { /** 3분 (180,000ms) */
             override fun onTick(millisUntilFinished: Long) {
                 val minutes = millisUntilFinished / 1000 / 60
                 val seconds = millisUntilFinished / 1000 % 60

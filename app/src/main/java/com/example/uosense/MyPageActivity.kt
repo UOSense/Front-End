@@ -21,6 +21,14 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
+/**
+ * **MyPageActivity**
+ *
+ * 마이 페이지 정보를 표시하는 액티비티입니다.
+ * 내 닉네임 확인, 내 즐겨찾기 목록, 내 리뷰 목록 조회 기능을 제공합니다.
+ */
+
+
 class MyPageActivity : AppCompatActivity() {
 
     /** UI 요소 선언 */
