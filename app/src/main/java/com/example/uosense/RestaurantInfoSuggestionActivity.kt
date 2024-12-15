@@ -12,6 +12,13 @@ import com.example.uosense.fragments.BusinessHoursFragment
 import com.example.uosense.fragments.ProductMenuFragment
 import com.google.android.material.tabs.TabLayoutMediator
 
+/**
+ * **RestaurantInfoSuggestionActivity**
+ *
+ * 식당 정보 수정 제안을 요청하는 액티비티입니다.
+ * 특정 식당의 상품/메뉴, 영업시간, 기본정보 제안 기능을 제공합니다.
+ */
+
 class RestaurantInfoSuggestionActivity : AppCompatActivity() {
 
     /** View Binding 객체 선언 */

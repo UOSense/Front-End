@@ -26,6 +26,13 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.time.LocalDateTime
 
+/**
+ * **ReviewWriteActivity**
+ *
+ * 사용자가 리뷰를 작성하는 액티비티입니다.
+ * 리뷰 작성 기능을 제공합니다.
+ */
+
 class ReviewWriteActivity : AppCompatActivity() {
 
 

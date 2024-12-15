@@ -19,6 +19,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * **SignupActivity**
+ *
+ * 회원가입 액티비티입니다.
+ * 회원가입 기능을 제공합니다.
+ */
 
 class SignupActivity : AppCompatActivity() {
 

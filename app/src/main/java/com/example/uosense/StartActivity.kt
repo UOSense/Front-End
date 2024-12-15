@@ -16,6 +16,13 @@ import kotlinx.coroutines.withContext
 import android.util.Base64
 import org.json.JSONObject
 
+/**
+ * **StartActivity**
+ *
+ * 로그인을 하는 액티비티입니다.
+ * 로그인 후 사용자, 관리자 역할 파악 및 회원가입 액티비티로의 이동 기능을 제공합니다.
+ */
+
 class StartActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStartBinding

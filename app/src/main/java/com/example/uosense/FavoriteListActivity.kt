@@ -15,6 +15,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * **FavoriteListActivity**
+ *
+ * 내 즐겨찾기 목록을 표시하는 액티비티입니다.
+ * 내가 즐겨찾기한 식당 조회 기능을 제공합니다.
+ */
+
+
 class FavoriteListActivity : AppCompatActivity() {
 
     /** RecyclerView 및 어댑터 선언 */

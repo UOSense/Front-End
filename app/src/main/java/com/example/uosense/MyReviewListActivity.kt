@@ -15,6 +15,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * **MyReviewListActivity**
+ *
+ * 내 리뷰 목록을 표시하는 액티비티입니다.
+ * 내 리뷰 목록 조회 기능을 제공합니다.
+ */
+
 class MyReviewListActivity : AppCompatActivity() {
 
     /** RecyclerView 및 어댑터 선언 */

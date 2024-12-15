@@ -14,6 +14,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * **ReportActivity**
+ *
+ * 관리자가 신고가 들어온 리뷰를 조회하는 액티비티입니다.
+ * 신고된 리뷰 확인 및 리뷰 삭제 기능을 제공합니다.
+ */
+
 class ReportActivity : AppCompatActivity() {
 
     /** 바인딩 객체 및 어댑터 선언 */
