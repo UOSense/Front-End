@@ -2,7 +2,49 @@ package com.example.uosense.models
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 import java.time.LocalDateTime
+
+// 카테고리 유형 - 식당 종류
+enum class CategoryType {
+    KOREAN,    // 한식
+    CHINESE,   // 중식
+    JAPANESE,  // 일식
+    WESTERN,   // 양식
+    OTHER      // 기타
+}
+
+// 세부 설명 유형 - 업종 세분화
+enum class SubDescriptionType {
+    BAR,        // 술집
+    CAFE,       // 카페
+    RESTAURANT  // 식당
+}
+
+// 출입구 유형 - 학교 출입구 구분
+enum class DoorType {
+    FRONT,   // 정문
+    SIDE,    // 쪽문
+    BACK,    // 후문
+    SOUTH    // 남문
+}
+
+// 필터 유형 - 식당 정렬 기준
+enum class FilterType {
+    DEFAULT,   // 기본 정렬
+    BOOKMARK,  // 즐겨찾기 많은 순
+    DISTANCE,  // 거리 가까운 순
+    RATING,    // 별점 순
+    REVIEW,    // 리뷰 순
+    PRICE      // 가격 순
+}
+
+// 신고 상세 유형 - 신고 사유 분류
+enum class ReportDetailType {
+    ABUSIVE,        // 욕설
+    DEROGATORY,     // 비방
+    ADVERTISEMENT   // 광고
+}
 
 // 메뉴 요청 모델
 data class MenuRequest(
@@ -20,23 +62,24 @@ data class MenuResponse(
     val restaurantId: Int,
     val name: String,
     val price: Int,
-    val description: String,
-    val imageUrl: String
+    val description: String?,
+    var imageUrl: String?
 )
 
-// 식당 요청 모델
+// 데이터 모델 수정
 data class RestaurantRequest(
-    val id: Int? = null,
+    val id: Int,
     val name: String,
-    val doorType: String?,
+    val doorType: String,
     val latitude: Double,
     val longitude: Double,
     val address: String,
-    val phoneNumber: String? = null,
+    val phoneNumber: String,
     val category: String,
-    val subDescription: String? = null,
+    val subDescription: String,
     val description: String
 )
+
 
 // 영업일 정보 모델
 data class BusinessDay(
@@ -98,9 +141,9 @@ data class BusinessDayList(
 data class BusinessDayInfo(
     val id: Int?,
     val dayOfWeek: String,
-    val breakTime: Boolean,
-    val startBreakTime: String? ,
-    val stopBreakTime: String? ,
+    val haveBreakTime: Boolean,
+    val startBreakTime: String? = null,
+    val stopBreakTime: String? = null,
     val openingTime: String,
     val closingTime: String,
     val holiday: Boolean
@@ -119,13 +162,23 @@ data class LocalTime(
 data class RestaurantImagesResponse(
     val restaurantId: Int,
     val imageList: List<ImageInfo>
+) {
+
+}
+
+// 이미지 정보 모델
+data class ImageInfo(
+    val imageUrl: String,
+    val id: Int
 )
 
 // 이미지 정보 모델
+/*
 data class ImageInfo(
     val url: String,
     val description: String? = null
 )
+*/
 
 // 새 메뉴 요청 모델
 data class NewMenuRequest(
@@ -140,8 +193,8 @@ data class NewMenuRequest(
 data class RestaurantListResponse(
     val id: Int,
     val name: String,
-    val longitude: Double,
-    val latitude: Double,
+    var longitude: Double,
+    var latitude: Double,
     val address: String,
     val rating: Double,
     val category: String,
@@ -211,7 +264,8 @@ data class RestaurantInfo(
     val reviewCount: Int?,
     val bookmarkCount: Int?,
     val bookmarkId: Int?, // 즐겨찾기 ID 추가
-    val businessDays: List<BusinessDay>? = null
+    val businessDays: List<BusinessDay>? = null,
+    val restaurantImageUrl: String? = null // 이미지 URL 필드 추가
 ) : Parcelable {
 
     // Parcel 생성자
@@ -230,7 +284,8 @@ data class RestaurantInfo(
         reviewCount = parcel.readValue(Int::class.java.classLoader) as? Int,
         bookmarkCount = parcel.readValue(Int::class.java.classLoader) as? Int,
         bookmarkId = parcel.readValue(Int::class.java.classLoader) as? Int,
-        businessDays = parcel.createTypedArrayList(BusinessDay.CREATOR)
+        businessDays = parcel.createTypedArrayList(BusinessDay.CREATOR),
+        restaurantImageUrl = parcel.readString()
     )
 
     // Parcel 데이터 쓰기
@@ -250,6 +305,7 @@ data class RestaurantInfo(
         parcel.writeValue(bookmarkCount)
         parcel.writeValue(bookmarkId)
         parcel.writeTypedList(businessDays)
+        parcel.writeString(restaurantImageUrl)
     }
 
     override fun describeContents(): Int = 0
@@ -276,6 +332,33 @@ data class ReportRequest(
 )
 
 
+//리뷰 목록 조회 시 날라오는 것들
+data class ReviewItem(
+    val id: Int,
+    val restaurantId: Int,
+    val userId: Int,
+    val nickname: String,
+    val userImage: String,
+    val body: String,
+    val rating: Double,
+    val dateTime: List<Int>, // 배열 형태로 정의
+    val reviewEventCheck: Boolean,
+    val tag: String?,
+    var likeCount: Int,
+    val imageUrls: List<String>?
+){
+    // 날짜 포맷 변환 함수
+    fun getFormattedDate(): String {
+        return if (dateTime.size >= 3) {
+            "${dateTime[0]}-${"%02d".format(dateTime[1])}-${"%02d".format(dateTime[2])}" +
+                    " ${"%02d".format(dateTime[3])}:${"%02d".format(dateTime[4])}:${"%02d".format(dateTime[5])}"
+        } else {
+            "Invalid Date"
+        }
+    }
+}
+
+
 data class ReviewResponse(
     val id: Int,
     val restaurantId: Int,
@@ -289,21 +372,6 @@ data class ReviewResponse(
     val reviewEventCheck: Boolean
 )
 
-data class ReviewItem(
-    val id: Int,
-    val restaurantId: Int,
-    val userId: Int,
-    val nickname: String,
-    val userImage: String,
-    val body: String,
-    val rating: Double,
-    val dateTime: String,
-    val reviewEventCheck: Boolean,
-    val tag: String?,
-    val likeCount: Int,
-    val imageUrls: List<String>?
-)
-
 
 
 // 즐겨찾기 응답 모델
@@ -314,9 +382,38 @@ data class BookMarkResponse(
 )
 // 신고 응답 모델
 data class ReportResponse(
-    val id: Int,                // 신고 고유 ID
+    val reportId: Int,                // 신고 고유 ID
     val reviewId: Int,          // 신고된 리뷰 ID
     val userId: Int,            // 신고한 사용자 ID
     val detail: String,         // 신고 상세 내용 (예: ABUSIVE, DEROGATORY, ADVERTISEMENT)
-    val createdAt: LocalDateTime // 신고 생성 일시
+    val createdAt: List<Int> // 신고 생성 일시
+)
+// 식당 상품 메뉴 모델
+data class MenuImageRequest(
+    val image: String? = null
+)
+// 식당 영업 시간 모델
+data class BusinessDayRequest(
+    val restaurantId: Int,
+    val purposeDayInfoList: List<PurposeDayInfo>
+)
+
+// = BusinessDayInfo
+data class PurposeDayInfo(
+    val id: Int = 0, // 의미 X
+    val dayOfWeek: String,
+    val breakTime: Boolean,
+    val startBreakTime: String? = "00:00:00",
+    val stopBreakTime: String? = "00:00:00",
+    val openingTime: String = "00:00:00",
+    val closingTime: String = "00:00:00",
+    val holiday: Boolean
+)
+// = RestaurantInfo
+data class RestaurantBasicInfo(
+    val restaurantId: Int, // Intent해서 받아오기
+    val name: String,
+    val address: String,
+    val phoneNumber: String,
+    val subDescription: String = "BAR"
 )

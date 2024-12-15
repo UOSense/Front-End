@@ -8,33 +8,38 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.uosense.databinding.ActivityStartBinding
 import com.example.uosense.models.LoginRequest
-import com.example.uosense.network.CustomRetrofitProvider
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.util.Base64
-import androidx.core.content.ContextCompat.startActivity
 import org.json.JSONObject
+
+/**
+ * **StartActivity**
+ *
+ * 로그인을 하는 액티비티입니다.
+ * 로그인 후 사용자, 관리자 역할 파악 및 회원가입 액티비티로의 이동 기능을 제공합니다.
+ */
 
 class StartActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStartBinding
     private lateinit var tokenManager: TokenManager
-    private var userRole: String? = null // admin인지 user인지 저장
+    private var userRole: String? = null /** admin인지 user인지 저장 */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // View Binding 초기화
+        /** View Binding 초기화 */
         binding = ActivityStartBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // TokenManager 초기화
+        /** TokenManager 초기화 */
         tokenManager = TokenManager(this)
 
-        // 로그인 버튼 클릭 이벤트
+        /** 로그인 버튼 클릭 이벤트 */
         binding.loginBtn.setOnClickListener {
             val email = binding.emailInput.text.toString().trim()
             val password = binding.passwordInput.text.toString().trim()
@@ -46,19 +51,19 @@ class StartActivity : AppCompatActivity() {
             }
         }
 
-        // 회원가입 클릭 이벤트
+        /** 회원가입 클릭 이벤트 */
         binding.signup.setOnClickListener {
             val intent = Intent(this, SignupActivity::class.java)
             startActivity(intent)
         }
 
-        // 비밀번호 찾기 클릭 이벤트
+        /** 비밀번호 찾기 클릭 이벤트 */
         binding.forgotPassword.setOnClickListener {
             Toast.makeText(this, "아이디/비밀번호 찾기 기능 준비 중", Toast.LENGTH_SHORT).show()
         }
     }
 
-    //    로그인 처리
+    /** 로그인 처리 */
     private fun loginUser(email: String, password: String) {
         val loginRequest = LoginRequest(email, password)
 
@@ -75,14 +80,14 @@ class StartActivity : AppCompatActivity() {
                             ?.substringAfter("refresh=") ?: ""
 
                         if (accessToken.isNotEmpty() && refreshToken.isNotEmpty()) {
-                            // 토큰 저장 및 role 파싱
+                            /** 토큰 저장 및 role 파싱 */
                             saveTokensToLocal(accessToken, refreshToken)
                             parseRoleFromToken(refreshToken)
 
                             if (userRole == "USER") {
                                 Toast.makeText(
                                     this@StartActivity,
-                                    "로그인 성공! 사용자 역할: USER",
+                                    "로그인 성공!" ,
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 navigateToMainActivity()
@@ -107,31 +112,30 @@ class StartActivity : AppCompatActivity() {
                     } else {
                         Toast.makeText(
                             this@StartActivity,
-                            "로그인 실패: ${response.code()}",
+                            "로그인 실패",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@StartActivity, "네트워크 오류: ${e.message}", Toast.LENGTH_SHORT)
+                    Toast.makeText(this@StartActivity, "네트워크 오류", Toast.LENGTH_SHORT)
                         .show()
                 }
             }
         }
     }
 
-
-    //    리프레시 토큰 파싱 처리
+    /** 리프레시 토큰 파싱 처리 */
     private fun parseRoleFromToken(refreshToken: String) {
         try {
-            // JWT 토큰의 Payload 부분만 추출
+            /** JWT 토큰의 Payload 부분만 추출 */
             val payloadBase64 = refreshToken.split(".")[1]
             val payload = String(Base64.decode(payloadBase64, Base64.URL_SAFE))
 
-            // JSON 객체로 변환하여 role 값 추출
+            /** JSON 객체로 변환하여 role 값 추출 */
             val jsonObject = JSONObject(payload)
-            userRole = jsonObject.getString("role") // admin 또는 user
+            userRole = jsonObject.getString("role") /** admin 또는 user */
         } catch (e: Exception) {
             Log.e("ParseRole", "토큰 파싱 중 오류 발생: ${e.message}")
         }
@@ -153,7 +157,7 @@ class StartActivity : AppCompatActivity() {
     }
 
     private fun navigateToControlMainActivity() {
-        val intent = Intent(this, ReviewWriteActivity::class.java)
+        val intent = Intent(this, MyPageActivity::class.java)
         startActivity(intent)
         finish()
     }

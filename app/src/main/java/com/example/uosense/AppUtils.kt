@@ -169,5 +169,65 @@ object AppUtils {
             }
         }
     }
+    // doorType을 API에서 사용하는 값으로 매핑하는 함수
+    fun mapDoorTypeForApi(doorType: String): String {
+        return when (doorType) {
+            "정문" -> "FRONT"
+            "남문" -> "SOUTH"
+            "쪽문" -> "SIDE"
+            "후문" -> "BACK"
+            else -> "DEFAULT"  // 기본값 처리
+        }
+    }
+
+    // CategoryType 매핑 함수
+    fun mapCategoryForApi(category: String): String {
+        return when (category) {
+            "한식" -> "KOREAN"
+            "중식" -> "CHINESE"
+            "일식" -> "JAPANESE"
+            "양식" -> "WESTERN"
+            "기타" -> "OTHER"
+            else -> "OTHER"
+        }
+    }
+
+    // SubDescriptionType 매핑 함수
+    fun mapSubDescription(subDescription: String): String {
+        return when (subDescription) {
+            "술집" -> "BAR"
+            "카페" -> "CAFE"
+            "음식점" -> "RESTAURANT"
+            else -> "RESTAURANT"
+        }
+    }
+
+    // DayOfWeek 매핑 함수
+    fun mapDayOfWeek(day: String): String {
+        return when (day) {
+            "월요일" -> "Monday"
+            "화요일" -> "Tuesday"
+            "수요일" -> "Wednesday"
+            "목요일" -> "Thursday"
+            "금요일" -> "Friday"
+            "토요일" -> "Saturday"
+            "일요일" -> "Sunday"
+            else -> throw IllegalArgumentException("알 수 없는 요일: $day")
+        }
+    }
+
+
+    // FilterType 매핑 함수
+    fun mapFilterType(filter: String): String {
+        return when (filter) {
+            "즐겨찾기 많은 순" -> "BOOKMARK"
+            "거리 가까운 순" -> "DISTANCE"
+            "평점 순" -> "RATING"
+            "리뷰 많은 순" -> "REVIEW"
+            "가격 낮은 순" -> "PRICE"
+            else -> "BOOKMARK"
+        }
+    }
+
 
 }

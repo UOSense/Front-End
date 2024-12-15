@@ -7,40 +7,8 @@
     android:padding="16dp"
     android:background="@color/white">
 
-    <!-- 이미지 업로드 -->
-    <GridLayout
-        android:id="@+id/imageContainer"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:rowCount="2"
-        android:columnCount="2"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="16dp"
-        android:padding="8dp"
-        android:background="@drawable/rounded_input_background">
-
-        <TextView
-            android:id="@+id/imageHint"
-            android:layout_height="wrap_content"
-            android:layout_rowSpan="2"
-            android:layout_columnSpan="2"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:text="간판, 식당 외관 사진 등 식당을 확인할 수 있는 사진을 \n첨부해주세요."
-            android:textColor="@color/gray" />
-    </GridLayout>
 
 
-    <Button
-        android:id="@+id/uploadImageBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/rounded_border_green"
-        android:text="이미지 업로드"
-        android:textColor="@color/black"
-        android:layout_gravity="center"/>
 
     <!-- 입력 필드 -->
     <TextView
@@ -53,6 +21,7 @@
         android:layout_marginBottom="8dp"/>
 
     <EditText
+        android:id="@+id/editTextRestaurantName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="장소명 입력"
@@ -74,9 +43,10 @@
         android:layout_marginTop="8dp"/>
 
     <EditText
+        android:id="@+id/editTextCategory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="업종 입력"
+        android:hint="CAFE, BAR, RESTAURANT 중 하나를 적어주세요."
         android:background="@drawable/rounded_input_background"
         android:padding="8dp"
         android:inputType="text"
@@ -95,9 +65,32 @@
         android:layout_marginBottom="8dp"/>
 
     <EditText
+        android:id="@+id/editTextRestaurantAddress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="상세 위치 입력 (예 : 동, 층, 호)"
+        android:background="@drawable/rounded_input_background"
+        android:padding="8dp"
+        android:inputType="text"
+        android:layout_marginBottom="8dp"
+        android:textColorHint="@color/gray"
+        android:textColor="@color/black" />
+
+    <!-- 입력 필드 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="전화번호"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:textSize="20dp"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/editTextPhoneNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="전화번호 입력"
         android:background="@drawable/rounded_input_background"
         android:padding="8dp"
         android:inputType="text"

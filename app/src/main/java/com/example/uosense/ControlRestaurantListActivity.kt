@@ -1,14 +1,18 @@
 package com.example.uosense
 
+import TokenManager
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uosense.AppUtils.showToast
 import com.example.uosense.adapters.RestaurantListAdapter
+import com.example.uosense.adapters.RestaurantViewType
+import com.example.uosense.databinding.ActivityControlRestaurantListBinding
 import com.example.uosense.databinding.ActivityRestaurantListBinding
 import com.example.uosense.models.RestaurantListResponse
 import com.example.uosense.network.RetrofitInstance
@@ -17,22 +21,30 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
+/**
+ * **ControlRestaurantListActivity**
+ *
+ * 식당 관리 기능을 제공하는 액티비티로,
+ * 관리자 권한으로 식당 목록을 관리할 수 있습니다.
+ */
 class ControlRestaurantListActivity : AppCompatActivity() {
 
     private lateinit var originalRestaurantList: MutableList<RestaurantListResponse>
     private lateinit var restaurantList: MutableList<RestaurantListResponse>
     private lateinit var adapter: RestaurantListAdapter
-    private lateinit var binding: ActivityRestaurantListBinding
+    private lateinit var binding: ActivityControlRestaurantListBinding
     private var selectedFilter = "DEFAULT"
     //검색을 위해서 새로운 변수
     private var selectedDoorType: String? = null
 
+    private lateinit var tokenManager: TokenManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        tokenManager = TokenManager(this)
         // 바인딩 초기화
-        binding = ActivityRestaurantListBinding.inflate(layoutInflater)
+        binding = ActivityControlRestaurantListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         originalRestaurantList = intent.getParcelableArrayListExtra("restaurantList") ?: mutableListOf()
@@ -53,17 +65,71 @@ class ControlRestaurantListActivity : AppCompatActivity() {
         customizeSearchView()
 
         binding.ivMap.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, ControlMainActivity::class.java)
             startActivity(intent)
         }
     }
-    // RecyclerView 설정 함수
+    /**
+     * RecyclerView 초기 설정
+     */
     private fun setupRecyclerView() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = RestaurantListAdapter(restaurantList) { navigateToDetailActivity(it) }
+
+        // 어댑터 초기화 시 CONTROL_VIEW 모드 설정
+        adapter = RestaurantListAdapter(
+            restaurantList,
+            onItemClick = { navigateToDetailActivity(it) },
+            onDeleteClick = { restaurant -> confirmDeleteRestaurant(restaurant) },
+            viewType = RestaurantViewType.CONTROL_VIEW // CONTROL_VIEW 사용
+        )
         binding.recyclerView.adapter = adapter
     }
-    // 리스트가 비어있는지 체크하고, 빈 경우에는 "결과 없음" 텍스트를 보여줌
+
+
+    /**
+     * 식당 삭제 확인 대화 상자 표시
+     * @param restaurant 삭제할 식당 객체
+     */
+    private fun confirmDeleteRestaurant(restaurant: RestaurantListResponse) {
+        AlertDialog.Builder(this)
+            .setTitle("삭제 확인")
+            .setMessage("정말로 ${restaurant.name} 식당을 정말로 식당 삭제? (주의)")
+            .setPositiveButton("삭제") { _, _ -> deleteRestaurant(restaurant.id) }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    /**
+     * 식당 삭제 API 호출
+     * @param restaurantId 삭제할 식당 ID
+     */
+    private fun deleteRestaurant(restaurantId: Int) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val accessToken = tokenManager.ensureValidAccessToken()
+            if (accessToken.isNullOrEmpty()) {
+                showToast(this@ControlRestaurantListActivity, "로그인이 필요합니다.")
+                return@launch
+            }
+
+            try {
+                val response = RetrofitInstance.restaurantApi.deleteRestaurant("Bearer $accessToken", restaurantId)
+                if (response.isSuccessful) {
+                    restaurantList.removeAll { it.id == restaurantId }
+                    adapter.updateList(restaurantList)
+                    showToast(this@ControlRestaurantListActivity, "삭제되었습니다.")
+                } else {
+                    showToast(this@ControlRestaurantListActivity, "삭제 실패.")
+                }
+            } catch (e: Exception) {
+                showToast(this@ControlRestaurantListActivity, "삭제 중 오류 발생.")
+            }
+        }
+    }
+
+    /**
+     * 식당 목록이 비어 있는지 확인
+     * 비어 있으면 "결과 없음" 텍스트 표시
+     */
     private fun checkIfListIsEmpty() {
         if (restaurantList.isEmpty()) {
             binding.recyclerView.visibility = RecyclerView.GONE
@@ -73,7 +139,9 @@ class ControlRestaurantListActivity : AppCompatActivity() {
             binding.tvNoResults.visibility = TextView.GONE
         }
     }
-    // DoorType 필터 버튼 클릭 리스너 등록
+    /**
+     * 필터 버튼 클릭 리스너 등록
+     */
     private fun setupFilterButtons() {
         binding.apply {
             doorTypeButton1.setOnClickListener { filterRestaurantsLocally("정문") }
@@ -84,7 +152,10 @@ class ControlRestaurantListActivity : AppCompatActivity() {
     }
 
 
-    // DoorType 필터 적용
+    /**
+     * DoorType에 따른 식당 목록 필터링
+     * @param doorType 선택된 문 유형
+     */
     private fun filterRestaurantsLocally(doorType: String) {
         selectedDoorType = doorType
 
@@ -104,13 +175,17 @@ class ControlRestaurantListActivity : AppCompatActivity() {
     }
 
 
-    // 정렬 버튼 클릭 시 옵션을 보여주는 함수
+    /**
+    * 정렬 버튼 클릭 리스너 등록
+    */
     private fun setupSortButton() {
         binding.btnFilter.setOnClickListener {
             showSortOptions()
         }
     }
-    // 정렬 기준을 선택하는 다이얼로그를 띄우는 함수
+    /**
+     * 정렬 기준 선택 대화 상자 표시
+     */
     private fun showSortOptions() {
         val sortOptions = arrayOf("리뷰 많은 순", "즐겨찾기 많은 순", "평점 순", "가격 낮은 순", "거리 가까운 순")
         val apiValues = arrayOf("REVIEW", "BOOKMARK", "RATING", "PRICE", "DISTANCE")
@@ -125,7 +200,9 @@ class ControlRestaurantListActivity : AppCompatActivity() {
             .setNegativeButton("취소", null)
             .show()
     }
-    // 정렬된 레스토랑 데이터를 서버에서 받아오는 함수
+    /**
+     * 정렬된 식당 목록을 서버에서 불러옴
+     */
     private fun fetchSortedRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -145,14 +222,19 @@ class ControlRestaurantListActivity : AppCompatActivity() {
             }
         }
     }
-    // 레스토랑 상세보기 화면으로 이동하는 함수
+    /**
+     * 식당 세부 정보 화면으로 이동
+     * @param restaurant 선택된 식당 객체
+     */
     private fun navigateToDetailActivity(restaurant: RestaurantListResponse) {
-        val intent = Intent(this, RestaurantDetailActivity::class.java).apply {
+        val intent = Intent(this, ControlRestaurantDetail::class.java).apply {
             putExtra("restaurantId", restaurant.id)
         }
         startActivity(intent)
     }
-    // 검색어 기반으로 RestaurantListActivity에서 검색 수행
+    /**
+     * 검색어를 입력받아 식당 목록을 필터링합니다.
+     */
     private fun setupSearch() {
         binding.svSearch.setOnQueryTextListener(object :
             androidx.appcompat.widget.SearchView.OnQueryTextListener {
@@ -169,21 +251,43 @@ class ControlRestaurantListActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
     }
-
-    // 검색 메서드 수정
-    // 검색 API 호출
+    /**
+     * doorType을 API에서 사용하는 값으로 매핑하는 함수
+     */
+    private fun mapDoorTypeForApi(doorType: String): String {
+        return when (doorType) {
+            "정문" -> "FRONT"
+            "남문" -> "SOUTH"
+            "쪽문" -> "SIDE"
+            "후문" -> "BACK"
+            else -> "NULL"  // 기본값 처리
+        }
+    }
+    /**
+     * API를 통해 검색어와 선택된 문 유형(DoorType)에 따라 식당 목록을 검색합니다.
+     * @param keyword 검색할 키워드
+     */
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val apiDoorType = if (!selectedDoorType.isNullOrEmpty()) {
+                    mapDoorTypeForApi(selectedDoorType!!)
+                }else {
+                    null
+                }
                 val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
-                    doorType = selectedDoorType
+                    doorType = apiDoorType
                 )
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
-                        navigateToRestaurantList(response.body()!!)
+                        if (selectedDoorType != null) {
+                            navigateToSelectedDoorList(response.body()!!, mapDoorTypeForApi(selectedDoorType!!))
+                        } else {
+                            navigateToRestaurantList(response.body()!!)
+                        }
                     } else {
-
+                        showToast(this@ControlRestaurantListActivity, "검색 결과가 없습니다.")
                     }
                 }
             } catch (e: Exception) {
@@ -194,9 +298,27 @@ class ControlRestaurantListActivity : AppCompatActivity() {
             }
         }
     }
-    // 전체 목록 보기로 이동 (정문 기본 선택)
+    /**
+     * 선택된 필터에 따른 식당 리스트 화면으로 이동
+     * @param restaurantList 검색된 식당 리스트
+     * @param doorType 선택된 필터
+     */
+    private fun navigateToSelectedDoorList(
+        restaurantList: List<RestaurantListResponse>,
+        doorType: String
+    ) {
+        val intent = Intent(this, SelectedDoorActivity::class.java).apply {
+            putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
+            putExtra("doorType", doorType)
+        }
+        startActivity(intent)
+    }
+    /**
+     * 식당 리스트 화면으로 이동
+     * @param restaurantList 검색된 식당 리스트
+     */
     private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
-        val intent = Intent(this, RestaurantListActivity::class.java).apply {
+        val intent = Intent(this, ControlRestaurantListActivity::class.java).apply {
             putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
             putExtra("defaultDoorType", "FRONT") // 정문 기본 선택
         }
@@ -206,8 +328,7 @@ class ControlRestaurantListActivity : AppCompatActivity() {
 
 
     /**
-     * 검색창 글씨체는 따로 함수정의해서 색상 변경
-     * xml 파일 내에서 수정 X
+     * 검색창 글씨체는 따로 함수정의해서 색상 변경합니다.
      */
     private fun customizeSearchView() {
         try {
@@ -228,7 +349,7 @@ class ControlRestaurantListActivity : AppCompatActivity() {
     }
 
     /**
-     * (iv_search) 검색 버튼 눌러질 떄 이벤트 처리
+     * 검색창 초기화 및 검색 기능 설정
      */
     private fun setupClickListeners() {
         binding.ivSearch.setOnClickListener {
