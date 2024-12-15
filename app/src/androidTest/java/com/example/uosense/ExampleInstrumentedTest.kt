@@ -1,24 +1,3 @@
-package com.example.uosense
-
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.ext.junit.runners.AndroidJUnit4
-
-import org.junit.Test
-import org.junit.runner.RunWith
-
-import org.junit.Assert.*
-
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-@RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
-    @Test
-    fun useAppContext() {
-        // Context of the app under test.
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.uosense", appContext.packageName)
-    }
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:1ac55f6bdd20459e145f8f76f10bccd0c62c15d73cf166efad6bd7cea1b45c69
+size 688

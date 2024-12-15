@@ -1,21 +1,3 @@
-package com.example.uosense.adapters
-
-import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.uosense.fragments.BasicInfoFragment
-import com.example.uosense.fragments.BusinessHoursFragment
-import com.example.uosense.fragments.ProductMenuFragment
-
-class InfoSuggestionPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
-
-    override fun getItemCount(): Int = 3
-
-    override fun createFragment(position: Int): Fragment {
-        return when (position) {
-            0 -> ProductMenuFragment()
-            1 -> BusinessHoursFragment()
-            else -> BasicInfoFragment()
-        }
-    }
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:08f92de43b7d54fcb864b62d3817d5a0d389db44efd67f0ace2d3f820b7ef83e
+size 743
