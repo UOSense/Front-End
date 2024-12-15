@@ -51,7 +51,10 @@ import com.google.android.gms.location.LocationServices
 import android.util.Base64
 import com.example.uosense.databinding.ActivityControlMainBinding
 import org.json.JSONObject
-
+/**
+ * 관리자 메인 액티비티 - 네이버 지도를 사용해 식당 정보를 관리하는 메인 화면
+ * 지도 초기화, 사용자 위치 추적, 식당 목록 표시 등의 기능을 수행도 메인 액티비티와 동일합니다.
+ */
 class ControlMainActivity : AppCompatActivity() {
     //위치 관련 변수
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -290,6 +293,14 @@ class ControlMainActivity : AppCompatActivity() {
     private fun loadAllRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlMainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = restaurantApi.getRestaurantList(
                     doorType = null,
                     filter = "DEFAULT"
@@ -316,6 +327,14 @@ class ControlMainActivity : AppCompatActivity() {
     private fun loadRestaurantsByFilter(doorType: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlMainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 Log.d("API_CALL", "doorType: $doorType")  // 로그 추가
                 val response = restaurantApi.getRestaurantList(
                     doorType = doorType,
@@ -504,6 +523,14 @@ class ControlMainActivity : AppCompatActivity() {
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlMainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 // API 호출
                 val response = restaurantApi.getRestaurantList(
                     doorType = null,
@@ -588,6 +615,14 @@ class ControlMainActivity : AppCompatActivity() {
     private fun fetchRestaurantDetails(restaurantId: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlMainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = RetrofitInstance.restaurantApi.getRestaurantById(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
@@ -675,6 +710,14 @@ class ControlMainActivity : AppCompatActivity() {
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ControlMainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = restaurantApi.searchRestaurants(
                     keyword = keyword,
                     doorType = AppUtils.mapDoorTypeForApi(selectedDoorType!!)
@@ -683,7 +726,8 @@ class ControlMainActivity : AppCompatActivity() {
                     if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
                         navigateToRestaurantList(response.body()!!)
                     } else {
-
+                        // 검색 결과 없음 알림
+                        showToast(this@ControlMainActivity, "검색 결과가 없습니다.")
                     }
                 }
             } catch (e: Exception) {

@@ -59,7 +59,7 @@ import java.sql.Types.NULL
 import kotlin.math.log
 
 /**
- * 메인 액티비티 - 네이버 지도를 사용해 식당 정보를 관리하는 메인 화면
+ * 메인 액티비티 - 네이버 지도를 사용해 식당 정보를 보여주는 메인 화면
  * 지도 초기화, 사용자 위치 추적, 식당 목록 표시 등의 기능을 수행합니다.
  */
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -112,12 +112,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             loadRestaurants()  // 식당 목록 다시 로딩
         }
     }
+    /**
+     * 모든 마커를 초기화합니다.
+     */
     fun clearMarkers() {
         restaurantMarkers.forEach { it.map = null }
         restaurantMarkers.clear()
         Log.d("MARKERS_RESET", "모든 마커 초기화")
     }
-
+    /**
+     * 초기 위치를 정해줍니다.
+     */
     override fun onMapReady(map: NaverMap) {
         naverMap = map
         naverMap.locationSource = locationSource
@@ -315,6 +320,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun loadAllRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@MainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = restaurantApi.getRestaurantList(
                     filter = "DEFAULT"
                 )
@@ -344,6 +357,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun loadRestaurantsByFilter(doorType: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@MainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 Log.d("API_CALL", "doorType: $doorType")  // 로그 추가
                 val response = restaurantApi.getRestaurantList(
                     doorType = doorType,
@@ -563,6 +584,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun loadRestaurants() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@MainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 // API 호출
                 val response = restaurantApi.getRestaurantList(
                     doorType = null,
@@ -656,6 +685,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun fetchRestaurantDetails(restaurantId: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@MainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val response = RetrofitInstance.restaurantApi.getRestaurantById(restaurantId)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful && response.body() != null) {
@@ -744,6 +781,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun searchRestaurants(keyword: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@MainActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
                 val apiDoorType = if (!selectedDoorType.isNullOrEmpty()) {
                     mapDoorTypeForApi(selectedDoorType!!)
                 }else {
@@ -760,7 +805,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             navigateToSelectedDoorList(response.body()!!, mapDoorTypeForApi(selectedDoorType!!))
                         } else {
                             // 체크박스 해제 시 전체 목록 이동
-                            navigateToRestaurantList(response.body()!!)
+                            navigateToRestaurantList(response.body()!!, isSearchResult = true)
                         }
                     } else {
                         showToast(this@MainActivity, "검색 결과가 없습니다.")
@@ -922,10 +967,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
      * 전체 식당 목록 화면으로 이동합니다. 정문이 기본 선택으로 설정됩니다.
      * @param restaurantList 식당 목록
      */
-    private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>) {
+    private fun navigateToRestaurantList(restaurantList: List<RestaurantListResponse>,isSearchResult: Boolean = false) {
         val intent = Intent(this, RestaurantListActivity::class.java).apply {
             putParcelableArrayListExtra("restaurantList", ArrayList(restaurantList))
             putExtra("defaultDoorType", "FRONT") // 정문 기본 선택
+            putExtra("isSearchResult", isSearchResult)
         }
         startActivity(intent)
     }

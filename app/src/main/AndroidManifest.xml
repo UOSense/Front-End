@@ -43,13 +43,20 @@
             android:exported="false" />
         <activity
             android:name=".ControlRestaurantListActivity"
-            android:exported="false" />
+            android:exported="true" />
         <activity
             android:name=".ReviewListActivity"
             android:exported="false" />
         <activity
             android:name=".SelectedDoorActivity"
             android:exported="true" />
+        <activity
+            android:name=".MyReviewListActivity"
+            android:exported="true" />
+        <activity
+            android:name=".FavoriteListActivity"
+            android:exported="true" />
+
         <activity
             android:name=".StartActivity"
             android:exported="true">

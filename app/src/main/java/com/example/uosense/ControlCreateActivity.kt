@@ -51,6 +51,10 @@ import org.json.JSONObject
 import java.io.File
 
 class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
+    /**
+     * **openImagePicker**
+     * 이미지 선택기를 엽니다.
+     */
     override fun openImagePicker(position: Int) {
         currentMenuPosition = position
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -89,6 +93,7 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
 
         tokenManager = TokenManager(this)
         setContentView(R.layout.activity_control_create)
+
         val doorTypeSpinner = findViewById<Spinner>(R.id.editDoorType)
         ArrayAdapter.createFromResource(
             this,
@@ -206,9 +211,11 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
     }
 
 
-    //수정된 모든 데이터 저장
+    /**
+     * **saveRestaurantData**
+     * 사용자가 입력한 식당 데이터를 저장합니다.
+     */
     private fun saveRestaurantData() {
-        val accessToken = tokenManager.getAccessToken() ?: ""
         val name = findViewById<EditText>(R.id.editRestaurantName).text.toString()
         val description = findViewById<EditText>(R.id.editRestaurantDescription).text.toString()
         val address = findViewById<EditText>(R.id.editRestaurantAddress).text.toString()
@@ -228,12 +235,6 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
             return
         }
 
-        // 사용자 권한 확인
-        val userRole = tokenManager.getUserRoleFromToken(accessToken)
-        if (userRole != "ADMIN") {
-            showToast("관리자 권한이 필요합니다.")
-            return
-        }
 
         // 도로명 주소를 통해 위도/경도 가져오기
         getLatLngFromAddress(address) { latitude, longitude ->
@@ -244,18 +245,26 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
 
             CoroutineScope(Dispatchers.Main).launch {
                 try {
+                    // 액세스 토큰 유효성 확인 및 새로 고침
+                    val accessToken = tokenManager.ensureValidAccessToken()
+
+                    if (accessToken.isNullOrEmpty()) {
+                        // 로그인 화면으로 이동
+                        Toast.makeText(this@ControlCreateActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
                     val restaurantResponse = RetrofitInstance.restaurantApi.createRestaurant(
                         "Bearer $accessToken",
                         RestaurantRequest(
                             id = -1,
                             name = name,
-                            doorType = doorType,
+                            doorType = AppUtils.mapDoorTypeForApi(doorType),
                             latitude = latitude,
                             longitude = longitude,
                             address = address,
                             phoneNumber = phoneNumber,
-                            category = category,
-                            subDescription = subDescription,
+                            category = AppUtils.mapCategoryForApi(category),
+                            subDescription = AppUtils.mapSubDescription(subDescription),
                             description = description
                         )
                     )
@@ -280,7 +289,7 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
                         showToast("등록 실패: ${restaurantResponse.code()}")
                     }
                 } catch (e: Exception) {
-                    showToast("저장 중 오류 발생: ${e.message}")
+                    finish()
                 }
             }
         }
@@ -367,25 +376,42 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
 
 
 
-    // 사진 선택기 열기
+    /**
+     * **openImagePicker**
+     * 이미지 선택기를 엽니다.
+     */
     private fun openImagePicker() {
+        currentMenuPosition = -1  // 식당 이미지 선택을 의미
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(intent, PICK_IMAGE_REQUEST)
     }
-
-    // 이미지 추가 기능
+    /**
+     * **onActivityResult**
+     * 이미지 선택 결과를 처리합니다.
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
-            val imageUri: Uri? = data.data
-            if (imageUri != null) {
+            val imageUri: Uri = data.data!!
+
+            if (currentMenuPosition != -1) {
+                // 메뉴 이미지 업데이트
+                menuAdapter.updateMenuImage(currentMenuPosition, imageUri)
+                currentMenuPosition = -1
+            } else {
+                // 식당 이미지 추가
                 selectedImageUris.add(imageUri)
                 addImageToLayout(imageUri)
             }
         }
     }
 
-    // 이미지 추가 레이아웃에 이미지 표시
+    /**
+     * **addImageToLayout**
+     * 선택한 이미지를 레이아웃에 추가합니다.
+     * @param imageUri 이미지 URI
+     */
     private fun addImageToLayout(imageUri: Uri?) {
         val imageView = ImageView(this).apply {
             layoutParams = LinearLayout.LayoutParams(200, 200).apply {
@@ -397,7 +423,9 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
         Toast.makeText(this, "이미지가 추가되었습니다.", Toast.LENGTH_SHORT).show()
     }
 
-    // 이미지 파일 준비
+    /**
+     * 이미지 파일을 가져옵니다.
+     */
     private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part {
         val fileDescriptor = contentResolver.openFileDescriptor(fileUri, "r") ?: return MultipartBody.Part.createFormData(partName, "")
         val inputStream = contentResolver.openInputStream(fileUri)
@@ -411,7 +439,9 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
         return MultipartBody.Part.createFormData(partName, file.name, requestFile)
     }
 
-    // 파일 이름 가져오기
+    /**
+     * 파일 이름을 가져옵니다.
+     */
     private fun ContentResolver.getFileName(uri: Uri): String {
         var name = "temp_file"
         val cursor = query(uri, null, null, null, null)
@@ -428,7 +458,6 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
 
 
 
-    // 토스트 메시지
     private fun showToast(message: String) {
         runOnUiThread {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -439,7 +468,11 @@ class ControlCreateActivity : AppCompatActivity(), MenuImagePicker {
 
 
 
-    // 도로명 주소 -> 위도, 경도 변환
+    /**
+     * 도로명 주소를 위도와 경도로 변환합니다.
+     * @param restaurant 변환할 식당 정보 객체
+     * @param callback 변환된 위도 및 경도를 반환하는 콜백 함수
+     */
     private fun getLatLngFromAddress(address: String, callback: (Double?, Double?) -> Unit) {
         val client = OkHttpClient()
         val url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${address}"

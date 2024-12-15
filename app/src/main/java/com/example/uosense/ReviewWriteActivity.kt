@@ -13,11 +13,13 @@ import android.text.Editable
 import android.text.TextWatcher
 import androidx.core.content.ContextCompat
 import android.util.Log
+import com.example.uosense.models.RestaurantInfo
 import com.example.uosense.models.ReviewRequest
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -47,7 +49,7 @@ class ReviewWriteActivity : AppCompatActivity() {
     private lateinit var reviewEventCheckBox: CheckBox
     private var reviewEventCheck = false
 
-//    선택된 이미지 URI 관리
+    // 선택된 이미지 URI 관리
     private val selectedImageUris: MutableList<Uri> = mutableListOf()
 
     private var restaurantId: Int = 1
@@ -111,6 +113,42 @@ class ReviewWriteActivity : AppCompatActivity() {
 
         // 등록 버튼 클릭 리스너 설정
         registerReviewBtn.setOnClickListener { submitReview() }
+
+        loadRestaurantData()
+
+    }
+    /**
+     * 식당 정보를 API로부터 불러옵니다.
+     */
+    private fun loadRestaurantData() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 액세스 토큰 유효성 확인 및 새로 고침
+                val accessToken = tokenManager.ensureValidAccessToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    // 로그인 화면으로 이동
+                    Toast.makeText(this@ReviewWriteActivity, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                val response = RetrofitInstance.restaurantApi.getRestaurantById(restaurantId)
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && response.body() != null) {
+                        bindRestaurantData(response.body()!!)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * 식당 데이터를 UI에 바인딩합니다.
+     * @param restaurant API 응답에서 가져온 식당 데이터
+     */
+    private fun bindRestaurantData(restaurant: RestaurantInfo) {
+        findViewById<TextView>(R.id.restaurantName).text = restaurant.name
     }
 
     // 사진 선택기 열기
@@ -232,13 +270,16 @@ private fun prepareFilePart(partName: String, fileUri: Uri): MultipartBody.Part 
                 if (response.isSuccessful) {
                     Log.d("ImageUpload", "Image upload successful. Response code: ${response.code()}")
                     Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 성공!", Toast.LENGTH_SHORT).show()
+                    finish()
+
                 } else {
                     Log.e("ImageUpload", "이미지 업로드 실패: ${response.code()} - ${response.errorBody()?.string()}")
                     Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 실패", Toast.LENGTH_SHORT).show()
+                    finish()
                 }
             } catch (e: Exception) {
                 Log.e("ImageUpload", "오류 발생: ${e.message}")
-                Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 중 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ReviewWriteActivity, "이미지 업로드 중 오류 발생", Toast.LENGTH_SHORT).show()
             }
         }
     }
