@@ -15,6 +15,7 @@ import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import com.example.uosense.models.ReportRequest
 import com.example.uosense.network.RetrofitInstance
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +40,7 @@ class ReviewAdapter(private val reviews: List<ReviewItem>,
         val reviewImage2: ImageView = itemView.findViewById(R.id.reviewImage2)
         val reportBtn: Button = itemView.findViewById(R.id.reportBtn)
         val deleteBtn: Button = itemView.findViewById(R.id.deleteBtn)
+        val featureTag1: TextView = itemView.findViewById(R.id.featureTag1)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
@@ -95,6 +97,29 @@ class ReviewAdapter(private val reviews: List<ReviewItem>,
                 .load(images[1])
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .into(holder.reviewImage2)
+        }
+
+        // 태그 버튼 설정
+        if (!review.tag.isNullOrEmpty()) {
+            holder.featureTag1.text = review.tag
+            holder.featureTag1.visibility = View.VISIBLE
+
+            // 동적 색상 설정
+            val (textColorRes, backgroundRes) = when (review.tag) {
+                "서비스가 좋아요" -> R.color.green to R.drawable.rounded_border_green
+                "데이트 장소 추천" -> R.color.pink to R.drawable.rounded_border_pink
+                "혼밥 가능" -> R.color.teal_700 to R.drawable.rounded_border_tealed_700
+                "사장님이 친절해요" -> R.color.purple_200 to R.drawable.rounded_border_purple_200
+                "인테리어가 멋져요" -> R.color.orange to R.drawable.rounded_border_orange
+                else -> R.color.black to R.drawable.rounded_border_black
+            }
+
+            // 텍스트 색상 및 백그라운드 적용
+            holder.featureTag1.setTextColor(ContextCompat.getColor(holder.itemView.context, textColorRes))
+            holder.featureTag1.background = ContextCompat.getDrawable(holder.itemView.context, backgroundRes)
+
+        } else {
+            holder.featureTag1.visibility = View.GONE
         }
 
         // 좋아요 버튼 클릭 이벤트 처리
