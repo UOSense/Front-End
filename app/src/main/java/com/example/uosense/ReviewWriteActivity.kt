@@ -50,7 +50,7 @@ class ReviewWriteActivity : AppCompatActivity() {
 //    선택된 이미지 URI 관리
     private val selectedImageUris: MutableList<Uri> = mutableListOf()
 
-    private var restaurantId: Int = -1
+    private var restaurantId: Int = 1
 
 
 
@@ -63,7 +63,7 @@ class ReviewWriteActivity : AppCompatActivity() {
         setContentView(R.layout.activity_review_write)
 
         // 식당 ID 수신
-        restaurantId = intent.getIntExtra("restaurantId", -1)
+        restaurantId = intent.getIntExtra("restaurantId", 1)
 
         // TokenManager 초기화
         tokenManager = TokenManager(this)

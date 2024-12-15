@@ -52,7 +52,7 @@ class RestaurantDetailActivity : AppCompatActivity(), MenuImagePicker {
     private lateinit var menuAdapter: MenuAdapter
 
     private var isFavorite = false
-    private var restaurantId: Int = -1
+    private var restaurantId: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -108,7 +108,7 @@ class RestaurantDetailActivity : AppCompatActivity(), MenuImagePicker {
         favoriteButton.setOnClickListener { toggleFavorite() }
 
         // 식당 ID 수신
-        restaurantId = intent.getIntExtra("restaurantId", -1)
+        restaurantId = intent.getIntExtra("restaurantId", 1)
 
         // 식당 정보 없을 시 ! (절대 발생하면 안됨)
         if (restaurantId == -1) {

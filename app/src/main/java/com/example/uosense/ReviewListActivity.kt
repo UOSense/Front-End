@@ -20,14 +20,14 @@ class ReviewListActivity : AppCompatActivity() {
     private lateinit var reviewRecyclerView: RecyclerView
     private lateinit var reviewAdapter: ReviewAdapter
     private val reviews = mutableListOf<ReviewItem>()
-    private var restaurantId: Int = -1
+    private var restaurantId: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_review_list)
 
         // 식당 ID 수신
-        restaurantId = intent.getIntExtra("restaurantId", -1)
+        restaurantId = intent.getIntExtra("restaurantId", 1)
 
         // RecyclerView 설정
         reviewRecyclerView = findViewById(R.id.reviewRecyclerView)
@@ -55,6 +55,8 @@ class ReviewListActivity : AppCompatActivity() {
 
                 // API 호출하여 리뷰 데이터 가져오기
                 val response = RetrofitInstance.restaurantApi.getRestaurantReviews(restaurantId)
+
+                Log.d("ReviewAdapter", "리뷰 목록 크기: ${reviews.size}")
 
                 if (response.isSuccessful) {
                     val reviewList = response.body() ?: emptyList()
